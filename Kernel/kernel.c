@@ -3,6 +3,8 @@
 #include <lib.h>
 #include <moduleLoader.h>
 #include <screen.h>
+#include <idtLoader.h>
+#include <interrupts.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -34,8 +36,7 @@ void * getStackBase()
 	);
 }
 
-void * initializeKernelBinary()
-{
+void * initializeKernelBinary() {
 	char buffer[10];
 
 	ncPrint("[x64BareBones]");
@@ -85,8 +86,26 @@ void * initializeKernelBinary()
 
 int main()
 {	
-	ncSetStyle(0x2F);
-	ncPrint("Hola");
-	((EntryPoint)shell)();
-	return 0;
+    ncSetStyle(0x2F);
+
+    ncPrint("[Kernel init]");
+    ncNewline();
+
+    load_idt();              // IDT
+    ncPrint("IDT loaded");
+    ncNewline();
+	
+    _sti();                   // habilita interrupciones (usa inline asm o función si la tienes)
+    ncPrint("Interrupts ON");
+    ncNewline();
+
+    ncPrint("Jumping to shell at 0x");
+    ncPrintHex((uint64_t)shell);
+    ncNewline();
+
+    ((EntryPoint)shell)();
+
+    ncPrint("Returned from shell (unexpected)");
+    ncNewline();
+    return 0;
 }

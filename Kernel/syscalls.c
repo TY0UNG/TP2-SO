@@ -13,7 +13,6 @@ static int syscall_write(Registers * registers);
 static int syscall_read(Registers * registers);
 
 int sysCallDispatcher(Registers * registers) {
-    ncPrint("ASKDJA");
     switch ((*registers).rax) {
     case 1:
         return syscall_write(registers);
@@ -34,22 +33,31 @@ int syscall_write(Registers * registers) {
 int syscall_read(Registers * registers) {
     char * input = (char *) registers->rbx;
     uint8_t size = 0;
-    size = 0;
-    bool finished = false;
-    do {
-        if (!isKeyBufferEmpty()) {
-            KeyEvent event = getNextKey();
-            if (event.ascii == '\n') {
-                input[size] = '\0';
-                finished = true;
-            } else if (event.ascii == '\b') {
-                if (!event.is_release && size > 0) {
-                    size--;
-                }
-            } else {
+    const uint8_t MAX = 255;
+    for(;;){
+        if(isKeyBufferEmpty()) continue;
+        KeyEvent event = getNextKey();
+
+        // Ignorar liberaciones y teclas sin ascii (modificadores)
+        if(event.is_release || event.ascii == 0)
+            continue;
+
+        if(event.ascii == '\n'){
+            input[size] = 0;
+            ncPrint("\n");
+            return size;
+        } else if(event.ascii == '\b'){
+            if(size > 0){
+                size--;
+                // borrar en pantalla: mover cursor atrás, espacio, atrás
+                ncPrint("\b \b");
+            }
+        } else {
+            if(size < MAX){
                 input[size++] = event.ascii;
+                char tmp[2] = { event.ascii, 0 };
+                ncPrint(tmp);
             }
         }
-    } while (!finished);
-    return size;
+    }
 }

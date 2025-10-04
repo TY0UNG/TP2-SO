@@ -1,4 +1,5 @@
 #include <inout.h>
+#include <stdint.h>
 
 extern int sys_write(int fd, const char* str);
 extern size_t sys_read(const char* buffer);

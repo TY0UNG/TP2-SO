@@ -167,17 +167,20 @@ _sysCallHandler:
 	mov rdi, registers
 	call sysCallDispatcher
 
-	pop rbp
-	pop rdi
-	pop rsi
-	pop r8
-	pop r9
-	pop r10
-	pop r11
-	pop r12
-	pop r13
-	pop r14
+	mov al, 20h
+	out 20h, al
+
 	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rsi
+	pop rdi
+	pop rbp
 	iretq
 
 haltcpu:
@@ -192,7 +195,7 @@ SECTION .bss
 
 SECTION .data
 	registers:
-        dq 0   ; rax
-        dq 0   ; rbx
-        dq 0   ; rcx
+        dq 0  	; rax
+        dq 0  	; rbx
+        dq 0  	; rcx
         dq 0	; rdx

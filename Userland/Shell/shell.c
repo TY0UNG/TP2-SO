@@ -1,11 +1,28 @@
 #include <inout.h>
 
-char * v = (char*)0xB8000 + 79 * 2;
+static int strcmp(const char *a, const char *b){
+    while(*a && *a == *b){ a++; b++; }
+    return (unsigned char)*a - (unsigned char)*b;
+}
+
+#define MAX_LINE 128
+
+static char line[MAX_LINE];
+
+static void run(char * cmd) {
+    if(cmd[0]==0) return;
+    if(strcmp(cmd,"help")==0){
+        print("Comandos: help\n", STDOUT);
+    } else {
+        print("Comando desconocido\n", STDERR);
+    }
+}
 
 int main() {
-    *v = 'X';
-	*(v+1) = 0x74;
-    print("Hola", STDERR);
-    while(1) {}
-	return 0;
+    for(;;){
+        print("> ", STDOUT);
+        int n = read(line);
+        run(line);
+    }
+    return 0;
 }
