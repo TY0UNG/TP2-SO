@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <keyboard.h>
 #include <screen.h>
+#include <interrupts.h>
 
 typedef struct {
     uint64_t rax;
@@ -33,35 +34,26 @@ int syscall_write(Registers * registers) {
 int syscall_read(Registers * registers) {
     char * input = (char *) registers->rbx;
     uint8_t size = 0;
-    const uint8_t MAX = 255;
 
-    _sti();                                                             ///
+    _sti();
 
-    for(;;){
-        //if(isKeyBufferEmpty()) continue;
-        if(isKeyBufferEmpty()) _hlt();                                  ////
-
-        KeyEvent event = getNextKey();
-
-        // Ignorar liberaciones y teclas sin ascii (modificadores)
-        if(event.is_release || event.ascii == 0)
-            continue;
-
-        if(event.ascii == '\n'){
-            input[size] = 0;
-            ncPrint("\n");
-            return size;
-        } else if(event.ascii == '\b'){
-            if(size > 0){
-                size--;
-                // borrar en pantalla: mover cursor atrás, espacio, atrás
-                ncPrint("\b \b");
-            }
-        } else {
-            if(size < MAX){
-                input[size++] = event.ascii;
-                char tmp[2] = { event.ascii, 0 };
-                ncPrint(tmp);
+    while(1) {
+        if (!isKeyBufferEmpty()) {
+            KeyEvent event = getNextKey();
+                if (!event.is_release) {
+                    if(event.ascii == '\n') {
+                        input[size] = 0;
+                        ncPrint("\n");
+                        return size;
+                    } else if(event.ascii == '\b'){
+                        if(size > 0){
+                            size--;
+                            ncDelChar();
+                        }
+                    } else if (event.printable) {
+                        input[size++] = event.ascii;
+                        ncPrintChar(event.ascii);
+                    }
             }
         }
     }

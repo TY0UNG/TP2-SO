@@ -10,6 +10,7 @@ typedef struct key_event {
     uint8_t scancode;
     uint8_t ascii;
     bool is_release;
+    bool printable;
 } KeyEvent;
 
 void keyboard_handler();

@@ -15,7 +15,8 @@ void ncPrint(const char * string)
 	int i;
 
 	for (i = 0; string[i] != 0; i++)
-		ncPrintChar(string[i]);
+		if (string[i] == '\n') ncNewline();
+		else ncPrintChar(string[i]);
 }
 
 void ncPrintChar(char character)

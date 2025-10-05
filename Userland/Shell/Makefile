@@ -13,10 +13,10 @@ OBJECTS     := $(OBJECTS_C) $(OBJECTS_ASM)
 all: $(MODULE)
 
 $(MODULE): $(OBJECTS)
-	$(GCC) $(GCCFLAGS) -T shell.ld ../_loader.c $(OBJECTS) -I./lib -o ../$(MODULE)
+	$(GCC) $(GCCFLAGS) -T shell.ld ../_loader.c $(OBJECTS) -I./lib -I./commands -o ../$(MODULE)
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -I./lib -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./lib -I./commands -c $< -o $@
 
 %.o: %.asm
 	nasm -f elf64 $< -o $@

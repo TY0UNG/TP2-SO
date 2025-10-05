@@ -3,6 +3,8 @@
 
 extern char get_keyboard_output();
 
+static bool isPrintable(unsigned char scancode);
+
 KeyEvent buffer[BUFFER_LENGHT];
 uint8_t size = 0;
 uint8_t head = 0;
@@ -66,7 +68,14 @@ void keyboard_handler() {
     KeyEvent event = {
         raw_scancode,
         ascii,
-        is_release
+        is_release,
+        isPrintable(scancode)
     };
     queue(event);
+}
+
+bool isPrintable(unsigned char scancode) {
+    scancode &= 0x7F;
+    char c = (scancode < sizeof(scancode_to_ascii)) ? scancode_to_ascii[scancode] : 0;
+    return (c >= 32 && c < 127);
 }

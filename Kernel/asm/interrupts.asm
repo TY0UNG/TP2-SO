@@ -167,9 +167,6 @@ _sysCallHandler:
 	mov rdi, registers
 	call sysCallDispatcher
 
-	mov al, 20h
-	out 20h, al
-
 	pop r15
 	pop r14
 	pop r13

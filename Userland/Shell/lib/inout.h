@@ -6,7 +6,9 @@
 #define STDOUT 1
 #define STDERR 2
 
-int print(const char* str, int fd);
+int print(const char* str);
+int println(const char* str);
+int printerr(const char* str);
 size_t read(char* buffer);
 
 #endif
