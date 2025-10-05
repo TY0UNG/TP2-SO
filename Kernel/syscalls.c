@@ -34,8 +34,13 @@ int syscall_read(Registers * registers) {
     char * input = (char *) registers->rbx;
     uint8_t size = 0;
     const uint8_t MAX = 255;
+
+    _sti();                                                             ///
+
     for(;;){
-        if(isKeyBufferEmpty()) continue;
+        //if(isKeyBufferEmpty()) continue;
+        if(isKeyBufferEmpty()) _hlt();                                  ////
+
         KeyEvent event = getNextKey();
 
         // Ignorar liberaciones y teclas sin ascii (modificadores)

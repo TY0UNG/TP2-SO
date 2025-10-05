@@ -84,6 +84,8 @@ void * initializeKernelBinary() {
 	return getStackBase();
 }
 
+#include <keyboard.h>									////
+
 int main()
 {	
     ncSetStyle(0x2F);
@@ -102,6 +104,49 @@ int main()
     ncPrint("Jumping to shell at 0x");
     ncPrintHex((uint64_t)shell);
     ncNewline();
+
+	// veo si funcona el keyboard 
+/*
+	while(1){											///     funcion bien el drive, es tema de la sys 
+		if (!isKeyBufferEmpty()) {
+            KeyEvent event = getNextKey();
+            
+            // Muestra scancode
+            ncPrint("Scancode: 0x");
+            ncPrintHex(event.scancode);
+            
+            // Muestra ASCII
+            ncPrint(" | ASCII: ");
+            if (event.ascii >= 32 && event.ascii <= 126) {
+                ncPrint("'");
+                ncPrintChar(event.ascii);
+                ncPrint("' (");
+                ncPrintDec(event.ascii);
+                ncPrint(")");
+            } else {
+                ncPrintDec(event.ascii);
+            }
+            
+            // Muestra si es press o release
+            ncPrint(" | ");
+            if (event.is_release) {
+                ncPrint("RELEASE");
+            } else {
+                ncPrint("PRESS");
+            }
+            
+            ncNewline();
+            
+            // Eco del carácter si es imprimible y PRESS
+            if (!event.is_release && event.ascii != 0) {
+                ncPrint("  -> Eco: ");
+                ncPrintChar(event.ascii);
+                ncNewline();
+            }
+        }
+
+	}
+	*/
 
     ((EntryPoint)shell)();
 
