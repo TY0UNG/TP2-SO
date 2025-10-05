@@ -3,5 +3,6 @@
 #include <inout.h>
 
 int help();
+void clear();
 
 #endif

@@ -10,5 +10,6 @@ int print(const char* str);
 int println(const char* str);
 int printerr(const char* str);
 size_t read(char* buffer);
+void clear();
 
 #endif

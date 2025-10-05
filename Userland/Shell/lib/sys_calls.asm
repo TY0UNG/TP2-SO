@@ -1,6 +1,8 @@
 SECTION .text
 GLOBAL sys_write
 GLOBAL sys_read
+GLOBAL sys_clear
+
 
 sys_write:
     push rbp
@@ -35,6 +37,18 @@ sys_read:
 
     pop rbx
 
+    mov rsp, rbp
+    pop rbp
+    ret
+
+
+    sys_clear:
+    push rbp
+    mov rbp, rsp
+    
+    mov rax, 3      ; ver numeor 
+    int 80h
+    
     mov rsp, rbp
     pop rbp
     ret

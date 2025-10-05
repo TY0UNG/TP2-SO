@@ -12,6 +12,7 @@ typedef struct {
 
 static int syscall_write(Registers * registers);
 static int syscall_read(Registers * registers);
+static int syscall_clear(Registers * registers);
 
 int sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -19,6 +20,8 @@ int sysCallDispatcher(Registers * registers) {
         return syscall_write(registers);
     case 2:
         return syscall_read(registers);
+    case 3:
+        return  syscall_clear(registers);
     default:
         break;
     }
@@ -57,4 +60,9 @@ int syscall_read(Registers * registers) {
             }
         }
     }
+}
+
+int syscall_clear(Registers * registers) {
+    ncClear();  
+    return 0;
 }

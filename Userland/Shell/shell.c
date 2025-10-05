@@ -17,6 +17,10 @@ int main() {
 
 int commandDispatcher(char * command) {
     if (strcmp(command, "help") == 0) return help();
+    if(strcmp(command, "clear") == 0){
+        clear();
+        return 1;
+    }
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
 }
