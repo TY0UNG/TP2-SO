@@ -74,13 +74,24 @@ int   syscall_shutdown(Registers * registers){
     syscall_clear(registers);
 
     ncPrint("Apagando....");
-    //poner un tiempo  antes de apagar 
-
-
-    __asm__ volatile ("outw %0, %1" : : "a"((uint16_t)0x2000), "Nd"((uint16_t)0x604));   // QEMU                //ver bien 
-  
+    //poner un tiempo  antes de apagar
+    /*
     
-    //si hubo error 
+    */ 
+
+
+    __asm__ volatile ("outw %0, %1" : : "a"((uint16_t)0x2000), "Nd"((uint16_t)0x604));   // solo funciona en QEMU    //ver bien 
+    /*|--> mov ax, 0x2000    ; Poner valor en AX
+           mov dx, 0x604     ; Poner puerto en DX
+           out dx, ax        ; Enviar AX al puerto DX  
+    */
+
+   //aca seria maquina fisica 
+
+
+
+    //si no apago 
+    ncPrint("NO SE PUDO APAGAR");
     while(1) {
         _hlt();
     }
