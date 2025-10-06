@@ -2,6 +2,7 @@ SECTION .text
 GLOBAL sys_write
 GLOBAL sys_read
 GLOBAL sys_clear
+GLOBAL sys_shutdown
 
 
 sys_write:
@@ -52,3 +53,17 @@ sys_read:
     mov rsp, rbp
     pop rbp
     ret
+
+
+
+    sys_shutdown:                               ;;;;;
+    push rbp
+    mov rbp, rsp
+    
+    mov rax, 0     ; 
+    int 80h
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+

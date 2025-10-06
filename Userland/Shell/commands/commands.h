@@ -4,5 +4,6 @@
 
 int help(char ** argv, int argc);
 int echo(char ** argv, int argc);
+int shutdown();
 
 #endif

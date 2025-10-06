@@ -13,9 +13,12 @@ typedef struct {
 static int syscall_write(Registers * registers);
 static int syscall_read(Registers * registers);
 static int syscall_clear(Registers * registers);
+static int  syscall_shutdown(Registers * registers);
 
 int sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
+    case 0:
+        return syscall_shutdown(registers);
     case 1:
         return syscall_write(registers);
     case 2:
@@ -64,5 +67,23 @@ int syscall_read(Registers * registers) {
 
 int syscall_clear(Registers * registers) {
     ncClear();  
+    return 0;
+}
+
+int   syscall_shutdown(Registers * registers){
+    syscall_clear(registers);
+
+    ncPrint("Apagando....");
+    //poner un tiempo  antes de apagar 
+
+
+    __asm__ volatile ("outw %0, %1" : : "a"((uint16_t)0x2000), "Nd"((uint16_t)0x604));   // QEMU                //ver bien 
+  
+    
+    //si hubo error 
+    while(1) {
+        _hlt();
+    }
+
     return 0;
 }

@@ -19,6 +19,9 @@ int commandDispatcher(char * input) {
     char* argsv[256];
     int argc = strparse(input, argsv, " ");
     char * cmd = argsv[0];
+
+    if (strcmp(cmd, "shutdown") == 0) shutdown();
+    
     if (strcmp(cmd, "help") == 0) return help(argsv, argc);
     if (strcmp(cmd, "clear") == 0) {
         clear();
