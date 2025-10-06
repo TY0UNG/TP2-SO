@@ -2,7 +2,7 @@
 #define help_h
 #include <inout.h>
 
-int help();
-void clear();
+int help(char ** argv, int argc);
+int echo(char ** argv, int argc);
 
 #endif
