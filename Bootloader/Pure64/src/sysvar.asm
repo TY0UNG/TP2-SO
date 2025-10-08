@@ -65,7 +65,17 @@ msg_MEM:		db ']  [MEM: ', 0
 msg_mb:			db ' MiB]', 0
 msg_startingkernel:	db 'Starting kernel...', 13, 13, 0
 msg_no64:		db 'ERROR: This computer does not support 64-bit mode.', 0
-msg_novesa:		db 'VESA error', 0
+msg_novesa:		db 'VESA error. EDID agotados.', 0
+
+msg_edid_bpp_fail:		db ' bpp fail', 0
+msg_edid_found:		db ' EDID 0', 0
+
+resoluciones_preferidas:		;; En orden de preferencia y así: resx, resy, bpp, 0x0000 (el cero requerido para indexar [8*edx])
+						dw 1024, 768, 24, 0x0000
+						dw 1024, 768, 32, 0x0000
+						dw 1366, 768, 32, 0x0000
+						dw 1024, 600, 32, 0x0000
+resol_prefs_vctor_cant		equ ($-resoluciones_preferidas)/8
 
 ; VESA
 ; Mandatory information for all VBE revisions
