@@ -16,7 +16,7 @@ $(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM)
 	$(LD) $(LDFLAGS) -T kernel.ld -o $(KERNEL) $(LOADEROBJECT) $(OBJECTS) $(OBJECTS_ASM) $(STATICLIBS)
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -I./include -I./drivers -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I./drivers -I./resources/fonts -c $< -o $@
 	
 %.o : %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@

@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <keyboard.h>
-#include <screen.h>
+#include <video.h>
 #include <interrupts.h>
 
 typedef struct {
@@ -32,8 +32,8 @@ int sysCallDispatcher(Registers * registers) {
 }
 
 int syscall_write(Registers * registers) {
-    ncSetStyle(registers->rbx == 2 ? 0x04 : 0x0F);
-    ncPrint((char *) registers->rcx);
+    select_style(registers->rbx == 2 ? 0x04 : 0x0F);
+    print((char *) registers->rcx);
     return 1;
 }
 
@@ -49,16 +49,16 @@ int syscall_read(Registers * registers) {
                 if (!event.is_release) {
                     if(event.ascii == '\n') {
                         input[size] = 0;
-                        ncPrint("\n");
+                        print("\n");
                         return size;
                     } else if(event.ascii == '\b'){
                         if(size > 0){
                             size--;
-                            ncDelChar();
+                            deleteChar();
                         }
                     } else if (event.printable) {
                         input[size++] = event.ascii;
-                        ncPrintChar(event.ascii);
+                        printChar(event.ascii);
                     }
             }
         }
@@ -66,14 +66,14 @@ int syscall_read(Registers * registers) {
 }
 
 int syscall_clear(Registers * registers) {
-    ncClear();  
+    clear_text_buffer();  
     return 0;
 }
 
 int   syscall_shutdown(Registers * registers){
     syscall_clear(registers);
 
-    ncPrint("Apagando....");
+    print("Apagando....");
     //poner un tiempo  antes de apagar
     /*
     
@@ -91,7 +91,7 @@ int   syscall_shutdown(Registers * registers){
 
 
     //si no apago 
-    ncPrint("NO SE PUDO APAGAR");
+    print("NO SE PUDO APAGAR");
     while(1) {
         _hlt();
     }
