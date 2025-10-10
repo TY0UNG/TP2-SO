@@ -14,6 +14,7 @@ GLOBAL _irq04Handler
 GLOBAL _irq05Handler
 
 GLOBAL _exception0Handler
+GLOBAL _exception6Handler
 
 GLOBAL _sysCallHandler
 
@@ -76,13 +77,14 @@ SECTION .text
 
 
 %macro exceptionHandler 1
-	pushState
-
-	mov rdi, %1 ; pasaje de parametro
-	call exceptionDispatcher
-
-	popState
-	iretq
+    pushState
+    
+    mov rdi, rsp        ; puntero al frame (primer arg)
+    mov rsi, %1         ; exception ID (segundo arg)
+    call exceptionDispatcher
+    
+    popState
+    iretq
 %endmacro
 
 
@@ -145,6 +147,10 @@ _irq05Handler:
 ;Zero Division Exception
 _exception0Handler:
 	exceptionHandler 0
+
+;Invalid Opcode Exception
+_exception6Handler:
+    exceptionHandler 6
 
 _sysCallHandler:
 	push rbp

@@ -2,11 +2,16 @@
 #include <str.h>
 #include <commands.h>
 
+static int show_welcome = 1;    // si se vuelve a llamar a la shell, no se resetea a 1 pues se guarda en section .data
+
 static int commandDispatcher(char * input);
 
 int main() {
     char input[256];
-    println("Bienvenido al sistema operativo.");
+    if (show_welcome) {
+        println("Bienvenido al sistema operativo.");
+        show_welcome = 0;
+    }
     while(1) {
         print("OS> ");
         read(input);
@@ -20,8 +25,12 @@ int commandDispatcher(char * input) {
     int argc = strparse(input, argsv, " ");
     char * cmd = argsv[0];
 
+    /* Para probar las excepciones, borrenlo cuando no se necesite más hacer los testeos */
+    if (strcmp(cmd, "dividezero") == 0) dividezero();
+    if (strcmp(cmd, "invalidop") == 0) invalidop();
+    /* Fin de prueba de excepciones */
+
     if (strcmp(cmd, "shutdown") == 0) shutdown();
-    
     if (strcmp(cmd, "help") == 0) return help(argsv, argc);
     if (strcmp(cmd, "clear") == 0) {
         clear();
