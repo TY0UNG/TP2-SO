@@ -27,6 +27,7 @@ int commandDispatcher(char * input) {
         clear();
         return 1;
     }
+    if (strcmp(cmd, "tron") == 0) return tron(argsv, argc); 
     if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;

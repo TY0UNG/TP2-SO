@@ -4,6 +4,7 @@
 
 int help(char ** argv, int argc);
 int echo(char ** argv, int argc);
+int tron(char ** argv, int argc);
 int shutdown();
 
 #endif

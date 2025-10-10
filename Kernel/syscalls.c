@@ -10,10 +10,19 @@ typedef struct {
     uint64_t rdx;
 } Registers;
 
+static int syscall_shutdown(Registers * registers);
 static int syscall_write(Registers * registers);
 static int syscall_read(Registers * registers);
 static int syscall_clear(Registers * registers);
-static int  syscall_shutdown(Registers * registers);
+static int syscall_graphics_mode(Registers * registers);
+static int syscall_draw_line(Registers * registers);
+static int syscall_draw_rectangle(Registers * registers);
+static int syscall_draw_filled_rectangle(Registers * registers);
+static int syscall_draw_circle(Registers * registers);
+static int syscall_draw_filled_circle(Registers * registers);
+static int syscall_draw_text(Registers * registers);
+static int syscall_clear_canvas(Registers * registers);
+static int syscall_swap_buffers(Registers * registers);
 
 int sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -24,7 +33,25 @@ int sysCallDispatcher(Registers * registers) {
     case 2:
         return syscall_read(registers);
     case 3:
-        return  syscall_clear(registers);
+        return syscall_clear(registers);
+    case 4:
+        return syscall_graphics_mode(registers);
+    case 5:
+        return syscall_draw_line(registers);
+    case 6:
+        return syscall_draw_rectangle(registers);
+    case 7:
+        return syscall_draw_filled_rectangle(registers);
+    case 8:
+        return syscall_draw_circle(registers);
+    case 9:
+        return syscall_draw_filled_circle(registers);
+    case 10:
+        return syscall_draw_text(registers);
+    case 11:
+        return syscall_clear_canvas(registers);
+    case 12:
+        return syscall_swap_buffers(registers);
     default:
         break;
     }
@@ -32,7 +59,7 @@ int sysCallDispatcher(Registers * registers) {
 }
 
 int syscall_write(Registers * registers) {
-    select_style(registers->rbx == 2 ? 0x04 : 0x0F);
+    selectStyle(registers->rbx == 2 ? 0x04 : 0x0F);
     print((char *) registers->rcx);
     return 1;
 }
@@ -66,7 +93,99 @@ int syscall_read(Registers * registers) {
 }
 
 int syscall_clear(Registers * registers) {
-    clear_text_buffer();  
+    clearTextBuffer();  
+    return 0;
+}
+
+int syscall_graphics_mode(Registers * registers) {
+    if (registers->rbx) {
+        canvasMode();
+    } else {
+        textMode();
+    }
+    return 0;
+}
+
+typedef struct {
+    uint64_t x1, y1, x2, y2;
+    uint16_t thickness;
+    uint32_t color;
+} LineParameters;
+
+typedef struct {
+    uint64_t x1, y1, x2, y2;
+    uint16_t thickness;
+    uint32_t color;
+} RectangleParameters;
+
+typedef struct {
+    uint64_t x1, y1, x2, y2;
+    uint32_t color;
+} FilledRectangleParameters;
+
+typedef struct {
+    uint64_t x, y;
+    uint16_t radius;
+    uint16_t thickness;
+    uint32_t color;
+} CircleParameters;
+
+typedef struct {
+    uint64_t x, y;
+    uint16_t radius;
+    uint32_t color;
+} FilledCircleParameters;
+
+typedef struct {
+    uint64_t x, y;
+    const char* text;
+    uint16_t height;
+    uint32_t color;
+} TextParameters;
+
+int syscall_draw_line(Registers * registers) {
+    LineParameters * params = (LineParameters *) registers->rbx;
+    drawLine(params->x1, params->y1, params->x2, params->y2, params->thickness, params->color);
+    return 0;
+}
+
+int syscall_draw_rectangle(Registers * registers) {
+    RectangleParameters * params = (RectangleParameters *) registers->rbx;
+    drawRectangle(params->x1, params->y1, params->x2, params->y2, params->thickness, params->color);
+    return 0;
+}
+
+int syscall_draw_filled_rectangle(Registers * registers) {
+    FilledRectangleParameters * params = (FilledRectangleParameters *) registers->rbx;
+    drawFilledRectangle(params->x1, params->y1, params->x2, params->y2, params->color);
+    return 0;
+}
+
+int syscall_draw_circle(Registers * registers) {
+    CircleParameters * params = (CircleParameters *) registers->rbx;
+    drawCircle(params->x, params->y, params->radius, params->thickness, params->color);
+    return 0;
+}
+
+int syscall_draw_filled_circle(Registers * registers) {
+    FilledCircleParameters * params = (FilledCircleParameters *) registers->rbx;
+    drawFilledCircle(params->x, params->y, params->radius, params->color);
+    return 0;
+}
+
+int syscall_draw_text(Registers * registers) {
+    TextParameters * params = (TextParameters *) registers->rbx;
+    drawText(params->x, params->y, params->text, params->height, params->color);
+    return 0;
+}
+
+int syscall_clear_canvas(Registers * registers) {
+    clearCanvas();
+    return 0;
+}
+
+static int syscall_swap_buffers(Registers * registers) {
+    swapBuffers();
     return 0;
 }
 
