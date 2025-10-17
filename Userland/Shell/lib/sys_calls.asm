@@ -12,6 +12,7 @@ GLOBAL sys_draw_filled_circle
 GLOBAL sys_draw_text
 GLOBAL sys_clear_canvas
 GLOBAL sys_swap_buffers
+GLOBAL sys_getTime                          ;///
 
 
 %macro START_SYSCALL 0
@@ -125,5 +126,13 @@ sys_clear_canvas:
 sys_swap_buffers:
     START_SYSCALL
     mov rax, 12
+    int 80h
+    END_SYSCALL
+
+
+sys_getTime:
+ START_SYSCALL
+  mov rbx, rdi              ;;
+    mov rax, 13
     int 80h
     END_SYSCALL

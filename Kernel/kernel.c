@@ -5,7 +5,7 @@
 #include <screen.h>
 #include <idtLoader.h>
 #include <interrupts.h>
-
+#include <video.h>
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -87,14 +87,54 @@ void * initializeKernelBinary() {
 	return getStackBase();
 }
 
+
+
+
+// Convertir un dígito hexadecimal (0-15) a char
+char hex_to_char(uint8_t value) {
+    if (value < 10)
+        return '0' + value;  // 0-9
+    else
+        return 'A' + (value - 10);  // A-F
+}
+
+// Imprimir un byte en hexadecimal (2 dígitos)
+void printByteHex(uint8_t value) {
+    printChar(hex_to_char((value >> 4) & 0x0F));  // Nibble alto
+    printChar(hex_to_char(value & 0x0F));          // Nibble bajo
+}
+
+
+
 int main()
 {	
 	load_idt();
     ncSetStyle(0x0F);
+	print("shbdasjd");
 
+	uint8_t time_buffer[10];
+	getTime(time_buffer);
+	print(" ano ");
+	printByteHex(time_buffer[0]);
+    printChar(':');
+	print(" mes ");
+    printByteHex(time_buffer[1]);
+    printChar(':');
+	print(" hora ");
+    printByteHex(time_buffer[2]);
+	print(" minuto ");
+    printByteHex(time_buffer[3]);
+    printChar('\n');
+
+
+	
     ((EntryPoint)shell)();
 
-    ncPrint("Returned from shell (unexpected)");
+
+    print("Returned from shell (unexpected)");
     ncNewline();
     return 0;
+	
+
+
 }
