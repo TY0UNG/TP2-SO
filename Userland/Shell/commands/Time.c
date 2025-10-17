@@ -9,7 +9,7 @@ void printChar(char c) {
     print(str);
 }
 
-// Convertir un dígito hexadecimal (0-15) a char
+
 char hex_to_char(uint8_t value) {
     if (value < 10)
         return '0' + value;
@@ -17,14 +17,14 @@ char hex_to_char(uint8_t value) {
         return 'A' + (value - 10);
 }
 
-// Imprimir un byte en hexadecimal (2 dígitos)
+
 void printByteHex(uint8_t value) {
     printChar(hex_to_char((value >> 4) & 0x0F));
     printChar(hex_to_char(value & 0x0F));
 }
 
 int getTime() {
-    uint8_t datetime[5];  // ← IMPORTANTE: uint8_t, no char
+    uint8_t datetime[5];  
     sys_getTime(datetime);
     
     print("Fecha: ");
