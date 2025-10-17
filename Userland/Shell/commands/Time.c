@@ -34,7 +34,7 @@ int getTime() {
     printChar('\n');
     
     print("Hora:  ");
-    printByteHex(datetime[2]);  // Hora
+    printByteHex((datetime[2]));  // Hora
     printChar(':');
     printByteHex(datetime[3]);  // Minutos
     printChar(':');

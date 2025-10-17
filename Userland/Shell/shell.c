@@ -30,7 +30,7 @@ int commandDispatcher(char * input) {
     if (strcmp(cmd, "invalidop") == 0) invalidop();
     /* Fin de prueba de excepciones */
 
-    if (strcmp(cmd, "shutdown") == 0) shutdown();
+    if (strcmp(cmd, "exit") == 0) shutdown();
     if (strcmp(cmd, "help") == 0) return help(argsv, argc);
     if (strcmp(cmd, "clear") == 0) {
         clear();

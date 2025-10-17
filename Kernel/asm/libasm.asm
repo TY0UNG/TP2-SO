@@ -41,6 +41,32 @@ getTime:
 	mov [rdi+1], al
 
 	call getHour
+
+	;;;;;;;;	CAMBIO DE HORA A ARGENTINA  	;;;;;
+
+	; Cambio formato para restar 
+	mov bl, al          ; Backup del valor BCD
+	shr al, 4           ; al = decenas ( alto)
+	mov cl, 10
+	mul cl              ; al = decenas * 10
+	and bl, 0x0F        ; bl = unidades ( bajo)
+	add al, bl          ; al = hora en binario (0-23)
+	
+	; Restar 3 horas  
+	sub al, 3
+	jns wrap         	; Si no es negativo, continuar
+	add al, 24          ; Si es negativo, sumar 24
+	
+	wrap:
+	; pasa de binaro a formato anteriro 
+	xor ah, ah          ; Limpiar ah
+	mov cl, 10
+	div cl              ; al = decenas, ah = unidades
+	shl al, 4           ; Mover decenas al alto
+	or al, ah           ; Combinar: (decenas << 4) | unidades
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+
 	mov [rdi+2], al
 
 	call getMinutes
