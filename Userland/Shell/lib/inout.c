@@ -24,3 +24,36 @@ size_t read(char* buffer) {
 void clear() {  
     sys_clear();
 }
+
+void printChar(char c) {
+    char str[2] = {c, '\0'};
+    print(str);
+}
+
+char hex_to_char(uint8_t value) {
+    if (value < 10)
+        return '0' + value;
+    else
+        return 'A' + (value - 10);
+}
+
+void printHex(uint8_t value) {
+    printChar(hex_to_char((value >> 4) & 0x0F));
+    printChar(hex_to_char(value & 0x0F));
+}
+
+void printDec(uint64_t number) {
+    char buffer[21];
+    int i = 0;
+    if (number == 0) {
+        printChar('0');
+        return;
+    }
+    while (number > 0) {
+        buffer[i++] = '0' + (number % 10);
+        number /= 10;
+    }
+    while (i--) {
+        printChar(buffer[i]);
+    }
+}

@@ -12,7 +12,8 @@ GLOBAL sys_draw_filled_circle
 GLOBAL sys_draw_text
 GLOBAL sys_clear_canvas
 GLOBAL sys_swap_buffers
-GLOBAL sys_getTime                          ;///
+GLOBAL sys_get_time
+GLOBAL sys_get_ms
 
 
 %macro START_SYSCALL 0
@@ -129,10 +130,15 @@ sys_swap_buffers:
     int 80h
     END_SYSCALL
 
-
-sys_getTime:
- START_SYSCALL
-  mov rbx, rdi              ;;
+sys_get_time:
+    START_SYSCALL
+    mov rbx, rdi
     mov rax, 13
+    int 80h
+    END_SYSCALL
+
+sys_get_ms:
+    START_SYSCALL
+    mov rax, 14
     int 80h
     END_SYSCALL

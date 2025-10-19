@@ -3,12 +3,27 @@
 void * memset(void * destination, int32_t c, uint64_t length)
 {
 	uint8_t chr = (uint8_t)c;
-	char * dst = (char*)destination;
+	// Patron para escribir de a 8 bytes
+    uint64_t pattern = 0x0101010101010101ULL * chr;
 
-	while(length--)
-		dst[length] = chr;
+    uint64_t *d64 = (uint64_t *)destination;
+    uint64_t i;
 
-	return destination;
+    // Bucle principal rápido: escribe de a 8 bytes
+    for (i = 0; i < length / sizeof(uint64_t); i++)
+    {
+        d64[i] = pattern;
+    }
+
+    // Maneja los bytes restantes al final
+    uint8_t *d8 = (uint8_t *)(d64 + i);
+    uint64_t remainder = length % sizeof(uint64_t);
+    while (remainder--)
+    {
+        *d8++ = chr;
+    }
+    
+    return destination;
 }
 
 void * memcpy(void * destination, const void * source, uint64_t length)

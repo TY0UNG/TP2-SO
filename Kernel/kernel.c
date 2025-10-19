@@ -6,6 +6,7 @@
 #include <idtLoader.h>
 #include <interrupts.h>
 #include <video.h>
+#include "./drivers/time.h"
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -94,9 +95,10 @@ int main()
 {	
 	load_idt();
     ncSetStyle(0x0F);
+
+	calibrateMilis();
 	
     ((EntryPoint)shell)();
-
 
     print("Returned from shell (unexpected)");
     ncNewline();

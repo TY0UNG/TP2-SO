@@ -73,9 +73,7 @@ void canvasMode() {
 void clearCanvas() {
 	uint64_t total_pixels = (uint64_t)VBE_mode_info->width * VBE_mode_info->height;
     uint32_t *dest = (uint32_t *)VBE_mode_info->framebuffer;
-    for (uint64_t i = 0; i < total_pixels; i++) {
-        *dest++ = 0;
-    }
+    memset(dest, 0, total_pixels);
 }
 
 void drawPixel(uint64_t x, uint64_t y, uint32_t color) {

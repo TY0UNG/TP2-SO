@@ -2,6 +2,7 @@
 #include <keyboard.h>
 #include <video.h>
 #include <interrupts.h>
+#include "./drivers/time.h"
 
 typedef struct {
     uint64_t rax;
@@ -23,10 +24,10 @@ static int syscall_draw_filled_circle(Registers * registers);
 static int syscall_draw_text(Registers * registers);
 static int syscall_clear_canvas(Registers * registers);
 static int syscall_swap_buffers(Registers * registers);
-
 static int syscall_time(Registers *registers);
+static uint64_t syscall_ms(Registers *registers);
 
-int sysCallDispatcher(Registers * registers) {
+uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
     case 0:
         return syscall_shutdown(registers);
@@ -56,6 +57,8 @@ int sysCallDispatcher(Registers * registers) {
         return syscall_swap_buffers(registers);
     case 13:
         return syscall_time(registers);
+    case 14:
+        return syscall_ms(registers);
     default:
         break;
     }
@@ -224,15 +227,18 @@ int   syscall_shutdown(Registers * registers){
 
 int syscall_time(Registers * registers){
 
-    int8_t* datetime_buffer = (uint8_t*)registers->rbx;
+    uint8_t* datetime_buffer = (uint8_t*)registers->rbx;
     
     if (datetime_buffer == 0) {
         return -1;  // Error
     }
     
-    
     getTime(datetime_buffer);
     
     return 0;
 
+}
+
+uint64_t syscall_ms(Registers * registers){
+    return getMilisFromBoot();
 }
