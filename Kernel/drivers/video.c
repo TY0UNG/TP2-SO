@@ -43,41 +43,38 @@ typedef struct vbe_mode_info_structure * VBEInfoPtr;
 
 VBEInfoPtr VBE_mode_info = (VBEInfoPtr) 0x0000000000005C00;
 
-/* uint8_t backbuffer[4 * 1920 * 1080]; // TODO: hacerlo variable segun VBE info
+uint8_t * backbuffer = (void*)0x500000;
 
-uint8_t * actualBuffer = backbuffer; */
+extern void vsync_wait();
 
 static void printBuffer();
 
 bool text_mode_enabled = true;
 
-static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y) {
-    uint8_t * framebuffer = (uint8_t *) VBE_mode_info->framebuffer;
+static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite) {
+    uint8_t * framebuffer = directWrite ? (uint8_t *) VBE_mode_info->framebuffer : backbuffer;
     uint64_t offset = (x * ((VBE_mode_info->bpp)/8)) + (y * VBE_mode_info->pitch);
     framebuffer[offset]     =  (hexColor) & 0xFF;
     framebuffer[offset+1]   =  (hexColor >> 8) & 0xFF; 
     framebuffer[offset+2]   =  (hexColor >> 16) & 0xFF;
 }
 
-void swapBuffers() {/* 
-    uint8_t *temp = VBE_mode_info->framebuffer; 
-    VBE_mode_info->framebuffer = backbuffer;
-    actualBuffer = temp; */
+void swapBuffers() {
+    vsync_wait();
+    memcpy(VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
 
 void canvasMode() {
 	text_mode_enabled = false;
-	clearCanvas();
+    clearCanvas();
 }
 
 void clearCanvas() {
-	uint64_t total_pixels = (uint64_t)VBE_mode_info->width * VBE_mode_info->height;
-    uint32_t *dest = (uint32_t *)VBE_mode_info->framebuffer;
-    memset(dest, 0, total_pixels);
+    memset(backbuffer, 0, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
 
 void drawPixel(uint64_t x, uint64_t y, uint32_t color) {
-	putPixel(color, x, y);
+	putPixel(color, x, y, false);
 }
 
 static int abs(int number) {
@@ -94,7 +91,7 @@ void drawLine(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t thick
     while (1) {
         for (int i = 0; i < thickness; i++) {
             for (int j = 0; j < thickness; j++) {
-                putPixel(color, x1 + i, y1 + j);
+                putPixel(color, x1 + i, y1 + j, false);
             }
         }
         if (x1 == x2 && y1 == y2) break;
@@ -120,7 +117,7 @@ void drawRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t 
 void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color) {
 	for (uint64_t y = y1; y <= y2; y++) {
         for (uint64_t x = x1; x <= x2; x++) {
-            putPixel(color, x, y);
+            putPixel(color, x, y, false);
         }
     }
 }
@@ -128,14 +125,14 @@ void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uin
 static void drawCirclePoints(uint64_t x_center, uint64_t y_center, int x, int y, uint16_t thickness, uint32_t color) {
     for (int i = 0; i < thickness; i++) {
         for (int j = 0; j < thickness; j++) {
-            putPixel(color, x_center + x + i, y_center + y + j);
-            putPixel(color, x_center - x + i, y_center + y + j);
-            putPixel(color, x_center + x + i, y_center - y + j);
-            putPixel(color, x_center - x + i, y_center - y + j);
-            putPixel(color, x_center + y + i, y_center + x + j);
-            putPixel(color, x_center - y + i, y_center + x + j);
-            putPixel(color, x_center + y + i, y_center - x + j);
-            putPixel(color, x_center - y + i, y_center - x + j);
+            putPixel(color, x_center + x + i, y_center + y + j, false);
+            putPixel(color, x_center - x + i, y_center + y + j, false);
+            putPixel(color, x_center + x + i, y_center - y + j, false);
+            putPixel(color, x_center - x + i, y_center - y + j, false);
+            putPixel(color, x_center + y + i, y_center + x + j, false);
+            putPixel(color, x_center - y + i, y_center + x + j, false);
+            putPixel(color, x_center + y + i, y_center - x + j, false);
+            putPixel(color, x_center - y + i, y_center - x + j, false);
         }
     }
 }
@@ -164,7 +161,7 @@ void drawFilledCircle(uint64_t x_center, uint64_t y_center, uint16_t radius, uin
     for (int y = -radius; y <= radius; y++) {
         for (int x = -radius; x <= radius; x++) {
             if (x * x + y * y <= r2) {
-                putPixel(color, x_center + x, y_center + y);
+                putPixel(color, x_center + x, y_center + y, false);
             }
         }
     }
@@ -203,7 +200,7 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
 
                 unsigned char mask = 0x80 >> x_int;
                 if (mask & char_bitmap[y_int]) {
-                    putPixel(color, current_x + col_out, current_y + row_out);
+                    putPixel(color, current_x + col_out, current_y + row_out, true);
                 }
             }
         }
@@ -282,9 +279,9 @@ void printBuffer(int from, int to) {
 					for (int y = 0; y < 16; y++) {
 						unsigned char mask = 0x80 >> x;
 						if (mask & font8x16[text_buffer[i]][y])
-							putPixel(getHexColor(text_buffer[i+1]), ch*8+x, line*16+y);
+							putPixel(getHexColor(text_buffer[i+1]), ch*8+x, line*16+y, true);
 						else
-							putPixel(getHexColor(text_buffer[i+1] >> 4), ch*8+x, line*16+y);
+							putPixel(getHexColor(text_buffer[i+1] >> 4), ch*8+x, line*16+y, true);
 					}
 				}
 			}

@@ -19,7 +19,8 @@ void strcpy(char* dest, const char* src) {
 }
 
 void strcat(char* dest, const char* src) {
-
+    while (*dest != '\0') dest++;
+    while ((*dest++ = *src++));
 }
 
 char * strchr(const char *s, char c) {

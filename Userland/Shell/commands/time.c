@@ -1,13 +1,11 @@
 #include <commands.h>
 #include <stdint.h>
 #include <inout.h>
+#include "../lib/time.h"
 
-extern void sys_get_time(uint8_t* buffer);
-extern uint64_t sys_get_ms();
-
-int getTime() {
+int time() {
     uint8_t datetime[6];  
-    sys_get_time(datetime);
+    getDateTime(datetime);
     
     print("Fecha: ");
     printHex(datetime[2]);  // Dia

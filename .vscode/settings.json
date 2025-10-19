@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "time.h": "c"
+        "time.h": "c",
+        "inout.h": "c",
+        "stdint.h": "c",
+        "commands.h": "c"
     }
 }

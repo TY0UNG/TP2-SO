@@ -2,6 +2,7 @@
 #define NAIVE_CONSOLE_H
 
 #include <stdint.h>
+#include <lib.h>
 
 void ncSetStyle(char style);
 void ncPrint(const char * string);
