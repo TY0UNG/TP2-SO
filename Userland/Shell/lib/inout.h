@@ -17,4 +17,6 @@ void printChar(char c);
 void printHex(uint8_t value);
 void printDec(uint64_t number);
 
+uint8_t getKey(int* is_release);
+
 #endif

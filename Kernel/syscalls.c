@@ -26,6 +26,7 @@ static int syscall_clear_canvas(Registers * registers);
 static int syscall_swap_buffers(Registers * registers);
 static int syscall_time(Registers *registers);
 static uint64_t syscall_ms(Registers *registers);
+static uint64_t syscall_get_key(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -59,6 +60,8 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_time(registers);
     case 14:
         return syscall_ms(registers);
+    case 15:
+        return syscall_get_key(registers);
     default:
         break;
     }
@@ -241,4 +244,18 @@ int syscall_time(Registers * registers){
 
 uint64_t syscall_ms(Registers * registers){
     return getMilisFromBoot();
+}
+
+// Retorna el scancode en los bits 0-7, el ascii en bits 8-15 y el 'is_release' en bit 16
+// Si no hay tecla, retorna 0
+uint64_t syscall_get_key(Registers * registers) {
+    if (isKeyBufferEmpty()) return 0;
+
+    KeyEvent event = getNextKey();
+    // Guarda en un uint64_t: scancode | (ascii << 8) | (is_release << 16)
+    uint64_t result = event.scancode;
+    result |= ((uint64_t)event.ascii) << 8;
+    result |= ((uint64_t)event.is_release) << 16;
+    
+    return result;
 }

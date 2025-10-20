@@ -14,6 +14,7 @@ GLOBAL sys_clear_canvas
 GLOBAL sys_swap_buffers
 GLOBAL sys_get_time
 GLOBAL sys_get_ms
+GLOBAL sys_get_key
 
 
 %macro START_SYSCALL 0
@@ -140,5 +141,11 @@ sys_get_time:
 sys_get_ms:
     START_SYSCALL
     mov rax, 14
+    int 80h
+    END_SYSCALL
+
+sys_get_key:
+    START_SYSCALL
+    mov rax, 15
     int 80h
     END_SYSCALL

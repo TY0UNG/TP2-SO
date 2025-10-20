@@ -20,10 +20,11 @@ static void zero_division(ExceptionStackFrame *frame);
 static void invalid_opcode(ExceptionStackFrame *frame);
 
 void exceptionDispatcher(ExceptionStackFrame *frame, int exception) {
-    if (exception == ZERO_EXCEPTION_ID)
+    if (exception == ZERO_EXCEPTION_ID) {
         zero_division(frame);
-	if (exception == INVALID_OPCODE_ID)
+    } if (exception == INVALID_OPCODE_ID) {
         invalid_opcode(frame);
+    }
 }
 
 static void zero_division(ExceptionStackFrame *frame) {
