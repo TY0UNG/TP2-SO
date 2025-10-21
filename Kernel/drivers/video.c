@@ -58,11 +58,15 @@ static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite
     framebuffer[offset+1]   =  (hexColor >> 8) & 0xFF; 
     framebuffer[offset+2]   =  (hexColor >> 16) & 0xFF;
 }
-
+/*
+/   Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer 
+/
+*/
 void swapBuffers() {
     vsync_wait();
     memcpy(VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
+
 
 void canvasMode() {
 	text_mode_enabled = false;
@@ -233,7 +237,9 @@ void clearTextBuffer() {
 	cursor = 0;
 	offset = 0;
 	clearCanvas();
+    swapBuffers();                      //lo actualiza para que se vea el cambio                
 }
+
 
 static uint32_t makeColor(uint8_t r, uint8_t g, uint8_t b) {
     return (r << VBE_mode_info->red_position) |

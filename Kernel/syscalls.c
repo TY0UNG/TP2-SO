@@ -103,7 +103,8 @@ int syscall_read(Registers * registers) {
 }
 
 int syscall_clear(Registers * registers) {
-    clearTextBuffer();  
+    clearTextBuffer();
+    
     return 0;
 }
 
