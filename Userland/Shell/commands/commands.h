@@ -13,4 +13,6 @@ int fps();
 int dividezero();
 int invalidop();
 
+int regs();         // imprime los registros 
+
 #endif

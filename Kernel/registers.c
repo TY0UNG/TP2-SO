@@ -1,8 +1,12 @@
 
 #include <video.h>
 #include <stdint.h>
+#include <time.h>
+
+
 
 typedef struct {
+    uint8_t time[6];
     uint64_t rax, rbx, rcx, rdx;
     uint64_t rsi, rdi, rbp, rsp;
     uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
@@ -11,8 +15,106 @@ typedef struct {
     uint16_t cs, ds, es, fs, gs, ss;
 } RegisterDump;
 
+static RegisterDump regs;
+
+
+
+#define MAX_DUMP_SIZE 2048   // tamaño máximo del texto 
+
+static char dump_buffer[MAX_DUMP_SIZE];
+static int dump_index = 0;
+
+/////////
+
+void printHexToBuffer(uint8_t value) {
+    const char *hex = "0123456789ABCDEF";
+    appendChar(hex[(value >> 4) & 0xF]);
+    appendChar(hex[value & 0xF]);
+}
+
+void printHex16ToBuffer(uint16_t value) {
+    printHexToBuffer(value >> 8);
+    printHexToBuffer(value & 0xFF);
+}
+
+void printHex64ToBuffer(uint64_t value) {
+    for (int i = 60; i >= 0; i -= 4)
+        appendChar("0123456789ABCDEF"[(value >> i) & 0xF]);
+}
+
+// agrega una cadena al buffer
+void append(const char *text) {
+    while (*text && dump_index < MAX_DUMP_SIZE - 1)
+        dump_buffer[dump_index++] = *text++;
+    dump_buffer[dump_index] = '\0'; // null-terminate
+}
+
+// agrega un solo carácter
+void appendChar(char c) {
+    if (dump_index < MAX_DUMP_SIZE - 1)
+        dump_buffer[dump_index++] = c;
+    dump_buffer[dump_index] = '\0';
+}
+
+/////////
+void DoArray() {
+    dump_index = 0; // reiniciamos el buffer
+
+    append(" TIME: "); 
+    append("Fecha: ");
+    printHexToBuffer(regs.time[2]);  appendChar('/');
+    printHexToBuffer(regs.time[1]);  appendChar('/');
+    printHexToBuffer(regs.time[0]);  appendChar('\n');
+    
+    append("Hora:  ");
+    printHexToBuffer(regs.time[3] - 3); appendChar(':');
+    printHexToBuffer(regs.time[4]);     appendChar(':');
+    printHexToBuffer(regs.time[5]);     appendChar('\n');
+
+    append("\n========== REGISTER DUMP ==========\n");
+    
+    append(" RAX: "); printHex64ToBuffer(regs.rax);
+    append("  RBX: "); printHex64ToBuffer(regs.rbx); append("\n");
+    
+    append(" RCX: "); printHex64ToBuffer(regs.rcx);
+    append("  RDX: "); printHex64ToBuffer(regs.rdx); append("\n");
+    
+    append(" RSI: "); printHex64ToBuffer(regs.rsi);
+    append("  RDI: "); printHex64ToBuffer(regs.rdi); append("\n");
+    
+    append(" RBP: "); printHex64ToBuffer(regs.rbp);
+    append("  RSP: "); printHex64ToBuffer(regs.rsp); append("\n");
+    
+    append(" R8:  "); printHex64ToBuffer(regs.r8);
+    append("  R9:  "); printHex64ToBuffer(regs.r9); append("\n");
+    
+    append(" R10: "); printHex64ToBuffer(regs.r10);
+    append("  R11: "); printHex64ToBuffer(regs.r11); append("\n");
+    
+    append(" R12: "); printHex64ToBuffer(regs.r12);
+    append("  R13: "); printHex64ToBuffer(regs.r13); append("\n");
+    
+    append(" R14: "); printHex64ToBuffer(regs.r14);
+    append("  R15: "); printHex64ToBuffer(regs.r15); append("\n");
+    
+    append("RIP: "); printHex64ToBuffer(regs.rip); append("\n");
+    append("RFLAGS: "); printHex64ToBuffer(regs.rflags); append("\n");
+    
+    append(" CS: "); printHex16ToBuffer(regs.cs);
+    append("  DS: "); printHex16ToBuffer(regs.ds);
+    append("  ES: "); printHex16ToBuffer(regs.es); append("\n");
+    
+    append(" FS: "); printHex16ToBuffer(regs.fs);
+    append("  GS: "); printHex16ToBuffer(regs.gs);
+    append("  SS: "); printHex16ToBuffer(regs.ss); append("\n");
+    
+    append("===================================\n");
+}
+
+
 void dump_registers() {
-    RegisterDump regs;
+    
+    getTime(regs.time);
     
     // Capturar registros
     __asm__ volatile (
@@ -54,44 +156,12 @@ void dump_registers() {
     
     __asm__ volatile ("pushfq; popq %0" : "=r"(regs.rflags));
     __asm__ volatile ("lea (%%rip), %0" : "=r"(regs.rip));
+
+    DoArray();              //vuelve todo un array en   dump_buffer         
     
-    // Imprimir 
-    print("\n========== REGISTER DUMP ==========\n");
-    
-    print(" RAX: "); printHex64(regs.rax);
-    print("  RBX: "); printHex64(regs.rbx); print("\n");
-    
-    print(" RCX: "); printHex64(regs.rcx);
-    print("  RDX: "); printHex64(regs.rdx); print("\n");
-    
-    print(" RSI: "); printHex64(regs.rsi);
-    print("  RDI: "); printHex64(regs.rdi); print("\n");
-    
-    print(" RBP: "); printHex64(regs.rbp);
-    print("  RSP: "); printHex64(regs.rsp); print("\n");
-    
-    print(" R8:  "); printHex64(regs.r8);
-    print("  R9:  "); printHex64(regs.r9); print("\n");
-    
-    print(" R10: "); printHex64(regs.r10);
-    print("  R11: "); printHex64(regs.r11); print("\n");
-    
-    print(" R12: "); printHex64(regs.r12);
-    print("  R13: "); printHex64(regs.r13); print("\n");
-    
-    print(" R14: "); printHex64(regs.r14);
-    print("  R15: "); printHex64(regs.r15); print("\n");
-    
-    print("RIP: "); printHex64(regs.rip); print("\n");
-    print("RFLAGS: "); printHex64(regs.rflags); print("\n");
-    
-    print(" CS: "); printHex16(regs.cs);
-    print("  DS: "); printHex16(regs.ds);
-    print("  ES: "); printHex16(regs.es); print("\n");
-    
-    print(" FS: "); printHex16(regs.fs);
-    print("  GS: "); printHex16(regs.gs);
-    print("  SS: "); printHex16(regs.ss); print("\n");
-    
-    print("===================================\n");
+}
+
+
+const char * get_register_dump() {
+    return dump_buffer;
 }

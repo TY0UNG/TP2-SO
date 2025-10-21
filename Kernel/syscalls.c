@@ -29,6 +29,7 @@ static int syscall_swap_buffers(Registers * registers);
 static int syscall_time(Registers *registers);
 static uint64_t syscall_ms(Registers *registers);
 static KeyEvent * syscall_get_key(Registers *registers);
+static uint64_t sycall_getRegs(Registers * registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -64,11 +65,21 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_ms(registers);
     case 15:
         return syscall_get_key(registers);
+    case 16:
+        return sycall_getRegs(registers);
     default:
         break;
     }
     return 0;
+}   
+
+uint64_t sycall_getRegs(Registers * registers){                          /////ver esto 
+     return (uint64_t)get_register_dump();
 }
+
+/// /////////
+/// 
+
 
 int syscall_write(Registers * registers) {
     selectStyle(registers->rbx == 2 ? 0x04 : 0x0F);
@@ -87,19 +98,7 @@ int syscall_read(Registers * registers) {
         if (!isKeyBufferEmpty()) {
             KeyEvent event = getNextKey();
                 if (!event.is_release) {
-                    ///////////////////////////////
-                    if (event.ascii == '~') {
-                    print("\n");
-                    dump_registers();
-                    print("\nOS> ");
-                    // Redibujar el input actual
-                    for(int i = 0; i < size; i++) {
-                        printChar(input[i]);
-                    }
-                    continue;  // No agregar ~ al input
-                }
-                ///////////////////////////////
-
+                   
                     if(event.ascii == '\n') {
                         input[size] = 0;
                         print("\n");

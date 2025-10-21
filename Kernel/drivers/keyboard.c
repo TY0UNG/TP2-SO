@@ -5,9 +5,10 @@ extern char get_keyboard_output();
 
 static bool isPrintable(unsigned char scancode);
 
+void dump_registers();////
+void imptimir_Regs();
 
 
-//volatile bool dump_registers_requested = false;
 
 KeyEvent buffer[BUFFER_LENGHT];
 uint8_t size = 0;
@@ -76,6 +77,12 @@ void keyboard_handler() {
         isPrintable(scancode)
     };
     queue(event);
+    ////////
+    if (!is_release && scancode == 0x29 && isShiftPressed) {
+        dump_registers();                                           // aca tiene q guardar en un strut hora y vals 
+        
+    }
+    ///
 }
 
 bool isPrintable(unsigned char scancode) {
