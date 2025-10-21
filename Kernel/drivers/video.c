@@ -217,6 +217,7 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
 unsigned char text_buffer[4096];
 int cursor = 0;
 char selected_style = 0x0F;
+uint16_t text_size = 20;
 int offset = 0;
 
 void textMode() {

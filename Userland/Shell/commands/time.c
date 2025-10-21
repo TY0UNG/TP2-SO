@@ -3,7 +3,7 @@
 #include <inout.h>
 #include "../lib/time.h"
 
-int time() {
+int time(char ** argv, int argc) {
     uint8_t datetime[6];  
     getDateTime(datetime);
     
