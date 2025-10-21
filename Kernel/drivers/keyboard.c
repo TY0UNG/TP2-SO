@@ -5,6 +5,10 @@ extern char get_keyboard_output();
 
 static bool isPrintable(unsigned char scancode);
 
+
+
+//volatile bool dump_registers_requested = false;
+
 KeyEvent buffer[BUFFER_LENGHT];
 uint8_t size = 0;
 uint8_t head = 0;

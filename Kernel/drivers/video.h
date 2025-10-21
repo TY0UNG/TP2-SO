@@ -24,4 +24,10 @@ void deleteChar();
 void scrollDown();
 void scrollUp();
 
+
+///
+void printHex16(uint16_t value);
+void printHex32(uint32_t value);
+void printHex64(uint64_t value);
+
 #endif

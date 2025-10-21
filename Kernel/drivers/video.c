@@ -340,3 +340,49 @@ void scrollUp() {
 	offset++;
 	printBuffer(offset, cursor);
 }
+
+
+
+/////////////// ver si aca 
+
+void printHex64(uint64_t value) {
+    char hex[17];  // 16 dg + null 
+    const char* digits = "0123456789ABCDEF";
+    
+    for (int i = 15; i >= 0; i--) {
+        hex[15 - i] = digits[(value >> (i * 4)) & 0xF];
+    }
+    hex[16] = '\0';
+    
+    print("0x");
+    print(hex);
+}
+
+void printHex32(uint32_t value) {
+    char hex[9];
+    const char* digits = "0123456789ABCDEF";
+    
+    for (int i = 7; i >= 0; i--) {
+        hex[7 - i] = digits[(value >> (i * 4)) & 0xF];
+    }
+    hex[8] = '\0';
+    
+    print("0x");
+    print(hex);
+}
+
+void printHex16(uint16_t value) {
+    char hex[5];
+    const char* digits = "0123456789ABCDEF";
+    
+    for (int i = 3; i >= 0; i--) {
+        hex[3 - i] = digits[(value >> (i * 4)) & 0xF];
+    }
+    hex[4] = '\0';
+    
+    print("0x");
+    print(hex);
+}
+
+
+////////////

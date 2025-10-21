@@ -4,6 +4,8 @@
 #include <interrupts.h>
 #include "./drivers/time.h"
 
+void dump_registers();          ////
+
 typedef struct {
     uint64_t rax;
     uint64_t rbx;
@@ -81,9 +83,23 @@ int syscall_read(Registers * registers) {
     _sti();
 
     while(1) {
+        
         if (!isKeyBufferEmpty()) {
             KeyEvent event = getNextKey();
                 if (!event.is_release) {
+                    ///////////////////////////////
+                    if (event.ascii == '~') {
+                    print("\n");
+                    dump_registers();
+                    print("\nOS> ");
+                    // Redibujar el input actual
+                    for(int i = 0; i < size; i++) {
+                        printChar(input[i]);
+                    }
+                    continue;  // No agregar ~ al input
+                }
+                ///////////////////////////////
+
                     if(event.ascii == '\n') {
                         input[size] = 0;
                         print("\n");

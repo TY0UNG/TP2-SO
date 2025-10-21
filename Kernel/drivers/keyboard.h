@@ -21,4 +21,7 @@ KeyEvent getNextKey();
 
 void clearKeyBuffer();
 
+
+//extern volatile bool dump_registers_requested;
+
 #endif

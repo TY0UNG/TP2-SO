@@ -7,7 +7,7 @@ Name             Origin             Length             Attributes
 Linker script and memory map
 
 
-.text           0x0000000000100000     0x3310
+.text           0x0000000000100000     0x3424
                 0x0000000000100000                text = .
  *(.text*)
  .text          0x0000000000100000       0x11 loader.o
@@ -31,103 +31,111 @@ Linker script and memory map
                 0x000000000010068d                uintToBase
  .text          0x000000000010076c      0x19c moduleLoader.o
                 0x000000000010076c                loadModules
- .text          0x0000000000100908      0x5a8 syscalls.o
-                0x0000000000100908                sysCallDispatcher
- .text          0x0000000000100eb0      0x21b drivers/keyboard.o
-                0x0000000000100eb0                isFull
-                0x0000000000100ec2                isKeyBufferEmpty
-                0x0000000000100ed4                clearKeyBuffer
-                0x0000000000100ef0                queue
-                0x0000000000100f74                getNextKey
-                0x0000000000100fdf                keyboard_handler
- .text          0x00000000001010cb        0x0 drivers/mouse.o
- .text          0x00000000001010cb      0x2a1 drivers/screen.o
-                0x00000000001010cb                ncPrint
-                0x0000000000101136                ncPrintChar
-                0x000000000010117b                ncNewline
-                0x00000000001011b5                ncPrintDec
-                0x00000000001011d5                ncPrintHex
-                0x00000000001011f5                ncPrintBin
-                0x0000000000101215                ncPrintBase
-                0x0000000000101245                ncDelChar
-                0x00000000001012e5                ncClear
-                0x0000000000101352                ncSetStyle
- .text          0x000000000010136c       0x47 drivers/tick.o
-                0x000000000010136c                timer_handler
-                0x0000000000101385                ticks_elapsed
-                0x0000000000101392                seconds_elapsed
- .text          0x00000000001013b3      0x125 drivers/time.o
-                0x00000000001013b3                calibrateMilis
-                0x0000000000101426                getMilisFromBoot
-                0x0000000000101447                getTime
- .text          0x00000000001014d8     0x1088 drivers/video.o
-                0x000000000010158b                swapBuffers
-                0x00000000001015da                canvasMode
-                0x00000000001015f2                clearCanvas
-                0x000000000010162d                drawPixel
-                0x0000000000101671                drawLine
-                0x00000000001017b2                drawRectangle
-                0x0000000000101870                drawFilledRectangle
-                0x0000000000101b00                drawCircle
-                0x0000000000101bc9                drawFilledCircle
-                0x0000000000101c63                drawText
-                0x0000000000101e7e                textMode
-                0x0000000000101eba                selectStyle
-                0x0000000000101ed4                clearTextBuffer
-                0x0000000000102328                print
-                0x00000000001023af                printChar
-                0x000000000010241d                deleteChar
-                0x0000000000102482                scrollDown
-                0x00000000001024e3                scrollUp
- .text          0x0000000000102560      0x265 asm/interrupts.o
-                0x0000000000102560                _hlt
-                0x0000000000102563                _cli
-                0x0000000000102565                _sti
-                0x0000000000102567                picMasterMask
-                0x0000000000102572                picSlaveMask
-                0x000000000010257d                _irq00Handler
-                0x00000000001025bb                _irq01Handler
-                0x00000000001025f9                _irq02Handler
-                0x0000000000102637                _irq03Handler
-                0x0000000000102675                _irq04Handler
-                0x00000000001026b3                _irq05Handler
-                0x00000000001026f1                _exception0Handler
-                0x000000000010272e                _exception6Handler
-                0x000000000010276b                _sysCallHandler
-                0x00000000001027c2                haltcpu
- *fill*         0x00000000001027c5        0xb 
- .text          0x00000000001027d0        0xa asm/keyboard.o
-                0x00000000001027d0                get_keyboard_output
- *fill*         0x00000000001027da        0x6 
- .text          0x00000000001027e0       0x21 asm/libasm.o
-                0x00000000001027e0                cpuVendor
- *fill*         0x0000000000102801        0xf 
- .text          0x0000000000102810       0x3b asm/time.o
-                0x0000000000102810                getMilis
-                0x000000000010281a                getSeconds
-                0x0000000000102821                getMinutes
-                0x0000000000102828                getHour
-                0x000000000010282f                getDayOfWeek
-                0x0000000000102836                getDayOfMonth
-                0x000000000010283d                getMonth
-                0x0000000000102844                getYear
- *fill*         0x000000000010284b        0x5 
- .text          0x0000000000102850        0xf asm/video.o
-                0x0000000000102850                vsync_wait
+ .text          0x0000000000100908      0x331 registers.o
+                0x0000000000100908                dump_registers
+ .text          0x0000000000100c39      0x60e syscalls.o
+                0x0000000000100c39                sysCallDispatcher
+ .text          0x0000000000101247      0x21b drivers/keyboard.o
+                0x0000000000101247                isFull
+                0x0000000000101259                isKeyBufferEmpty
+                0x000000000010126b                clearKeyBuffer
+                0x0000000000101287                queue
+                0x000000000010130b                getNextKey
+                0x0000000000101376                keyboard_handler
+ .text          0x0000000000101462        0x0 drivers/mouse.o
+ .text          0x0000000000101462      0x2a1 drivers/screen.o
+                0x0000000000101462                ncPrint
+                0x00000000001014cd                ncPrintChar
+                0x0000000000101512                ncNewline
+                0x000000000010154c                ncPrintDec
+                0x000000000010156c                ncPrintHex
+                0x000000000010158c                ncPrintBin
+                0x00000000001015ac                ncPrintBase
+                0x00000000001015dc                ncDelChar
+                0x000000000010167c                ncClear
+                0x00000000001016e9                ncSetStyle
+ .text          0x0000000000101703       0x47 drivers/tick.o
+                0x0000000000101703                timer_handler
+                0x000000000010171c                ticks_elapsed
+                0x0000000000101729                seconds_elapsed
+ .text          0x000000000010174a      0x125 drivers/time.o
+                0x000000000010174a                calibrateMilis
+                0x00000000001017bd                getMilisFromBoot
+                0x00000000001017de                getTime
+ .text          0x000000000010186f     0x11e4 drivers/video.o
+                0x0000000000101922                swapBuffers
+                0x0000000000101971                canvasMode
+                0x0000000000101989                clearCanvas
+                0x00000000001019c4                drawPixel
+                0x0000000000101a08                drawLine
+                0x0000000000101b49                drawRectangle
+                0x0000000000101c07                drawFilledRectangle
+                0x0000000000101e97                drawCircle
+                0x0000000000101f60                drawFilledCircle
+                0x0000000000101ffa                drawText
+                0x0000000000102215                textMode
+                0x0000000000102251                selectStyle
+                0x000000000010226b                clearTextBuffer
+                0x00000000001026bf                print
+                0x0000000000102746                printChar
+                0x00000000001027b4                deleteChar
+                0x0000000000102819                scrollDown
+                0x000000000010287a                scrollUp
+                0x00000000001028f7                printHex64
+                0x000000000010296b                printHex32
+                0x00000000001029dd                printHex16
+ *fill*         0x0000000000102a53        0xd 
+ .text          0x0000000000102a60      0x265 asm/interrupts.o
+                0x0000000000102a60                _hlt
+                0x0000000000102a63                _cli
+                0x0000000000102a65                _sti
+                0x0000000000102a67                picMasterMask
+                0x0000000000102a72                picSlaveMask
+                0x0000000000102a7d                _irq00Handler
+                0x0000000000102abb                _irq01Handler
+                0x0000000000102af9                _irq02Handler
+                0x0000000000102b37                _irq03Handler
+                0x0000000000102b75                _irq04Handler
+                0x0000000000102bb3                _irq05Handler
+                0x0000000000102bf1                _exception0Handler
+                0x0000000000102c2e                _exception6Handler
+                0x0000000000102c6b                _sysCallHandler
+                0x0000000000102cc2                haltcpu
+ *fill*         0x0000000000102cc5        0xb 
+ .text          0x0000000000102cd0        0xa asm/keyboard.o
+                0x0000000000102cd0                get_keyboard_output
+ *fill*         0x0000000000102cda        0x6 
+ .text          0x0000000000102ce0       0x21 asm/libasm.o
+                0x0000000000102ce0                cpuVendor
+ *fill*         0x0000000000102d01        0xf 
+ .text          0x0000000000102d10       0x3b asm/time.o
+                0x0000000000102d10                getMilis
+                0x0000000000102d1a                getSeconds
+                0x0000000000102d21                getMinutes
+                0x0000000000102d28                getHour
+                0x0000000000102d2f                getDayOfWeek
+                0x0000000000102d36                getDayOfMonth
+                0x0000000000102d3d                getMonth
+                0x0000000000102d44                getYear
+ *fill*         0x0000000000102d4b        0x5 
+ .text          0x0000000000102d50        0xf asm/video.o
+                0x0000000000102d50                vsync_wait
                 0x0000000000103000                . = ALIGN (0x1000)
- *fill*         0x000000000010285f      0x7a1 
+ *fill*         0x0000000000102d5f      0x2a1 
                 0x0000000000103000                rodata = .
  *(.rodata*)
  .rodata        0x0000000000103000       0x38 exceptions.o
  .rodata        0x0000000000103038       0xc9 kernel.o
  .rodata        0x0000000000103101       0x3d moduleLoader.o
  *fill*         0x000000000010313e        0x2 
- .rodata        0x0000000000103140       0xa1 syscalls.o
- *fill*         0x00000000001031e1       0x1f 
- .rodata        0x0000000000103200       0x7a drivers/keyboard.o
- *fill*         0x000000000010327a        0x6 
- .rodata        0x0000000000103280       0x10 drivers/screen.o
- .rodata        0x0000000000103290       0x80 drivers/video.o
+ .rodata        0x0000000000103140       0xfd registers.o
+ *fill*         0x000000000010323d        0x3 
+ .rodata        0x0000000000103240       0xa7 syscalls.o
+ *fill*         0x00000000001032e7       0x19 
+ .rodata        0x0000000000103300       0x7a drivers/keyboard.o
+ *fill*         0x000000000010337a        0x6 
+ .rodata        0x0000000000103380       0x10 drivers/screen.o
+ .rodata        0x0000000000103390       0x94 drivers/video.o
 
 .data           0x0000000000104000      0x894
                 0x0000000000104000                data = .
@@ -138,6 +146,7 @@ Linker script and memory map
  .data          0x0000000000104000        0x0 kernel.o
  .data          0x0000000000104000        0x0 lib.o
  .data          0x0000000000104000        0x0 moduleLoader.o
+ .data          0x0000000000104000        0x0 registers.o
  .data          0x0000000000104000        0x0 syscalls.o
  .data          0x0000000000104000        0x0 drivers/keyboard.o
  .data          0x0000000000104000        0x0 drivers/mouse.o
@@ -165,6 +174,7 @@ Linker script and memory map
  .bss           0x0000000000105008        0x0 kernel.o
  .bss           0x0000000000105008        0x8 lib.o
  .bss           0x0000000000105010        0x4 moduleLoader.o
+ .bss           0x0000000000105014        0x0 registers.o
  .bss           0x0000000000105014        0x4 syscalls.o
  *fill*         0x0000000000105018        0x8 
  .bss           0x0000000000105020      0x400 drivers/keyboard.o
@@ -194,6 +204,7 @@ LOAD irqDispatcher.o
 LOAD kernel.o
 LOAD lib.o
 LOAD moduleLoader.o
+LOAD registers.o
 LOAD syscalls.o
 LOAD drivers/keyboard.o
 LOAD drivers/mouse.o
@@ -209,20 +220,21 @@ LOAD asm/time.o
 LOAD asm/video.o
 OUTPUT(kernel.bin binary)
 
-.comment        0x0000000000000000      0x1a0
+.comment        0x0000000000000000      0x1c0
  .comment       0x0000000000000000       0x20 exceptions.o
  .comment       0x0000000000000020       0x20 idtLoader.o
  .comment       0x0000000000000040       0x20 irqDispatcher.o
  .comment       0x0000000000000060       0x20 kernel.o
  .comment       0x0000000000000080       0x20 lib.o
  .comment       0x00000000000000a0       0x20 moduleLoader.o
- .comment       0x00000000000000c0       0x20 syscalls.o
- .comment       0x00000000000000e0       0x20 drivers/keyboard.o
- .comment       0x0000000000000100       0x20 drivers/mouse.o
- .comment       0x0000000000000120       0x20 drivers/screen.o
- .comment       0x0000000000000140       0x20 drivers/tick.o
- .comment       0x0000000000000160       0x20 drivers/time.o
- .comment       0x0000000000000180       0x20 drivers/video.o
+ .comment       0x00000000000000c0       0x20 registers.o
+ .comment       0x00000000000000e0       0x20 syscalls.o
+ .comment       0x0000000000000100       0x20 drivers/keyboard.o
+ .comment       0x0000000000000120       0x20 drivers/mouse.o
+ .comment       0x0000000000000140       0x20 drivers/screen.o
+ .comment       0x0000000000000160       0x20 drivers/tick.o
+ .comment       0x0000000000000180       0x20 drivers/time.o
+ .comment       0x00000000000001a0       0x20 drivers/video.o
 
 .note.GNU-stack
                 0x0000000000000000        0x0
@@ -238,6 +250,8 @@ OUTPUT(kernel.bin binary)
                 0x0000000000000000        0x0 lib.o
  .note.GNU-stack
                 0x0000000000000000        0x0 moduleLoader.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 registers.o
  .note.GNU-stack
                 0x0000000000000000        0x0 syscalls.o
  .note.GNU-stack

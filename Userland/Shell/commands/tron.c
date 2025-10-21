@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include "../lib/time.h"
 #include "inout.h"
+//#include "../../../Kernel/drivers/keyboard.h"
+extern volatile bool dump_registers_requested;
+void dump_registers();
 
 void sleep(uint64_t ms) {
     uint64_t start = getMilisFromBoot();
@@ -39,6 +42,12 @@ int tron(char ** argv, int argc) {
 
     // --- Bucle principal de la animación ---
     while (1) {
+        
+        /*
+        
+        
+        
+        */
         // 1. CALCULAR DELTA TIME
         // ---------------------------------------------------------------------
         uint64_t current_time = getMilisFromBoot();
