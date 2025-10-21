@@ -30,16 +30,17 @@ int commandDispatcher(char * input) {
     if (strcmp(cmd, "invalidop") == 0) invalidop();
     /* Fin de prueba de excepciones */
 
-    if (strcmp(cmd, "exit") == 0) shutdown();
+    if (strcmp(cmd, "exit") == 0) shutdown(argsv, argc);
     if (strcmp(cmd, "help") == 0) return help(argsv, argc);
     if (strcmp(cmd, "clear") == 0) {
         clear();
         return 1;
     }
     if (strcmp(cmd, "tron") == 0) return tron(argsv, argc); 
+    if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);
     if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
-    if(strcmp(cmd, "time") == 0) return time();
-    if(strcmp(cmd, "fps") == 0) return fps();
+    if (strcmp(cmd, "time") == 0) return time(argsv, argc);
+    if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
 }

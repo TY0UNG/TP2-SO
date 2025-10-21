@@ -10,3 +10,8 @@ void getDateTime(uint8_t* buffer) {
 uint64_t getMilisFromBoot() {
     return sys_get_ms();
 }
+
+void sleep(uint64_t ms) {
+    uint64_t start = getMilisFromBoot();
+    while (getMilisFromBoot() < start + ms);
+}

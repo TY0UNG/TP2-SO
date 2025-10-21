@@ -3,7 +3,7 @@
 #include "../lib/str.h"
 #include "../lib/time.h"
 
-int fps() {
+int fps(char ** argv, int argc) {
     enableGraphicsMode();
 
     uint32_t color = 0x00000000;
