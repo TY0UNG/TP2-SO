@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define STDOUT 1
 #define STDERR 2
@@ -17,6 +18,13 @@ void printChar(char c);
 void printHex(uint8_t value);
 void printDec(uint64_t number);
 
-uint8_t getKey(int* is_release);
+typedef struct key_event {
+    uint8_t scancode;
+    uint8_t ascii;
+    bool is_release;
+    bool printable;
+} KeyEvent;
+
+KeyEvent * getKey();
 
 #endif

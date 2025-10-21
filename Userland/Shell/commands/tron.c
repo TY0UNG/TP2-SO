@@ -2,6 +2,7 @@
 #include <draw.h>
 #include <stddef.h>
 #include "../lib/time.h"
+#include "inout.h"
 
 void sleep(uint64_t ms) {
     uint64_t start = getMilisFromBoot();
@@ -79,6 +80,12 @@ int tron(char ** argv, int argc) {
         if (y - radius < 0) {
             y = radius;
             vy = -vy * RESTITUTION;
+        }
+
+        KeyEvent * key = getKey();
+
+        if (key != NULL && key->scancode == 1) {
+            break;
         }
 
         // 4. RENDERIZAR EL FOTOGRAMA

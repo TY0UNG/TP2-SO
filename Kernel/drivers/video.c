@@ -200,7 +200,7 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
 
                 unsigned char mask = 0x80 >> x_int;
                 if (mask & char_bitmap[y_int]) {
-                    putPixel(color, current_x + col_out, current_y + row_out, true);
+                    putPixel(color, current_x + col_out, current_y + row_out, false);
                 }
             }
         }
@@ -218,6 +218,7 @@ int offset = 0;
 void textMode() {
 	text_mode_enabled = true;
 	clearCanvas();
+    swapBuffers();
 	printBuffer(offset, cursor);
 }
 

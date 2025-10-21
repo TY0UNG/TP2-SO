@@ -7,6 +7,7 @@ int echo(char ** argv, int argc);
 int tron(char ** argv, int argc);
 int shutdown();
 int time();
+int fps();
 
 /* Para probar excepciones, borrarse (junto con test.c) cuando se terminen de validar */
 int dividezero();

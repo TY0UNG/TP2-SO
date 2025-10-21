@@ -39,6 +39,7 @@ int commandDispatcher(char * input) {
     if (strcmp(cmd, "tron") == 0) return tron(argsv, argc); 
     if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
     if(strcmp(cmd, "time") == 0) return time();
+    if(strcmp(cmd, "fps") == 0) return fps();
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
 }
