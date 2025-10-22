@@ -17,6 +17,7 @@ typedef struct {
 
 static RegisterDump regs;
 
+extern void addregs(RegisterDump* regs_ptr);
 
 
 #define MAX_DUMP_SIZE 2048   // tamaño máximo del texto 
@@ -60,8 +61,7 @@ void appendChar(char c) {
 void DoArray() {
     dump_index = 0; // reiniciamos el buffer
 
-    append(" TIME: "); 
-    append("Fecha: ");
+    append(" TIME: "); append("Fecha: ");
     printHexToBuffer(regs.time[2]);  appendChar('/');
     printHexToBuffer(regs.time[1]);  appendChar('/');
     printHexToBuffer(regs.time[0]);  appendChar('\n');
@@ -114,49 +114,8 @@ void DoArray() {
 
 void dump_registers() {
     
-    getTime(regs.time);
-    
-    // Capturar registros
-    __asm__ volatile (
-        "movq %%rax, %0\n"
-        "movq %%rbx, %1\n"
-        "movq %%rcx, %2\n"
-        "movq %%rdx, %3\n"
-        "movq %%rsi, %4\n"
-        "movq %%rdi, %5\n"
-        "movq %%rbp, %6\n"
-        "movq %%rsp, %7\n"
-        : "=m"(regs.rax), "=m"(regs.rbx), "=m"(regs.rcx), "=m"(regs.rdx),
-          "=m"(regs.rsi), "=m"(regs.rdi), "=m"(regs.rbp), "=m"(regs.rsp)
-    );
-    
-    __asm__ volatile (
-        "movq %%r8, %0\n"
-        "movq %%r9, %1\n"
-        "movq %%r10, %2\n"
-        "movq %%r11, %3\n"
-        "movq %%r12, %4\n"
-        "movq %%r13, %5\n"
-        "movq %%r14, %6\n"
-        "movq %%r15, %7\n"
-        : "=m"(regs.r8), "=m"(regs.r9), "=m"(regs.r10), "=m"(regs.r11),
-          "=m"(regs.r12), "=m"(regs.r13), "=m"(regs.r14), "=m"(regs.r15)
-    );
-    
-    __asm__ volatile (
-        "movw %%cs, %0\n"
-        "movw %%ds, %1\n"
-        "movw %%es, %2\n"
-        "movw %%fs, %3\n"
-        "movw %%gs, %4\n"
-        "movw %%ss, %5\n"
-        : "=m"(regs.cs), "=m"(regs.ds), "=m"(regs.es),
-          "=m"(regs.fs), "=m"(regs.gs), "=m"(regs.ss)
-    );
-    
-    __asm__ volatile ("pushfq; popq %0" : "=r"(regs.rflags));
-    __asm__ volatile ("lea (%%rip), %0" : "=r"(regs.rip));
-
+    getTime(regs.time); 
+    addregs(&regs);
     DoArray();              //vuelve todo un array en   dump_buffer         
     
 }

@@ -4,8 +4,10 @@
 
 static void int_20();
 static void int_21();
+extern void backupregs();
 
 void irqDispatcher(uint64_t irq) {
+	backupregs();
 	switch (irq) {
 		case 0:
 			int_20();
