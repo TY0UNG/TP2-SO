@@ -6,7 +6,7 @@
 
 extern sys_get_reg();
 
-int regs(){
+int regs(char ** argv, int argc){
     char *vec = sys_get_reg();   
 
     if (vec == 0 || vec[0] == '\0') {   
