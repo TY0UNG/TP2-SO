@@ -4,7 +4,7 @@
 
 static int show_welcome = 1;    // si se vuelve a llamar a la shell, no se resetea a 1 pues se guarda en section .data
 
-static int commandDispatcher(char * input);
+ int commandDispatcher(char * input);                       //quito static para q la pueda llamar speed  (VERRRRRRR!!!!!!!!)
 
 int main() {
     char input[256];
@@ -30,18 +30,25 @@ int commandDispatcher(char * input) {
     if (strcmp(cmd, "invalidop") == 0) invalidop();
     /* Fin de prueba de excepciones */
 
-    if (strcmp(cmd, "exit") == 0) shutdown(argsv, argc);
-    if (strcmp(cmd, "help") == 0) return help(argsv, argc);
-    if (strcmp(cmd, "clear") == 0) {
-        clear();
-        return 1;
+    if(argc==1){
+        if (strcmp(cmd, "exit") == 0) shutdown(argsv, argc);
+        if (strcmp(cmd, "help") == 0) return help(argsv, argc);
+        if (strcmp(cmd, "clear") == 0) {
+            clear();
+            return 1;
+        }
+        if (strcmp(cmd, "tron") == 0) {
+            return tron(argsv, argc); 
+            }
+        if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);
+        if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
+        if (strcmp(input, "registros") == 0) return regs(argsv, argc);
+        if (strcmp(cmd, "time") == 0) return time(argsv, argc);
+        if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
+    
     }
-    if (strcmp(cmd, "tron") == 0) return tron(argsv, argc); 
-    if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);
-    if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
-    if (strcmp(input, "registros") == 0) return regs(argsv, argc);
-    if (strcmp(cmd, "time") == 0) return time(argsv, argc);
-    if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
+    if (argc<3&& strcmp(cmd, "speed") == 0) return speed(argsv, argc);
+
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
 }

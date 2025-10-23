@@ -14,6 +14,7 @@ int shutdown(char ** argv, int argc);
 int time(char ** argv, int argc);
 int fps(char ** argv, int argc);
 int regs(char ** argv, int argc);
+int speed(char ** argv, int argc);
 
 /* Para probar excepciones, borrarse (junto con test.c) cuando se terminen de validar */
 int dividezero();
