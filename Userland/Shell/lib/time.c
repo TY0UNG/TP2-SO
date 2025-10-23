@@ -27,7 +27,7 @@ void printTime(uint8_t * datetime){
     printChar('\n');
     
     print("Hora:  ");
-    printHex((datetime[3] - 3));  // Hora
+    printHex((datetime[3] + 24 - 3) % 24);  // Hora
     printChar(':');
     printHex(datetime[4]);  // Minutos
     printChar(':');
@@ -37,22 +37,37 @@ void printTime(uint8_t * datetime){
     return;
 }
 
-uint8_t * difTime(uint8_t * Time_0,uint8_t * Time_1){               //falta ver q si sea de dim 6 
-    uint8_t dif_T[6];
+void printHR_M_S(uint8_t * datetime){
+    
+    printHex((datetime[3]));  // Hora
+     print(" Hs  ");
+    printHex(datetime[4]);  // Minutos
+    print(" min  ");
 
+    printHex(datetime[5]);  // Segundos
+    print(" sg  ");
+    
+}
+
+uint8_t * difTime(uint8_t * Time_0,uint8_t * Time_1, uint8_t * result){               //falta ver q si sea de dim 6 
+    
+    int limits[] = {100, 12, 31, 24, 60, 60};                   ///verrrr
     int num=0;
-   for(int i = 5; i > 0; i--) {    
-       
-              
-        int aux= Time_1[i] - Time_0[i]-num;  
+   
+    for(int i = 5; i >= 0; i--) {
+        int aux = Time_1[i] - Time_0[i] - num;
         
-        if(num!=0)  num=0;
-        if(aux<0){
-         aux=0;
-         num=aux*-1;
+        if(aux < 0) {
+            aux += limits[i];
+            num = 1;
+        } else {
+            num = 0;
         }
-        dif_T[i]=(uint8_t)aux;
+        
+        result[i]=(uint8_t)aux;
     }
 
-    return dif_T;
+    
+
+    
 }
