@@ -9,12 +9,13 @@ typedef struct {
 Commands command_list[] = {
     // SISTEMA
     {"help", " display online manual documentation pages", "  SISTEM"},
-    {"shutdown", " close down the system at a given time", "  SISTEM"},
+    {"exit", " close down the system at a given time", "  SISTEM"},
     // OTRAS FUNC
     {"time", " Muestra fecha y hora actual", "  DATA SIST."},
-    {"regs", " Muestra registros del CPU", "  DATA SIST."},
+    {"registros", " Muestra registros del CPU", "  DATA SIST."},
     //BENCHMARKING
     {"fps", " Muestra frames por segundo", "  BENCHMARKING"},
+    {"speed <COMAND>", " show processing time of command", "  BENCHMARKING"},
     // UTILIDADES
     {"echo", " write arguments to the standard output", "  UTILITIES"},
     // JUEGO
@@ -24,7 +25,7 @@ Commands command_list[] = {
 };
 
 void print_command(const char *name, const char *description) {
-    int maxNameWidth = 12; // columna donde empieza el "-"
+    int maxNameWidth = 20; // columna donde empieza el "-"
     int len = 0;
     while (name[len] != '\0') len++;
 
