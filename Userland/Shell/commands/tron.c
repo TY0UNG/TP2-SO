@@ -47,7 +47,7 @@ void startText(){
     clearCanvas();
     drawTextCentered( "Iniciando juego...",200, 25, 0x00FF00,SCREEN_WIDTH);
     swapBuffers();
-    sleep(2);   
+    sleep(9);   
 }
 
 
@@ -56,14 +56,16 @@ int tron(char **argv, int argc) {
     enableGraphicsMode();
 
     int mode = menu();
+    
 
     // --- INICIALIZAR JUEGO ---
 
-    startText();           
+               
 
     
     uint64_t last_time = getMilisFromBoot();
-
+    if(mode!=0){
+    startText();
     while (1) {
         KeyEvent *key = getKey();
         if (key != NULL && key->scancode == 1) { // ESC para salir
@@ -79,10 +81,12 @@ int tron(char **argv, int argc) {
         
         clearCanvas();
         //Se juega con el modo q eligio 
+        drawText(10, 10, "DEL para volver a menu",19, 0xAAAAAA);
         drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100,25, 0x00FFFF,SCREEN_WIDTH);
         
         //drawTextCentered(" lslslsls...",400, 25, 0x00FF00);
         swapBuffers();
+    }
     }
 
     disableGraphicsMode();
