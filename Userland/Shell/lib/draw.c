@@ -86,6 +86,26 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
     sys_draw_text(&params);
 }
 
+
+void drawTextCentered(const char* text, uint64_t y, uint16_t height, uint32_t color,const int SCREEN_WIDTH) {                  
+    if (!text) return;
+
+    uint16_t char_width = 8;
+    uint16_t char_height = 16;
+
+    // Scale factor que usa drawText
+    float scale_factor = (float)height / (float)char_height;
+    if (scale_factor < 1.0f) scale_factor = 1.0f;
+
+    // Ancho total del texto en píxeles
+    float text_width = strlen(text) * char_width * scale_factor;
+
+    // Coordenada X para centrar en pantalla
+    uint64_t x = (SCREEN_WIDTH - (uint64_t)text_width) / 2;
+
+    drawText(x, y, text, height, color);
+}
+
 void clearCanvas() {
     sys_clear_canvas();
 }

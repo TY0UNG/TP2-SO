@@ -60,4 +60,6 @@ void clearCanvas();
 
 void swapBuffers();
 
+void drawTextCentered(const char* text, uint64_t y, uint16_t height, uint32_t color,const int SCREEN_WIDTH);
+
 #endif
