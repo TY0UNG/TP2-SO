@@ -61,7 +61,7 @@ KeyEvent getNextKey() {
     return event;
 }
 
-void keyboard_handler() {
+void keyboard_handler() {                                        // ver esto !!!!!!!!!!!
     uint8_t raw_scancode = get_keyboard_output();
     int is_release = raw_scancode & 0x80;
     uint8_t scancode = raw_scancode & 0x7F;

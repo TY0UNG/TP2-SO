@@ -21,6 +21,7 @@ GLOBAL _sysCallHandler
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN sysCallDispatcher
+EXTERN saved_stack_ptr									;;;;;
 
 SECTION .text
 
@@ -62,6 +63,10 @@ SECTION .text
 
 %macro irqHandlerMaster 1
 	pushState
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	mov [saved_stack_ptr], rsp	; Guardar el puntero al stack en variable global
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	mov rdi, %1 ; pasaje de parametro
 	call irqDispatcher
@@ -195,6 +200,7 @@ haltcpu:
 
 SECTION .bss
 	aux resq 1
+	
 
 SECTION .data
 	registers:

@@ -20,6 +20,7 @@ static RegisterDump regs;
 extern void addregs(RegisterDump* regs_ptr);
 
 
+
 #define MAX_DUMP_SIZE 2048   // tamaño máximo del texto 
 
 static char dump_buffer[MAX_DUMP_SIZE];
@@ -112,7 +113,7 @@ void DoArray() {
 }
 
 
-void dump_registers() {
+void dump_registers(void* Back_regs) {
     
     getTime(regs.time); 
     addregs(&regs);
