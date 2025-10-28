@@ -43,6 +43,26 @@ int menu(){
     return mode;
 }
 
+
+int  waitForContinue() {                    // 1 si di salir 
+    clearCanvas();
+    drawTextCentered("Presiona ENTER para continuar", SCREEN_HEIGHT/2 + 50, 20, 0xFFFF00, SCREEN_WIDTH);
+    swapBuffers();
+    
+    while (1) {
+        KeyEvent *key = getKey();
+        if (key != NULL) {
+            if (key->scancode == 1) { // ESC
+                return 1;
+            }
+            if (key->scancode == 28/*ver bien el numero */) { // ENTER
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
 void startText(){
     clearCanvas();
     drawTextCentered( "Iniciando juego...",200, 25, 0x00FF00,SCREEN_WIDTH);
@@ -60,8 +80,8 @@ int tron(char **argv, int argc) {
 
     // --- INICIALIZAR JUEGO ---
 
-               
 
+    
     
     uint64_t last_time = getMilisFromBoot();
     if(mode!=0){
@@ -81,11 +101,42 @@ int tron(char **argv, int argc) {
         
         clearCanvas();
         //Se juega con el modo q eligio 
-        drawText(10, 10, "DEL para volver a menu",19, 0xAAAAAA);
-        drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100,25, 0x00FFFF,SCREEN_WIDTH);
+        int maxLives=3;
+        int flag=0;                         //0 para continuar 1 para terminar 
+
+        for(int livesP1=0 ,livesP2=0; 1&&flag==0 ; ){// esto podria ser una funcion aparte    //el p2 es puede ser la maquina                           
+            drawText(10, 10, "DEL para volver a menu",19, 0xAAAAAA);
+            drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100,25, 0x00FFFF,SCREEN_WIDTH);
+            
+            // IDEA 
+
+            //se arma arma el juego, si es de un player se juega con flechas y si es d dos p2 a w d
+            
+            /*
+            se hace lectura de teclado 
+
+            //-------Si chocan ---------
+
+            if(){                               //aca si se impacta solo el p1      
+                livesP1++;
+            }
+              if(){                             //aca si se impacta solo el p2
+                livesP2++;
+            }
+            
+            // obs si chocan a la vez no se suna 
+
+            //si alguno choca vamos a una especie de menu pera dar  enter para continuar 
+              
+                flag= waitForContinue();            
+
+            }
+                    
+            */
+            swapBuffers();
+
+        }
         
-        //drawTextCentered(" lslslsls...",400, 25, 0x00FF00);
-        swapBuffers();
     }
     }
 
