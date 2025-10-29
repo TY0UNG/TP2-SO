@@ -58,6 +58,17 @@ void drawPlayer(Player *p) {
     }
     drawFilledRectangle(p->x, p->y, p->x + GRID_SIZE, p->y + GRID_SIZE, p->color);
 }
+
+void drawLivesCounter(int *livesP1, int *livesP2, int maxLives) {
+
+    drawFilledRectangle(840, 10, 1010, 40, 0x222222); drawRectangle(840, 10, 1010, 40, 2, COLOR_WALL);
+    
+    char lvText[26] = "P1=     P2= ";
+    lvText[4] = '0' + (maxLives - *livesP1);
+    lvText[12] = '0' + (maxLives - *livesP2);
+    drawText(850, 20, lvText, 22, 0xAAAAAA);
+}
+
 //////////////////////////////////////////////////////////////////////
 
 int checkCollision(Player *p) {
@@ -158,8 +169,7 @@ int menu(){
 
 
 void  waitForContinue() {                    
-    clearCanvas();
-    drawTextCentered("Presiona ENTER para continuar", SCREEN_HEIGHT/2 + 50, 20, 0xFFFF00, SCREEN_WIDTH);
+    drawTextCentered("Presiona ENTER para continuar", SCREEN_HEIGHT/2 + 100, 20, 0xFFFF00, SCREEN_WIDTH);
     swapBuffers();
     
     while (1) {
@@ -226,9 +236,10 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             if (col1 || col2) {                                     
     
                 if (col1 && !col2) {
-                    (*livesP2)++;
-                } else if (col2 && !col1) {
                     (*livesP1)++;
+                } else if (col2 && !col1) {
+                    
+                    (*livesP2)++;
                 }
                 // OBS: Si chocan ambos, no se suma nada
                 
@@ -244,19 +255,18 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 }
                 //ve vidas 
                 if (*livesP1 >= maxLives || *livesP2 >= maxLives) {
-                    if (*livesP1 >= maxLives) {
-                        clearCanvas();
-                        drawTextCentered("¡Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
-                        sleep(10);
-                         swapBuffers();
-                    } else {
-                        drawTextCentered(mode == 1 ? "¡CPU gana!" : "¡Player 2 gana!", SCREEN_HEIGHT/2, 30, COLOR_P2, SCREEN_WIDTH);
+                    clearCanvas();
+
+                    if (*livesP2 >= maxLives) {
+                        drawTextCentered(mode == 1 ? "GANASTE!" :"Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
                     }
-                    waitForContinue();
-                    return;
+                    else {
+                        drawTextCentered(mode == 1 ? "CPU gana!" : "Player 2 gana!", 100, 30, COLOR_P2, SCREEN_WIDTH);
+                    }
                 }
+
                 waitForContinue();
-                return 10; 
+                return ;                            //
             }
         
             clearCanvas();
@@ -277,10 +287,7 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             if (p2.alive) drawPlayer(&p2);
             
             drawText(10, 10, "DEL: Menu | ESC: Salir", 23, 0xAAAAAA);
-
-            char lvText[22] = "|P1=  | P2= |";
-            lvText[4] = '0' + ( 3 - *livesP1); lvText[11] = '0' + ( 3 - *livesP2 );
-            drawText(900, 20, lvText, 18, 0xAAAAAA);
+            drawLivesCounter(livesP1, livesP2,  maxLives);
             
             drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
             swapBuffers();
