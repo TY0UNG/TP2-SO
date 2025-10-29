@@ -245,7 +245,10 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 //ve vidas 
                 if (*livesP1 >= maxLives || *livesP2 >= maxLives) {
                     if (*livesP1 >= maxLives) {
-                        drawTextCentered("¡Player 1 gana!", SCREEN_HEIGHT/2, 30, COLOR_P1, SCREEN_WIDTH);
+                        clearCanvas();
+                        drawTextCentered("¡Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
+                        sleep(10);
+                         swapBuffers();
                     } else {
                         drawTextCentered(mode == 1 ? "¡CPU gana!" : "¡Player 2 gana!", SCREEN_HEIGHT/2, 30, COLOR_P2, SCREEN_WIDTH);
                     }
@@ -274,9 +277,11 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             if (p2.alive) drawPlayer(&p2);
             
             drawText(10, 10, "DEL: Menu | ESC: Salir", 23, 0xAAAAAA);
-            // hacer hacer string de vidas 
-            //actualiza las vidas q tiene cada uno 
-            drawText(900, 20, "P1= |P2= ", 18, 0xAAAAAA); 
+
+            char lvText[22] = "|P1=  | P2= |";
+            lvText[4] = '0' + ( 3 - *livesP1); lvText[11] = '0' + ( 3 - *livesP2 );
+            drawText(900, 20, lvText, 18, 0xAAAAAA);
+            
             drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
             swapBuffers();
         }
