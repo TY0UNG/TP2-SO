@@ -27,6 +27,7 @@ typedef struct {
     int x, y;
     int dir;
     int alive;
+    int power;                              // aca poner el boost de velocidad ???
     uint32_t color;
 } Player;
 
@@ -188,8 +189,8 @@ void  waitForContinue() {
 
 int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {                
     initGrid();
-    Player p1 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, COLOR_P1};
-    Player p2 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, COLOR_P2};
+    Player p2 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, COLOR_P2};
+    Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, COLOR_P1};
     
     uint64_t last_move = getMilisFromBoot();
     
