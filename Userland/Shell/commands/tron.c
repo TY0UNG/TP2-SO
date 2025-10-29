@@ -189,8 +189,8 @@ void  waitForContinue() {
 
 int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {                
     initGrid();
-    Player p2 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, COLOR_P2};
-    Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, COLOR_P1};
+    Player p2 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, 1,COLOR_P2};
+    Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, 1,COLOR_P1};
     
     uint64_t last_move = getMilisFromBoot();
     

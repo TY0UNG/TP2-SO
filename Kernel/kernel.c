@@ -137,7 +137,7 @@ play_sound(392, 17);  // Sol (final)
     print("                          ##  #####      #####      ##\n");
     print("                          ##                        ##\n");
     print("                          ############################\n\n");
-    print("                             SISTEMA OPERATIVO v1.0\n");
+    print("                             SISTEMA OPERATIVO \n");
     print("\n\n");
     print("                   Loading...\n");
    
