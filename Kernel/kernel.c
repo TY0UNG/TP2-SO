@@ -7,6 +7,9 @@
 #include <interrupts.h>
 #include <video.h>
 #include "./drivers/time.h"
+
+#include <audio.h>
+
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -90,6 +93,55 @@ void * initializeKernelBinary() {
 
 
 
+ 
+
+
+
+/////ESTO ES APARTE
+void MusicSO(){
+	// cancion de inicio de SO 
+	//luego ver cual poner 
+play_sound(392, 7);   // Sol
+play_sound(392, 7);   // Sol
+play_sound(392, 7);   // Sol
+play_sound(311, 15);  // Mi bemol
+play_sound(466, 5);   // Si bemol
+play_sound(392, 7);   // Sol
+play_sound(311, 15);  // Mi bemol
+play_sound(466, 5);   // Si bemol
+play_sound(392, 17);  // Sol
+/*play_sound(587, 7);   // Re
+play_sound(587, 7);   // Re
+play_sound(587, 7);   // Re
+play_sound(622, 14);  // Mi bemol (alto)
+play_sound(466, 5);   // Si bemol
+play_sound(370, 7);   // Fa sostenido
+play_sound(311, 14);  // Mi bemol
+play_sound(466, 5);   // Si bemol
+play_sound(392, 17);  // Sol (final)
+*/
+
+	while (!isAudioBufferEmpty()) {				
+        audio_handler();
+    }
+}
+
+ void imagenSO() {
+    print("\n\n\n\n\n\n\n\n");
+    print("                          ############################\n");
+    print("                          ##                        ##\n");
+    print("                          ##   #####     #####      ##\n");
+    print("                          ##  ##        ##   ##     ##\n");
+    print("                          ##   ###      ##   ##     ##\n");
+    print("                          ##     ##     ##   ##     ##\n");
+    print("                          ##  #####      #####      ##\n");
+    print("                          ##                        ##\n");
+    print("                          ############################\n\n");
+    print("                             SISTEMA OPERATIVO v1.0\n");
+    print("\n\n");
+    print("                   Loading...\n");
+   
+}
 
 int main()
 {	
@@ -97,11 +149,15 @@ int main()
     ncSetStyle(0x0F);
 
 	calibrateMilis();
-	
+
+	imagenSO();
+	MusicSO();
+	clearTextBuffer();
+
     ((EntryPoint)shell)();
 
-    print("Returned from shell (unexpected)");
-    ncNewline();
+    print("Returned from shell (unexpected)\n");
+    
     return 0;
 	
 
