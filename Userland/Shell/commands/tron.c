@@ -10,7 +10,7 @@
 
 #define GRID_SIZE 4
 #define SPEED 50 
-
+#define MARGINSUP (GRID_SIZE*20)
 // DIRECS
 #define UP 0
 #define RIGHT 1
@@ -18,10 +18,16 @@
 #define LEFT 3
 
 // Colores                           VER 
+/*
 #define COLOR_P1 0x00FFFF
 #define COLOR_P2 0xFF00FF
-#define COLOR_BACKGROUND 0x000000
+*/
+#define COLOR_P1 0x0080FF  
+#define COLOR_P2 0xFF4000  
+
+#define COLOR_BACKGROUND 0x222222
 #define COLOR_WALL 0xFFFFFF
+#define COLOR_GRID 0x333333
 
 typedef struct {
     int x, y;
@@ -70,13 +76,31 @@ void drawLivesCounter(int *livesP1, int *livesP2, int maxLives) {
     drawText(850, 20, lvText, 22, 0xAAAAAA);
 }
 
+void drawTable(int mode ,int *livesP1, int *livesP2, int maxLives){
+    drawWalls();
+    drawLivesCounter(livesP1, livesP2,  maxLives);
+    drawText(10, 20, "DEL: Menu | ESC: Salir", 23, 0xAAAAAA);
+    drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", MARGINSUP - 40 , 25, 0x00FFFF, SCREEN_WIDTH);               //ver
+    drawFilledRectangle(0, MARGINSUP - GRID_SIZE, SCREEN_WIDTH, MARGINSUP, COLOR_WALL);                                             //VER 
+    
+    // Fondo dentro de tablero 
+    drawFilledRectangle(GRID_SIZE, MARGINSUP, SCREEN_WIDTH - GRID_SIZE, SCREEN_HEIGHT - GRID_SIZE, COLOR_BACKGROUND);               //
+    
+    for (int x = GRID_SIZE; x <= SCREEN_WIDTH - GRID_SIZE; x += GRID_SIZE*6) {
+        drawFilledRectangle(x, MARGINSUP, x + 1, SCREEN_HEIGHT - GRID_SIZE, COLOR_GRID);
+    }
+    for (int y = MARGINSUP; y <= SCREEN_HEIGHT - GRID_SIZE; y += GRID_SIZE*6) {
+        drawFilledRectangle(GRID_SIZE, y, SCREEN_WIDTH - GRID_SIZE, y + 1, COLOR_GRID);
+    }
+
+}
 //////////////////////////////////////////////////////////////////////
 
 int checkCollision(Player *p) {
     int gx = p->x / GRID_SIZE; int gy = p->y / GRID_SIZE;
     
-    // bordes
-    if (p->x < GRID_SIZE || p->x >= SCREEN_WIDTH - GRID_SIZE ||p->y < GRID_SIZE || p->y >= SCREEN_HEIGHT - GRID_SIZE) {
+    // bordes           
+    if (p->x < GRID_SIZE || p->x >= SCREEN_WIDTH - GRID_SIZE ||p->y < MARGINSUP || p->y >= SCREEN_HEIGHT - GRID_SIZE) {           //ver
         return 1;
     }
     // Contrincantes   
@@ -169,7 +193,8 @@ int menu(){
 }
 
 
-void  waitForContinue() {                    
+void  waitForContinue() {           
+    drawWalls();         
     drawTextCentered("Presiona ENTER para continuar", SCREEN_HEIGHT/2 + 100, 20, 0xFFFF00, SCREEN_WIDTH);
     swapBuffers();
     
@@ -193,12 +218,14 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
     Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, 1,COLOR_P1};
     
     uint64_t last_move = getMilisFromBoot();
+    clearCanvas();
+    drawTable(mode,livesP1, livesP2,  maxLives);   
     
     while (1) {
         KeyEvent *key = getKey();
         
         // Control P1 
-        if (key != NULL) {
+        if (key != NULL) {                                                                                          // se puede hacer generico 
             if (key->scancode == 72 && p1.dir != DOWN) p1.dir = UP;             //  Arriba
             else if (key->scancode == 80 && p1.dir != UP) p1.dir = DOWN;        //  Abajo
             else if (key->scancode == 75 && p1.dir != RIGHT) p1.dir = LEFT;     // Izqu
@@ -242,21 +269,12 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                     
                     (*livesP2)++;
                 }
+
                 // OBS: Si chocan ambos, no se suma nada
                 
                 clearCanvas();
-                drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
-                char livesText[50];
-                if (mode == 1) {
-                    drawTextCentered("Player", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
-                    
-                } else {
-                    drawTextCentered("Player 1", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
-                    drawTextCentered("Player 2", SCREEN_HEIGHT/2 - 50, 25, COLOR_P2, SCREEN_WIDTH);
-                }
-                //ve vidas 
+                  //ve vidas 
                 if (*livesP1 >= maxLives || *livesP2 >= maxLives) {
-                    clearCanvas();
 
                     if (*livesP2 >= maxLives) {
                         drawTextCentered(mode == 1 ? "GANASTE!" :"Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
@@ -264,15 +282,26 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                     else {
                         drawTextCentered(mode == 1 ? "CPU gana!" : "Player 2 gana!", 100, 30, COLOR_P2, SCREEN_WIDTH);
                     }
+
+                }else{
+
+                    drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
+                    char livesText[50];
+                    if (mode == 1) {
+                        drawTextCentered("Player", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
+                        
+                    } else {
+                        drawTextCentered("Player 1", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
+                        drawTextCentered("Player 2", SCREEN_HEIGHT/2 - 50, 25, COLOR_P2, SCREEN_WIDTH);
+                    }
                 }
+              
 
                 waitForContinue();
                 return ;                            //
             }
         
-            clearCanvas();
-            drawWalls();
-            
+                                                               
             // Dibujar lineas
             for (int i = 0; i < SCREEN_HEIGHT/GRID_SIZE; i++) {
                 for (int j = 0; j < SCREEN_WIDTH/GRID_SIZE; j++) {
@@ -286,11 +315,7 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             
             if (p1.alive) drawPlayer(&p1);
             if (p2.alive) drawPlayer(&p2);
-            
-            drawText(10, 10, "DEL: Menu | ESC: Salir", 23, 0xAAAAAA);
-            drawLivesCounter(livesP1, livesP2,  maxLives);
-            
-            drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
+    
             swapBuffers();
         }
     }
