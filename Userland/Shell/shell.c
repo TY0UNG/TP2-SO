@@ -25,29 +25,25 @@ int commandDispatcher(char * input) {
     int argc = strparse(input, argsv, " ");
     char * cmd = argsv[0];
 
-    /* Para probar las excepciones, borrenlo cuando no se necesite más hacer los testeos */
+    if (strcmp(cmd, "help") == 0) return help(argsv, argc);
+    if (strcmp(cmd, "clear") == 0) {
+        clear();
+        return 1;
+    }
+    if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
+    if (strcmp(cmd, "exit") == 0) shutdown(argsv, argc);
+    
+    if (strcmp(input, "registros") == 0) return regs(argsv, argc);
+    if (strcmp(cmd, "time") == 0) return time(argsv, argc);
+    if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
+    if (strcmp(cmd, "speed") == 0) return speed(argsv, argc);
+    
+    if (strcmp(cmd, "tron") == 0) return tron(argsv, argc);
+    if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);
+    
+
     if (strcmp(cmd, "dividezero") == 0) dividezero();
     if (strcmp(cmd, "invalidop") == 0) invalidop();
-    /* Fin de prueba de excepciones */
-
-    if(argc==1){
-        if (strcmp(cmd, "exit") == 0) shutdown(argsv, argc);
-        if (strcmp(cmd, "help") == 0) return help(argsv, argc);
-        if (strcmp(cmd, "clear") == 0) {
-            clear();
-            return 1;
-        }
-        if (strcmp(cmd, "tron") == 0) {
-            return tron(argsv, argc); 
-            }
-        if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);
-        if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
-        if (strcmp(input, "registros") == 0) return regs(argsv, argc);
-        if (strcmp(cmd, "time") == 0) return time(argsv, argc);
-        if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
-    
-    }
-    if (argc<3&& strcmp(cmd, "speed") == 0) return speed(argsv, argc);
 
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
