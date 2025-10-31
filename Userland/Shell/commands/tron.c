@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "../lib/time.h"
 #include "inout.h"
+#include <sound.h>
 
 //VER TEMA DE PANTALLA 
 #define SCREEN_WIDTH 1024                                   
@@ -43,6 +44,60 @@ void initGrid() {       // Senaliza en  0
             grid[i][j] = 0;
         }
     }
+}
+////
+void inGameMusic(){                 /// esto se corre en segundo plano toca ver donde poner 
+    clear_audio_buffer();
+    play_sound(440, 220);   // La4
+    play_sound(0,   55);    // Pausa
+    play_sound(660, 220);   // Mi5
+    play_sound(0,   55);    // Pausa
+    play_sound(880, 220);   // La5
+    play_sound(0,   55);    // Pausa
+    play_sound(660, 220);   // Mi5
+    play_sound(0,   55);    // Pausa
+    play_sound(523, 220);   // Do5
+    play_sound(0,   55);    // Pausa
+    play_sound(698, 220);   // Fa5
+    play_sound(0,   55);    // Pausa
+    play_sound(880, 220);   // La5
+    play_sound(0,   55);    // Pausa
+    play_sound(440, 220);   // La4
+   
+    
+}
+void crashSound(){
+    clear_audio_buffer();
+
+    play_sound(200, 110);  // Tono grave (2 ticks)
+    play_sound(0, 55);     // Pausa (1 tick)
+    play_sound(80, 110);   // Tono más grave (2 ticks)
+    play_sound(0, 55);     // Pausa (1 tick)
+    play_sound(50, 110);   // Tono bajísimo (2 ticks)
+
+}
+
+void MenuMusic(){
+    clear_audio_buffer();
+
+    play_sound(440, 110);   // La4 (2 ticks)
+    play_sound(0,   55);    // Pausa (1 tick)
+    play_sound(523, 110);   // Do5 (2 ticks)
+    play_sound(0,   55);    // Pausa (1 tick)
+    play_sound(659, 110);   // Mi5 (2 ticks)
+    play_sound(0,   55);    // Pausa (1 tick)
+    play_sound(784, 165);   // Sol5 (3 ticks)
+    play_sound(0,   110);   // Pausa larga (2 ticks)
+    play_sound(784, 110);   // Sol5 (2 ticks)
+    play_sound(0,   55);    // Pausa (1 tick)
+    play_sound(587, 110);   // Re5 (2 ticks)
+    play_sound(0,   55);    // Pausa (1 tick)
+    play_sound(493, 110);   // Si4 (2 ticks)
+    play_sound(0,   55);    // Pausa (1 tick)
+    play_sound(392, 165);   // Sol4 (3 ticks)
+
+    play_sound(0,   330);
+
 }
 
 ////////////// dibuja ////////////////////////////
@@ -177,9 +232,9 @@ void updateMachine(Player *mach, Player *player) {                          /// 
 
 int menu(){
     int mode = 0; // 1 jugador o 2 jugadores 
-
     // MENU
     clearCanvas();
+    MenuMusic();
 
     drawTextCentered("=== TRON GAME ===", 200, 28, 0x00FFFF,SCREEN_WIDTH);
     drawTextCentered("Presiona 1 para un jugador", 300, 20, 0xFFFFFF,SCREEN_WIDTH);
@@ -236,6 +291,8 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
     drawTable(mode,livesP1, livesP2,  maxLives);   
     
     while (1) {
+        
+
         KeyEvent *key = getKey();
         
         // Control P1 
@@ -326,7 +383,9 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
 
 
     // Si hay choque 
-    if (col1 || col2) {                                     
+    if (col1 || col2) {
+        crashSound();
+
         if (col1 && !col2) {
             (*livesP2)++;
         } else if (col2 && !col1) {
@@ -334,16 +393,17 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
         }
         // OBS: Si chocan ambos, no se suma nada
         
-        clearCanvas();
+        
         //ve vidas 
         if (*livesP1 >= maxLives || *livesP2 >= maxLives) {
+            clearCanvas();
             if (*livesP1 >= maxLives) {
                 drawTextCentered(mode == 1 ? "GANASTE!" :"Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
             }
             else {
                 drawTextCentered(mode == 1 ? "CPU gana!" : "Player 2 gana!", 100, 30, COLOR_P2, SCREEN_WIDTH);
             }
-        } else {
+        } /*else {
             drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
             char livesText[50];
             if (mode == 1) {
@@ -352,9 +412,12 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 drawTextCentered("Player 1", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
                 drawTextCentered("Player 2", SCREEN_HEIGHT/2 - 50, 25, COLOR_P2, SCREEN_WIDTH);
             }
-        }
+        }*/
         
-        waitForContinue();
+        //waitForContinue();
+        drawTextCentered("Presiona DEL para continuar", SCREEN_HEIGHT/2 + 100, 20, 0xFFFF00, SCREEN_WIDTH);
+        swapBuffers();
+        check();
         return ;
     }
 
@@ -401,6 +464,8 @@ int tron(char **argv, int argc) {
         int maxLives = 3, livesP1 = 0, livesP2 = 0, flag=0;
 
         while (1) {
+            inGameMusic();                      ///VERRR 
+
             KeyEvent *key = getKey();
             if (key != NULL && key->scancode == 1) break; // ESC
             
@@ -422,6 +487,8 @@ int tron(char **argv, int argc) {
         }
     }
     }
+
+    clear_audio_buffer();
     disableGraphicsMode();
     return 0;
 }
@@ -430,10 +497,10 @@ void check(){       // Aca lo q haria es para ver el tema de dDEL ESC para salir
    
     while(1){
         KeyEvent *key = getKey();
-            if (key != NULL && key->scancode == 1) break; // ESC
+            if (key != NULL && key->scancode == 1){} // ESC
                 
-            if (key != NULL && key->scancode == 14) { // DEL
-            }           // ver bien 
+            if (key != NULL && key->scancode == 14) break;// DEL
+                   // ver bien 
     }
 
 

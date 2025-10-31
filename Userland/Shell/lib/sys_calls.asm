@@ -18,6 +18,11 @@ GLOBAL sys_get_key
 GLOBAL sys_get_reg
 GLOBAL sys_set_text_size
 
+GLOBAL sys_audio_handler
+GLOBAL sys_play_sound
+GLOBAL sys_is_audio_buffer_empty
+GLOBAL sys_clear_audio_buffer
+
 
 %macro START_SYSCALL 0
     push rbp
@@ -164,3 +169,36 @@ sys_set_text_size:
     mov rbx, rdi
     int 80h
     END_SYSCALL
+
+
+
+;;;;;; 
+
+sys_audio_handler:
+    START_SYSCALL
+    mov rax, 18
+    int 80h
+    END_SYSCALL
+
+sys_play_sound:
+    START_SYSCALL
+    mov rax, 19
+    mov rbx, rdi    ; frec
+    mov rcx, rsi    ; dur
+    int 80h
+    END_SYSCALL
+
+sys_is_audio_buffer_empty:      
+    START_SYSCALL
+    mov rax, 20
+    int 80h
+    END_SYSCALL
+
+sys_clear_audio_buffer:
+    START_SYSCALL
+    mov rax, 21
+    int 80h
+    END_SYSCALL
+
+
+

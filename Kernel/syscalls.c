@@ -2,6 +2,7 @@
 #include <keyboard.h>
 #include <video.h>
 #include <interrupts.h>
+#include <audio.h>
 #include "./drivers/time.h"
 
 extern const char * get_register_dump();
@@ -31,6 +32,11 @@ static uint64_t syscall_ms(Registers *registers);
 static KeyEvent * syscall_get_key(Registers *registers);
 static uint64_t sycall_getRegs(Registers * registers);
 static int syscall_set_text_size(Registers * registers);
+
+static int syscall_audio_handler(Registers *registers);
+static int syscall_play_sound(Registers *registers);
+static int syscall_is_audio_buffer_empty(Registers *registers);
+static int syscall_clear_audio_buffer(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -70,6 +76,19 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return sycall_getRegs(registers);
     case 17:
         return syscall_set_text_size(registers);
+
+    case 18:
+        return syscall_audio_handler(registers);
+            
+    case 19:
+        return syscall_play_sound(registers);
+            
+    case 20:
+        return syscall_is_audio_buffer_empty(registers);
+            
+    case 21:
+        return syscall_clear_audio_buffer(registers);
+
     default:
         break;
     }
@@ -113,6 +132,30 @@ int syscall_read(Registers * registers) {
         }
     }
 }
+
+
+int syscall_audio_handler(Registers *registers) {                           /// ver bien 
+    //audio_handler();
+    return 0;
+}
+
+int syscall_play_sound(Registers *registers) {
+    uint16_t frequency = (uint16_t)registers->rbx;
+    uint16_t duration = (uint16_t)registers->rcx;
+    play_sound(frequency, duration);
+    return 0;
+}
+
+int syscall_is_audio_buffer_empty(Registers *registers) {
+    return /*isAudioBufferEmpty() ? 1 :*/ 1;
+}
+
+int syscall_clear_audio_buffer(Registers *registers) {
+    clearAudioBuffer();
+    return 0;
+}
+
+
 
 int syscall_clear(Registers * registers) {
     clearTextBuffer();  
