@@ -17,6 +17,8 @@ GLOBAL sys_get_ms
 GLOBAL sys_get_key
 GLOBAL sys_get_reg
 
+EXTERN printHex
+
 
 %macro START_SYSCALL 0
     push rbp

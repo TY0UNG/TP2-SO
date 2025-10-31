@@ -15,7 +15,7 @@ size_t read(char* buffer);
 void clear();
 
 void printChar(char c);
-void printHex(uint8_t value);
+void printHex(uint64_t value);
 void printDec(uint64_t number);
 
 typedef struct key_event {

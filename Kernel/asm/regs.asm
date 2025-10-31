@@ -1,87 +1,96 @@
 section .text
-
-GLOBAL backupregs 
 GLOBAL addregs
 
-GLOBAL saved_stack_ptr             
-
-    backupregs:
-
-    mov [backrbp], rbp
-    ;mov [backrsp], [rsp + ]           ; bajo del return 
-    mov [backrsp], rsp 
-    mov [backrax] ,rax
-    mov [backrdi],rdi
-    ret 
+GLOBAL saved_stack_ptr
+GLOBAL initial_saved_stack_ptr       
 
 addregs:
-   ; RDI = puntero a struct(destino)
-    
-    
     mov rsi, [saved_stack_ptr]
+
+    mov rax, [rsi + 112]    ; Cargar RAX desde el stack
+    mov [rdi + 0], rax
+
+    mov rax, [rsi + 104]    ; Cargar RBX
+    mov [rdi + 8], rax
+
+    mov rax, [rsi + 96]     ; Cargar RCX
+    mov [rdi + 16], rax
+
+    mov rax, [rsi + 88]     ; Cargar RDX
+    mov [rdi + 24], rax
+
+    mov rax, [rsi + 80]     ; Cargar RBP
+    mov [rdi + 32], rax
+
+    mov rax, [rsi + 64]     ; Cargar RSI (el valor que tenía ANTES de los push)
+    mov [rdi + 40], rax
+
+    mov rax, [rsi + 72]     ; Cargar RDI (el valor que tenía ANTES de los push)
+    mov [rdi + 48], rax
+
+    mov rax, [rsi + 56]     ; Cargar R8
+    mov [rdi + 56], rax
+
+    mov rax, [rsi + 48]     ; Cargar R9
+    mov [rdi + 64], rax
+
+    mov rax, [rsi + 40]     ; Cargar R10
+    mov [rdi + 72], rax
+
+    mov rax, [rsi + 32]     ; Cargar R11
+    mov [rdi + 80], rax
+
+    mov rax, [rsi + 24]     ; Cargar R12
+    mov [rdi + 88], rax
+
+    mov rax, [rsi + 16]     ; Cargar R13
+    mov [rdi + 96], rax
     
-   
-    mov rax, [rsi + 0]       ; rax
-    mov [rdi + 6], rax
-    mov rax, [rsi + 8]       ; rbx
-    mov [rdi + 14], rax
-    mov rax, [rsi + 16]      ; rcx
-    mov [rdi + 22], rax
-    mov rax, [rsi + 24]      ; rdx
-    mov [rdi + 30], rax
-    mov rax, [rsi + 32]      ; rbp
-    mov [rdi + 38], rax
-    mov rax, [rsi + 40]      ; rdi orig
-    mov [rdi + 46], rax
-    mov rax, [rsi + 48]      ; rsi orig
-    mov [rdi + 54], rax
+    mov rax, [rsi + 8]      ; Cargar R14
+    mov [rdi + 104], rax
+
+    mov rax, [rsi + 0]      ; Cargar R15
+    mov [rdi + 112], rax
     
-    ; RSP original
-    lea rax, [rsi + 120 + 24]
-    mov [rdi + 62], rax
-    mov rax, [rsi + 56]      ; r8
-    mov [rdi + 70], rax
-    mov rax, [rsi + 64]      ; r9
-    mov [rdi + 78], rax
-    mov rax, [rsi + 72]      ; r10
-    mov [rdi + 86], rax
-    mov rax, [rsi + 80]      ; r11
-    mov [rdi + 94], rax
-    mov rax, [rsi + 88]      ; r12
-    mov [rdi + 102], rax
-    mov rax, [rsi + 96]      ; r13
-    mov [rdi + 110], rax
-    
-    mov rax, [rsi + 104]     ; r14
-    mov [rdi + 118], rax
-    mov rax, [rsi + 112]     ; r15
-    mov [rdi + 126], rax
-    
-    ; RIP 
+; -----------------------------------------------------------------------------
+; Copia del Stack Frame de la Interrupción (guardado por el CPU)
+; -----------------------------------------------------------------------------
+
+    ; RIP original (Instruction Pointer)
     mov rax, [rsi + 120]
-    mov [rdi + 134], rax
+    mov [rdi + 120], rax
     
-    ; RFLAGS
+    ; CS original (Code Segment)
+    mov ax, [rsi + 128]
+    mov [rdi + 144], ax ; Se guarda el QWORD completo por alineación
+
+    ; RFLAGS original
     mov rax, [rsi + 136]
-    mov [rdi + 142], rax
-    
-    ; Segments
-    mov ax, [rsi + 128]      ; CS
-    mov [rdi + 150], ax
+    mov [rdi + 128], rax
+
+    ; RSP original (Stack Pointer)
+    mov rax, [rsi + 144]
+    mov [rdi + 136], rax
+
+    ; SS original (Stack Segment)
+    mov ax, [rsi + 152]
+    mov [rdi + 148], ax ; Se guarda el QWORD completo por alineación
+
+; -----------------------------------------------------------------------------
+; Copia de otros Segmentos (no se guardan automáticamente)
+; Es correcto leerlos del estado actual de la máquina.
+; Asumimos que la struct tiene espacio para ellos después de SS.
+; -----------------------------------------------------------------------------
     mov ax, ds
-    mov [rdi + 152], ax
-    mov ax, es
-    mov [rdi + 154], ax  
-    mov ax, fs
-    mov [rdi + 156], ax
-    mov ax, gs
-    mov [rdi + 158], ax
-    mov ax, [rsi + 152]      ; SS
     mov [rdi + 160], ax
+    mov ax, es
+    mov [rdi + 162], ax
+    mov ax, fs
+    mov [rdi + 164], ax
+    mov ax, gs
+    mov [rdi + 166], ax
     
     ret
-
-    
 
 section .bss
 backrax: resq 1                 
@@ -90,3 +99,4 @@ backrsp: resq 1
 backrdi: resq 1 
 
 saved_stack_ptr resq 1      ;Donde estan guardados los registros 
+initial_saved_stack_ptr resq 1

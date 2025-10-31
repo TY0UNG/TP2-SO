@@ -1,19 +1,39 @@
-
 #include <video.h>
 #include <stdint.h>
 #include <time.h>
 
+typedef struct RegisterDump {
+    uint64_t rax;      // Offset 0
+    uint64_t rbx;      // Offset 8
+    uint64_t rcx;      // Offset 16
+    uint64_t rdx;      // Offset 24
+    uint64_t rbp;      // Offset 32
+    uint64_t rsi;      // Offset 40
+    uint64_t rdi;      // Offset 48
+    uint64_t r8;       // Offset 56
+    uint64_t r9;       // Offset 64
+    uint64_t r10;      // Offset 72
+    uint64_t r11;      // Offset 80
+    uint64_t r12;      // Offset 88
+    uint64_t r13;      // Offset 96
+    uint64_t r14;      // Offset 104
+    uint64_t r15;      // Offset 112
 
+    uint64_t rip;      // Offset 120
+    uint64_t rflags;   // Offset 128
+    uint64_t rsp;      // Offset 136
+    uint16_t cs;       // Offset 144
+    uint16_t ss;       // Offset 148
 
-typedef struct {
-    uint8_t time[6];
-    uint64_t rax, rbx, rcx, rdx;
-    uint64_t rsi, rdi, rbp, rsp;
-    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
-    uint64_t rip;
-    uint64_t rflags;
-    uint16_t cs, ds, es, fs, gs, ss;
-} RegisterDump;
+    uint16_t ds;       // Offset 152
+    uint16_t es;       // Offset 156
+    uint16_t fs;       // Offset 160
+    uint16_t gs;       // Offset 164
+    
+    uint64_t int_no;   // Número de la interrupción
+    uint64_t err_code; // Código de error
+
+} __attribute__((packed)) RegisterDump;
 
 static RegisterDump regs;
 
@@ -62,7 +82,7 @@ void appendChar(char c) {
 void DoArray() {
     dump_index = 0; // reiniciamos el buffer
 
-    append(" TIME: "); append("Fecha: ");
+    /* append(" TIME: "); append("Fecha: ");
     printHexToBuffer(regs.time[2]);  appendChar('/');
     printHexToBuffer(regs.time[1]);  appendChar('/');
     printHexToBuffer(regs.time[0]);  appendChar('\n');
@@ -70,7 +90,7 @@ void DoArray() {
     append("Hora:  ");
     printHexToBuffer(regs.time[3] - 3); appendChar(':');
     printHexToBuffer(regs.time[4]);     appendChar(':');
-    printHexToBuffer(regs.time[5]);     appendChar('\n');
+    printHexToBuffer(regs.time[5]);     appendChar('\n'); */
 
     append("\n========== REGISTER DUMP ==========\n");
     
@@ -98,8 +118,8 @@ void DoArray() {
     append(" R14: "); printHex64ToBuffer(regs.r14);
     append("  R15: "); printHex64ToBuffer(regs.r15); append("\n");
     
-    append("RIP: "); printHex64ToBuffer(regs.rip); append("\n");
-    append("RFLAGS: "); printHex64ToBuffer(regs.rflags); append("\n");
+    append(" RIP: "); printHex64ToBuffer(regs.rip); append("\n");
+    append(" RFLAGS: "); printHex64ToBuffer(regs.rflags); append("\n");
     
     append(" CS: "); printHex16ToBuffer(regs.cs);
     append("  DS: "); printHex16ToBuffer(regs.ds);
@@ -114,11 +134,9 @@ void DoArray() {
 
 
 void dump_registers(void* Back_regs) {
-    
-    getTime(regs.time); 
+    // getTime(regs.time); 
     addregs(&regs);
-    DoArray();              //vuelve todo un array en   dump_buffer         
-    
+    DoArray();
 }
 
 

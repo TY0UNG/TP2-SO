@@ -38,9 +38,11 @@ char hex_to_char(uint8_t value) {
         return 'A' + (value - 10);
 }
 
-void printHex(uint8_t value) {
-    printChar(hex_to_char((value >> 4) & 0x0F));
-    printChar(hex_to_char(value & 0x0F));
+void printHex(uint64_t value) {
+    for (int shift = 60; shift >= 0; shift -= 4) {
+        uint8_t nibble = (value >> shift) & 0x0F;
+        printChar(hex_to_char(nibble));
+    }
 }
 
 void printDec(uint64_t number) {

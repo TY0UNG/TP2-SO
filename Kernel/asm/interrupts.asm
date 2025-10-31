@@ -21,7 +21,9 @@ GLOBAL _sysCallHandler
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN sysCallDispatcher
-EXTERN saved_stack_ptr									;;;;;
+
+EXTERN saved_stack_ptr
+EXTERN initial_saved_stack_ptr
 
 SECTION .text
 
@@ -62,11 +64,11 @@ SECTION .text
 %endmacro
 
 %macro irqHandlerMaster 1
+	mov [initial_saved_stack_ptr], rsp
 	pushState
 
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	mov [saved_stack_ptr], rsp	; Guardar el puntero al stack en variable global
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; Guardar el puntero al stack en variable global
+	mov [saved_stack_ptr], rsp
 
 	mov rdi, %1 ; pasaje de parametro
 	call irqDispatcher

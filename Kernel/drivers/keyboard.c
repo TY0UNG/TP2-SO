@@ -6,7 +6,6 @@ extern char get_keyboard_output();
 static bool isPrintable(unsigned char scancode);
 
 void dump_registers();
-void imptimir_Regs();
 
 KeyEvent buffer[BUFFER_LENGHT];
 uint8_t size = 0;
