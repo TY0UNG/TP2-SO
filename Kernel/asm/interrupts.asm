@@ -73,9 +73,14 @@ SECTION .text
 	mov rdi, %1 ; pasaje de parametro
 	call irqDispatcher
 
-	; signal pic EOI (End of Interrupt)
+	; Signal PIC EOI (End of Interrupt).
+	; If the interrupt originated on the slave PIC we must acknowledge the slave
+	; first (port 0xA0) and then the master (port 0x20). Sending to the slave
+	; for master-only IRQs is harmless on most PIC implementations and keeps
+	; the logic simple.
 	mov al, 20h
-	out 20h, al
+	out 0A0h, al    ; send EOI to slave PIC
+	out 20h, al    ; send EOI to master PIC
 
 	popState
 	iretq
