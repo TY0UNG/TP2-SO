@@ -1,10 +1,12 @@
 #include <keyboard.h>
 #define BUFFER_LENGHT 255
 
-extern char get_keyboard_output();
+extern uint8_t get_keyboard_output(void);
 
 static bool isPrintable(unsigned char scancode);
 
+/* dump_registers expects a pointer parameter in its definition; pass NULL
+    here and declare it with the proper prototype to avoid ABI mismatch */
 void dump_registers();
 
 KeyEvent buffer[BUFFER_LENGHT];
@@ -36,7 +38,7 @@ bool isFull() {
 
 // isEmpty
 bool isKeyBufferEmpty() {
-    return size == 0;
+    return size <= 0;
 }
 
 void clearKeyBuffer() {
@@ -52,15 +54,20 @@ void queue(KeyEvent event) {
     size++;
 }
 
+KeyEvent null = {
+    0, 0, 0, 0 
+};
+
 // dequeue
 KeyEvent getNextKey() {
+    if (isKeyBufferEmpty()) return null;
     KeyEvent event = buffer[tail];
     tail = (tail+1)%BUFFER_LENGHT;
     size--;
     return event;
 }
 
-void keyboard_handler() {                                        // ver esto !!!!!!!!!!!
+void keyboard_handler() {
     uint8_t raw_scancode = get_keyboard_output();
     int is_release = raw_scancode & 0x80;
     uint8_t scancode = raw_scancode & 0x7F;

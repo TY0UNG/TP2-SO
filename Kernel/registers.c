@@ -133,7 +133,7 @@ void DoArray() {
 }
 
 
-void dump_registers(void* Back_regs) {
+void dump_registers() {
     // getTime(regs.time); 
     addregs(&regs);
     DoArray();

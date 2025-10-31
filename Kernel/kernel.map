@@ -76,30 +76,30 @@ Linker script and memory map
                 0x000000000010205b                calibrateMilis
                 0x00000000001020ce                getMilisFromBoot
                 0x00000000001020ef                getTime
- .text          0x0000000000102180     0x1756 drivers/video.o
+ .text          0x0000000000102180     0x1751 drivers/video.o
                 0x0000000000102233                swapBuffers
-                0x000000000010227d                canvasMode
-                0x0000000000102295                clearCanvas
-                0x00000000001022d0                drawPixel
-                0x0000000000102314                drawLine
-                0x0000000000102455                drawRectangle
-                0x0000000000102513                drawFilledRectangle
-                0x00000000001027a3                drawCircle
-                0x000000000010286c                drawFilledCircle
-                0x0000000000102906                drawText
-                0x0000000000102b21                textMode
-                0x0000000000102b5d                selectStyle
-                0x0000000000102b77                setTextSize
-                0x0000000000102bdf                clearTextBuffer
-                0x0000000000103248                print
-                0x00000000001032cf                printChar
-                0x000000000010333a                deleteChar
-                0x00000000001033ad                scrollDown
-                0x0000000000103413                scrollUp
-                0x000000000010377a                printHex64
-                0x00000000001037ee                printHex32
-                0x0000000000103860                printHex16
- *fill*         0x00000000001038d6        0xa 
+                0x0000000000102278                canvasMode
+                0x0000000000102290                clearCanvas
+                0x00000000001022cb                drawPixel
+                0x000000000010230f                drawLine
+                0x0000000000102450                drawRectangle
+                0x000000000010250e                drawFilledRectangle
+                0x000000000010279e                drawCircle
+                0x0000000000102867                drawFilledCircle
+                0x0000000000102901                drawText
+                0x0000000000102b1c                textMode
+                0x0000000000102b58                selectStyle
+                0x0000000000102b72                setTextSize
+                0x0000000000102bda                clearTextBuffer
+                0x0000000000103243                print
+                0x00000000001032ca                printChar
+                0x0000000000103335                deleteChar
+                0x00000000001033a8                scrollDown
+                0x000000000010340e                scrollUp
+                0x0000000000103775                printHex64
+                0x00000000001037e9                printHex32
+                0x000000000010385b                printHex16
+ *fill*         0x00000000001038d1        0xf 
  .text          0x00000000001038e0       0x51 asm/audio.o
                 0x00000000001038e0                output_audio_start
                 0x0000000000103919                stop_audio
