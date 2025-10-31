@@ -66,7 +66,7 @@ static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite
     framebuffer[offset+2]   =  (hexColor >> 16) & 0xFF;
 }
 
-extern void *memcpy(void *dest, const void *src, uint64_t n);
+extern void *fast_memcpy(void *dest, const void *src, uint64_t n);
 
 /*
 /   Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer 
