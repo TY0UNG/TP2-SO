@@ -38,13 +38,29 @@ char hex_to_char(uint8_t value) {
     else
         return 'A' + (value - 10);
 }
-
-void printHex(uint64_t value) {
+/*
+void printFullHex(uint64_t value) {
     for (int shift = 60; shift >= 0; shift -= 4) {
         uint8_t nibble = (value >> shift) & 0x0F;
         printChar(hex_to_char(nibble));
     }
+}*/
+
+void printHex(uint64_t value) {
+    int flag = 0; 
+    for (int shift = 60; shift >= 0; shift -= 4) {
+        uint8_t nibble = (value >> shift) & 0x0F;
+        if (nibble != 0 || flag) {
+            printChar(hex_to_char(nibble));
+            flag = 1;
+        }
+    }
+    if (!flag)  
+        printChar('0');
 }
+
+
+
 
 void printDec(uint64_t number) {
     char buffer[21];

@@ -7,5 +7,7 @@
 *.qcow2
 *.vmdk
 
+*.map
+
 #Object files
 *.o
