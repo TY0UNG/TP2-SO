@@ -359,74 +359,21 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
     }
 
 
-
-
-            /*
-            // Mueve players 
-            if (p1.alive) movePlayer(&p1);
-            if (p2.alive) movePlayer(&p2);
-            
-            int col1 = 0, col2 = 0;
-            if (p1.alive) col1 = checkCollision(&p1);
-            if (p2.alive) col2 = checkCollision(&p2);
-            
-            // Si hay choque 
-            if (col1 || col2) {                                     
-    
-                if (col1 && !col2) {
-                    (*livesP1)++;
-                } else if (col2 && !col1) {
-                    
-                    (*livesP2)++;
-                }
-
-                // OBS: Si chocan ambos, no se suma nada
-                
-                clearCanvas();
-                  //ve vidas 
-                if (*livesP1 >= maxLives || *livesP2 >= maxLives) {
-
-                    if (*livesP2 >= maxLives) {
-                        drawTextCentered(mode == 1 ? "GANASTE!" :"Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
-                    }
-                    else {
-                        drawTextCentered(mode == 1 ? "CPU gana!" : "Player 2 gana!", 100, 30, COLOR_P2, SCREEN_WIDTH);
-                    }
-
-                }else{
-
-                    drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
-                    char livesText[50];
-                    if (mode == 1) {
-                        drawTextCentered("Player", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
-                        
-                    } else {
-                        drawTextCentered("Player 1", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
-                        drawTextCentered("Player 2", SCREEN_HEIGHT/2 - 50, 25, COLOR_P2, SCREEN_WIDTH);
-                    }
-                }
-              
-
-                waitForContinue();
-                return ;                            //
+    // Dibujar lineas
+     for (int i = 0; i < SCREEN_HEIGHT/GRID_SIZE; i++) {
+        for (int j = 0; j < SCREEN_WIDTH/GRID_SIZE; j++) {
+            if (grid[i][j] == 1) {
+                 drawFilledRectangle(j*GRID_SIZE, i*GRID_SIZE, j*GRID_SIZE + GRID_SIZE, i*GRID_SIZE + GRID_SIZE, COLOR_P1);
+            } else if (grid[i][j] == 2) {
+                 drawFilledRectangle(j*GRID_SIZE, i*GRID_SIZE, j*GRID_SIZE + GRID_SIZE, i*GRID_SIZE + GRID_SIZE, COLOR_P2);
             }
-            */
-
-            // Dibujar lineas
-            for (int i = 0; i < SCREEN_HEIGHT/GRID_SIZE; i++) {
-                for (int j = 0; j < SCREEN_WIDTH/GRID_SIZE; j++) {
-                    if (grid[i][j] == 1) {
-                        drawFilledRectangle(j*GRID_SIZE, i*GRID_SIZE, j*GRID_SIZE + GRID_SIZE, i*GRID_SIZE + GRID_SIZE, COLOR_P1);
-                    } else if (grid[i][j] == 2) {
-                        drawFilledRectangle(j*GRID_SIZE, i*GRID_SIZE, j*GRID_SIZE + GRID_SIZE, i*GRID_SIZE + GRID_SIZE, COLOR_P2);
-                    }
-                }
-            }
+        }
+    }
             
-            if (p1.alive) drawPlayer(&p1);
-            if (p2.alive) drawPlayer(&p2);
+        if (p1.alive) drawPlayer(&p1);
+        if (p2.alive) drawPlayer(&p2);
     
-            swapBuffers();
+        swapBuffers();
             
         }
     }
