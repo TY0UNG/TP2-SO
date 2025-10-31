@@ -16,6 +16,7 @@ void clear();
 
 void printChar(char c);
 void printHex(uint64_t value);
+
 void printDec(uint64_t number);
 void setTextSize(uint16_t height);
 
