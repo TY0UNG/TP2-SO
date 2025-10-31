@@ -49,6 +49,8 @@ uint8_t * backbuffer = (void*)0x500000;
 extern void vsync_wait();
 
 static void printBuffer(int from, int to, bool fullRedraw);
+static void checkBufferOverflow();
+static int checkAndAutoScroll(bool redraw_all);
 
 bool text_mode_enabled = true;
 
@@ -219,7 +221,17 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
     }
 }
 
-unsigned char text_buffer[4096];
+#define TEXT_BUFFER_SIZE 32768  // 32KB total
+
+// Calcular cuántas líneas caben en pantalla con tamaño mínimo
+#define MIN_TEXT_SIZE 12
+#define MAX_TEXT_SIZE 64
+#define MAX_SCREEN_LINES (768 / MIN_TEXT_SIZE)  // = 64 líneas
+
+// Queremos recordar ~1.5 pantallas
+#define LINES_TO_REMEMBER (MAX_SCREEN_LINES * 3 / 2)  // = 96 líneas
+
+unsigned char text_buffer[TEXT_BUFFER_SIZE];
 int cursor = 0;
 char selected_style = 0x0F;
 int offset = 0;
@@ -236,8 +248,10 @@ void selectStyle(char style) {
 }
 
 void setTextSize(uint16_t height) {
-    if (height < 12 || height > 64) return;
+    if (height < MIN_TEXT_SIZE || height > MAX_TEXT_SIZE) return;
+    uint16_t old_size = text_size;
     text_size = height;
+    if (old_size != text_size) checkAndAutoScroll(true);
     printBuffer(offset, cursor, true);
 }
 
@@ -248,7 +262,7 @@ void clearTextBuffer() {
 	cursor = 0;
 	offset = 0;
 	clearCanvas();
-    swapBuffers();                      //lo actualiza para que se vea el cambio                
+    swapBuffers();  //lo actualiza para que se vea el cambio
 }
 
 
@@ -375,20 +389,36 @@ void printBuffer(int from, int to, bool fullRedraw) {
 	}
 }
 
+static void addToBuffer(char c) {
+    text_buffer[cursor++] = c;
+    text_buffer[cursor++] = selected_style;
+    checkBufferOverflow();
+}
+
 void print(const char* text) {
-	int initial = cursor;
-	while (*text != 0) {
-		text_buffer[cursor++] = *text;
-		text_buffer[cursor++] = selected_style;
-		text++;
-	}
-	if (text_mode_enabled) printBuffer(initial, cursor, false);
+    int initial = cursor;
+    while (*text != 0) {
+        addToBuffer(*text);
+        text++;
+    }
+    
+    if (text_mode_enabled) {
+        if (checkAndAutoScroll(true)) {
+            printBuffer(offset, cursor, true);
+        } else {
+            printBuffer(initial, cursor, false);
+        }
+    }
 }
 
 void printChar(char c) {
-	text_buffer[cursor++] = c;
-	text_buffer[cursor++] = selected_style;
-	if (text_mode_enabled) printBuffer(cursor - 2, cursor, false);
+    addToBuffer(c);
+    if (text_mode_enabled) {
+        printBuffer(cursor - 2, cursor, false);
+        if (checkAndAutoScroll(false)) {
+            printBuffer(offset, cursor, true);
+        }
+    }
 }
 
 void deleteChar() {
@@ -419,7 +449,93 @@ void scrollUp() {
 	printBuffer(offset, cursor, true);
 }
 
+void checkBufferOverflow() {
+    if (cursor < TEXT_BUFFER_SIZE - 512) return;  // Hay espacio (~256 chars), no hacer nada
+    
+    // Buffer casi lleno, eliminar líneas viejas. Para calcular cuántas líneas lógicas tenemos
+    int total_logical_lines = 0;
+    for (int i = 0; i < cursor; i += 2) {
+        if (text_buffer[i] == '\n') total_logical_lines++;
+    }
 
+    if (total_logical_lines > LINES_TO_REMEMBER) {
+        int lines_to_delete = 20;
+        int new_start = 0;
+        int deleted = 0;
+        
+        for (int i = 0; i < cursor && deleted < lines_to_delete; i += 2) {
+            if (text_buffer[i] == '\n') {
+                deleted++;
+                new_start = i + 2;
+            }
+        }
+        // Mover contenido hacia adelante
+        int bytes_to_move = cursor - new_start;
+        for (int i = 0; i < bytes_to_move; i++) {
+            text_buffer[i] = text_buffer[new_start + i];
+        }
+        cursor = bytes_to_move;
+        if (offset >= new_start) offset -= new_start;
+        else offset = 0;
+    }
+}
+
+int checkAndAutoScroll(bool redraw_all) {
+    int screen_height = VBE_mode_info->height;
+    int max_visual_lines = screen_height / text_size;
+    
+    float scale = (float)text_size / 16.0f;
+    int char_width = (int)(8 * scale);
+    int chars_per_line = VBE_mode_info->width / char_width;
+    
+    // Contar líneas visuales desde offset hasta cursor
+    int visual_lines = 1;
+    int col = 0;
+    
+    for (int i = offset; i < cursor; i += 2) {
+        char ch = text_buffer[i];
+        
+        if (ch == '\n') {
+            visual_lines++;
+            col = 0;
+        } else if (ch >= 32 && ch <= 126) {
+            col++;
+            if (col >= chars_per_line) {
+                visual_lines++;
+                col = 0;
+            }
+        }
+    }
+    
+    // Si excede las líneas visibles, hacer scroll
+    if (visual_lines > max_visual_lines) {
+        int lines_to_skip = redraw_all ? (visual_lines - max_visual_lines) : 1;
+        int skipped = 0;
+        col = 0;
+        
+        while (skipped < lines_to_skip && offset < cursor - 2) {
+            char ch = text_buffer[offset];
+            
+            if (ch == '\n') {
+                skipped++;
+                col = 0;
+                offset += 2;
+            } else if (ch >= 32 && ch <= 126) {
+                col++;
+                offset += 2;
+                
+                if (col >= chars_per_line) {
+                    skipped++;
+                    col = 0;
+                }
+            } else {
+                offset += 2;
+            }
+        }
+        return 1;  // Hubo scroll
+    }
+    return 0;  // No hubo scroll
+}
 
 /////////////// ver si aca 
 
