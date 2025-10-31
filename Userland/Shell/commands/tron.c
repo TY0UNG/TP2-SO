@@ -8,8 +8,8 @@
 #define SCREEN_WIDTH 1024                                   
 #define SCREEN_HEIGHT 768
 
-#define GRID_SIZE 4
-#define SPEED 50 
+#define GRID_SIZE 6
+#define DELAY 4 
 #define MARGINSUP (GRID_SIZE*20)
 // DIRECS
 #define UP 0
@@ -18,15 +18,12 @@
 #define LEFT 3
 
 // Colores                           VER 
-/*
-#define COLOR_P1 0x00FFFF
-#define COLOR_P2 0xFF00FF
-*/
+
 #define COLOR_P1 0x0080FF  
 #define COLOR_P2 0xFF4000  
 
-#define COLOR_BACKGROUND 0x222222
-#define COLOR_WALL 0xFFFFFF
+#define COLOR_BACKGROUND 0x000820 /*0x0a0015*/
+#define COLOR_WALL 0x0088AA
 #define COLOR_GRID 0x333333
 
 typedef struct {
@@ -57,12 +54,16 @@ void drawWalls() {
     drawFilledRectangle(SCREEN_WIDTH - GRID_SIZE, 0, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_WALL);
 }
 void drawPlayer(Player *p) {
+/*  
+    //Para que este alineado 
+    p->x = (p->x / GRID_SIZE) * GRID_SIZE;
+    p->y = (p->y / GRID_SIZE) * GRID_SIZE;
+    
     int gx = p->x / GRID_SIZE, gy = p->y / GRID_SIZE;
-
-    if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && 
-        gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
+    
+    if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
         grid[gy][gx] = (p->color == COLOR_P1) ? 1 : 2;
-    }
+    } */
     drawFilledRectangle(p->x, p->y, p->x + GRID_SIZE, p->y + GRID_SIZE, p->color);
 }
 
@@ -111,12 +112,25 @@ int checkCollision(Player *p) {
 }
 
 void movePlayer(Player *p) {
+   
     switch (p->dir) {
         case UP:    p->y -= GRID_SIZE; break;
         case DOWN:  p->y += GRID_SIZE; break;
         case LEFT:  p->x -= GRID_SIZE; break;
         case RIGHT: p->x += GRID_SIZE; break;
     }
+     /*
+    int distance = (p->power > 0) ? GRID_SIZE * 2 : GRID_SIZE;  
+    
+    switch (p->dir) {
+        case UP:    p->y -= distance; break;
+        case DOWN:  p->y += distance; break;
+        case LEFT:  p->x -= distance; break;
+        case RIGHT: p->x += distance; break;
+    }
+    
+    if (p->power > 0) p->power--;
+    */
 }
 
 //Ver temas de switch 
@@ -133,7 +147,7 @@ void updateMachine(Player *mach, Player *player) {                          /// 
     int gx = next_x / GRID_SIZE, gy = next_y / GRID_SIZE;
     
     // ve obst 
-    if (next_x < GRID_SIZE || next_x >= SCREEN_WIDTH - GRID_SIZE ||next_y < GRID_SIZE || next_y >= SCREEN_HEIGHT - GRID_SIZE ||(gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE && grid[gy][gx] != 0)) {
+    if (next_x < GRID_SIZE || next_x >= SCREEN_WIDTH - GRID_SIZE ||next_y < MARGINSUP || next_y >= SCREEN_HEIGHT - GRID_SIZE ||(gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE && grid[gy][gx] != 0)) {
         
         // Intentar girar a la derecha o izquierda
         int new_dirs[2] = {(mach->dir + 1) % 4, (mach->dir + 3) % 4};
@@ -214,8 +228,8 @@ void  waitForContinue() {
 
 int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {                
     initGrid();
-    Player p2 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, 1,COLOR_P2};
-    Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, 1,COLOR_P1};
+    Player p2 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, 0,COLOR_P2};
+    Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, 0,COLOR_P1};
     
     uint64_t last_move = getMilisFromBoot();
     clearCanvas();
@@ -230,6 +244,7 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             else if (key->scancode == 80 && p1.dir != UP) p1.dir = DOWN;        //  Abajo
             else if (key->scancode == 75 && p1.dir != RIGHT) p1.dir = LEFT;     // Izqu
             else if (key->scancode == 77 && p1.dir != LEFT) p1.dir = RIGHT;     //  derch
+            else if (key->ascii == 'm' ) p1.power = 3;                          // Speedboost 
             
             // Control P2 
             if (mode == 2) {
@@ -244,14 +259,109 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
         }
         
         uint64_t current_time = getMilisFromBoot();
-        if (current_time - last_move >= SPEED) {
+        if (current_time - last_move >= DELAY) {
             last_move = current_time;
             
             // Actualizar maquina 
             if (mode == 1) {
                 updateMachine(&p2, &p1);
             }
+
+        int col1 = 0, col2 = 0;
             
+    
+        
+
+    // Mover P1 
+    if (p1.alive) {
+        int moves_p1 = (p1.power > 0) ? 5 : 1;
+        
+        for (int i = 0; i < moves_p1; i++) {
+            movePlayer(&p1);
+            
+            // PRIMERO verificar colisión (antes de marcar)
+            if (checkCollision(&p1)) {
+                col1 = 1;
+                break;
+            }
+            
+            //marcar en grid
+            //Para que este alineado 
+             p1.x = (p1.x / GRID_SIZE) * GRID_SIZE;   p1.y = (p1.y / GRID_SIZE) * GRID_SIZE;
+            int gx = p1.x / GRID_SIZE;
+            int gy = p1.y / GRID_SIZE;
+            if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && 
+                gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
+                grid[gy][gx] = 1;
+            }
+        }
+        
+        if (p1.power > 0) p1.power = 0;
+    }
+
+    // Mover P2 con power boost
+    if (p2.alive) {                                                     //HACER GENERIC
+        int moves_p2 = (p2.power > 0) ? 3 : 1;
+        
+        for (int i = 0; i < moves_p2; i++) {
+            movePlayer(&p2);
+            if (checkCollision(&p2)) {
+                col2 = 1;
+                break;
+            }
+
+             //Para que este alineado 
+             p2.x = (p2.x / GRID_SIZE) * GRID_SIZE;   p2.y = (p2.y / GRID_SIZE) * GRID_SIZE;
+
+            int gx = p2.x / GRID_SIZE;
+            int gy = p2.y / GRID_SIZE;
+            if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && 
+                gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
+                grid[gy][gx] = 2;
+            }
+        }
+        
+        if (p2.power > 0) p2.power = 0;                             //ver
+    }
+
+
+    // Si hay choque 
+    if (col1 || col2) {                                     
+        if (col1 && !col2) {
+            (*livesP2)++;
+        } else if (col2 && !col1) {
+            (*livesP1)++;
+        }
+        // OBS: Si chocan ambos, no se suma nada
+        
+        clearCanvas();
+        //ve vidas 
+        if (*livesP1 >= maxLives || *livesP2 >= maxLives) {
+            if (*livesP1 >= maxLives) {
+                drawTextCentered(mode == 1 ? "GANASTE!" :"Player 1 gana!", 100, 30, COLOR_P1, SCREEN_WIDTH);
+            }
+            else {
+                drawTextCentered(mode == 1 ? "CPU gana!" : "Player 2 gana!", 100, 30, COLOR_P2, SCREEN_WIDTH);
+            }
+        } else {
+            drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
+            char livesText[50];
+            if (mode == 1) {
+                drawTextCentered("Player", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
+            } else {
+                drawTextCentered("Player 1", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
+                drawTextCentered("Player 2", SCREEN_HEIGHT/2 - 50, 25, COLOR_P2, SCREEN_WIDTH);
+            }
+        }
+        
+        waitForContinue();
+        return ;
+    }
+
+
+
+
+            /*
             // Mueve players 
             if (p1.alive) movePlayer(&p1);
             if (p2.alive) movePlayer(&p2);
@@ -300,8 +410,8 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 waitForContinue();
                 return ;                            //
             }
-        
-                                                               
+            */
+
             // Dibujar lineas
             for (int i = 0; i < SCREEN_HEIGHT/GRID_SIZE; i++) {
                 for (int j = 0; j < SCREEN_WIDTH/GRID_SIZE; j++) {
@@ -317,6 +427,7 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             if (p2.alive) drawPlayer(&p2);
     
             swapBuffers();
+            
         }
     }
 }
