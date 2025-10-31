@@ -4,7 +4,7 @@
 #include <interrupts.h>
 #include "./drivers/time.h"
 
-void dump_registers();          ////
+extern const char * get_register_dump();
 
 typedef struct {
     uint64_t rax;
@@ -30,6 +30,7 @@ static int syscall_time(Registers *registers);
 static uint64_t syscall_ms(Registers *registers);
 static KeyEvent * syscall_get_key(Registers *registers);
 static uint64_t sycall_getRegs(Registers * registers);
+static int syscall_set_text_size(Registers * registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -64,9 +65,11 @@ uint64_t sysCallDispatcher(Registers * registers) {
     case 14:
         return syscall_ms(registers);
     case 15:
-        return syscall_get_key(registers);
+        return (uint64_t)syscall_get_key(registers);
     case 16:
         return sycall_getRegs(registers);
+    case 17:
+        return syscall_set_text_size(registers);
     default:
         break;
     }
@@ -76,10 +79,6 @@ uint64_t sysCallDispatcher(Registers * registers) {
 uint64_t sycall_getRegs(Registers * registers){                          /////ver esto 
      return (uint64_t)get_register_dump();
 }
-
-/// /////////
-/// 
-
 
 int syscall_write(Registers * registers) {
     selectStyle(registers->rbx == 2 ? 0x04 : 0x0F);
@@ -94,11 +93,9 @@ int syscall_read(Registers * registers) {
     _sti();
 
     while(1) {
-        
         if (!isKeyBufferEmpty()) {
             KeyEvent event = getNextKey();
                 if (!event.is_release) {
-                   
                     if(event.ascii == '\n') {
                         input[size] = 0;
                         print("\n");
@@ -118,8 +115,7 @@ int syscall_read(Registers * registers) {
 }
 
 int syscall_clear(Registers * registers) {
-    clearTextBuffer();
-    
+    clearTextBuffer();  
     return 0;
 }
 
@@ -268,4 +264,10 @@ KeyEvent * syscall_get_key(Registers * registers) {
     if (isKeyBufferEmpty()) return 0;
     event = getNextKey();
     return &event;
+}
+
+static int syscall_set_text_size(Registers * registers) {
+    uint16_t height = (uint16_t)registers->rbx;
+    setTextSize(height);
+    return 0;
 }

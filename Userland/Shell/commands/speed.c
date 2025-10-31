@@ -5,9 +5,6 @@
 #include <commands.h>
 #include "../lib/time.h"
 
-//extern uint8_t * difTime(uint8_t * Time_0,uint8_t * Time_1);
-extern int commandDispatcher(char * input);
-
 int speed(char ** argv, int argc) {
     
     if(argc<2){

@@ -16,6 +16,7 @@ GLOBAL sys_get_time
 GLOBAL sys_get_ms
 GLOBAL sys_get_key
 GLOBAL sys_get_reg
+GLOBAL sys_set_text_size
 
 
 %macro START_SYSCALL 0
@@ -154,5 +155,12 @@ sys_get_key:
 sys_get_reg:
     START_SYSCALL
     mov rax, 16
+    int 80h
+    END_SYSCALL
+
+sys_set_text_size:
+    START_SYSCALL
+    mov rax, 17
+    mov rbx, rdi
     int 80h
     END_SYSCALL

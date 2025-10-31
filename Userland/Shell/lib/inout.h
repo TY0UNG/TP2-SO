@@ -17,6 +17,7 @@ void clear();
 void printChar(char c);
 void printHex(uint8_t value);
 void printDec(uint64_t number);
+void setTextSize(uint16_t height);
 
 typedef struct key_event {
     uint8_t scancode;

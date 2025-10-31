@@ -4,8 +4,6 @@
 
 static int show_welcome = 1;    // si se vuelve a llamar a la shell, no se resetea a 1 pues se guarda en section .data
 
- int commandDispatcher(char * input);                       //quito static para q la pueda llamar speed  (VERRRRRRR!!!!!!!!)
-
 int main() {
     char input[256];
     if (show_welcome) {
@@ -37,6 +35,7 @@ int commandDispatcher(char * input) {
     if (strcmp(cmd, "time") == 0) return time(argsv, argc);
     if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
     if (strcmp(cmd, "speed") == 0) return speed(argsv, argc);
+    if (strcmp(cmd, "resize") == 0) return resize(argsv, argc);
     
     if (strcmp(cmd, "tron") == 0) return tron(argsv, argc);
     if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);

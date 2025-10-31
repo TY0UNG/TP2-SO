@@ -5,6 +5,7 @@ extern int sys_write(int fd, const char* str);
 extern size_t sys_read(const char* buffer);
 extern void sys_clear();
 extern KeyEvent * sys_get_key();
+extern void sys_set_text_size(uint16_t height);
 
 int print(const char* str) {
     return sys_write(STDOUT, str);
@@ -61,4 +62,8 @@ void printDec(uint64_t number) {
 
 KeyEvent * getKey() {
     return sys_get_key();
+}
+
+void setTextSize(uint16_t height) {
+    sys_set_text_size(height);
 }
