@@ -65,13 +65,16 @@ static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite
     framebuffer[offset+1]   =  (hexColor >> 8) & 0xFF; 
     framebuffer[offset+2]   =  (hexColor >> 16) & 0xFF;
 }
+
+extern void *memcpy(void *dest, const void *src, uint64_t n);
+
 /*
 /   Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer 
 /
 */
 void swapBuffers() {
-    vsync_wait();
-    memcpy((void*)(uintptr_t)VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
+    // vsync_wait();
+    fast_memcpy((void*)(uintptr_t)VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
 
 
