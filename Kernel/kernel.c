@@ -10,6 +10,7 @@
 
 #include <audio.h>
 
+
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -99,31 +100,15 @@ void * initializeKernelBinary() {
 
 /////ESTO ES APARTE
 void MusicSO(){
-	// cancion de inicio de SO 
-	//luego ver cual poner 
-play_sound(392, 7);   // Sol
-play_sound(392, 7);   // Sol
-play_sound(392, 7);   // Sol
-play_sound(311, 15);  // Mi bemol
-play_sound(466, 5);   // Si bemol
-play_sound(392, 7);   // Sol
-play_sound(311, 15);  // Mi bemol
-play_sound(466, 5);   // Si bemol
-play_sound(392, 17);  // Sol
-/*play_sound(587, 7);   // Re
-play_sound(587, 7);   // Re
-play_sound(587, 7);   // Re
-play_sound(622, 14);  // Mi bemol (alto)
-play_sound(466, 5);   // Si bemol
-play_sound(370, 7);   // Fa sostenido
-play_sound(311, 14);  // Mi bemol
-play_sound(466, 5);   // Si bemol
-play_sound(392, 17);  // Sol (final)
-*/
 
-	while (!isAudioBufferEmpty()) {				
-        audio_handler();
-    }
+    play_sound(700, 200);
+    play_sound(900, 200);
+
+    // Cierre descendente rápido (hum futurista)
+    play_sound(600, 150);
+    play_sound(400, 150);
+    play_sound(300, 200);
+	
 }
 
  void imagenSO() {
@@ -143,15 +128,28 @@ play_sound(392, 17);  // Sol (final)
    
 }
 
+void sleep(uint64_t ms) {
+    uint64_t start_time = getMilisFromBoot();
+    uint64_t end_time = start_time + ms;
+
+    
+    while (getMilisFromBoot() < end_time) {
+       
+    }
+}
+
 int main()
 {	
 	load_idt();
     ncSetStyle(0x0F);
-
+	
 	calibrateMilis();
 
-	imagenSO();
+	start_T();
 	MusicSO();
+	imagenSO();
+	sleep(2000);
+
 	clearTextBuffer();
 
     ((EntryPoint)shell)();

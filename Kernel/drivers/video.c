@@ -1,5 +1,6 @@
 #include <video.h>
 #include <font8x16.h>
+#include <stdint.h>
 
 struct vbe_mode_info_structure {
 	uint16_t attributes;		// deprecated, only bit 7 should be of interest to you, and it indicates the mode supports a linear frame buffer.
@@ -47,12 +48,18 @@ uint8_t * backbuffer = (void*)0x500000;
 
 extern void vsync_wait();
 
-static void printBuffer();
+static void printBuffer(int from, int to, bool fullRedraw);
+static void checkBufferOverflow();
+static int checkAndAutoScroll(bool redraw_all);
 
 bool text_mode_enabled = true;
 
+static uint16_t text_size = 16;  // tamaño de texto default
+
+static uint32_t getHexColor(char style);
+
 static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite) {
-    uint8_t * framebuffer = directWrite ? (uint8_t *) VBE_mode_info->framebuffer : backbuffer;
+    uint8_t * framebuffer = directWrite ? (uint8_t *)(uintptr_t)VBE_mode_info->framebuffer : backbuffer;
     uint64_t offset = (x * ((VBE_mode_info->bpp)/8)) + (y * VBE_mode_info->pitch);
     framebuffer[offset]     =  (hexColor) & 0xFF;
     framebuffer[offset+1]   =  (hexColor >> 8) & 0xFF; 
@@ -64,7 +71,7 @@ static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite
 */
 void swapBuffers() {
     vsync_wait();
-    memcpy(VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
+    memcpy((void*)(uintptr_t)VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
 
 
@@ -214,21 +221,38 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
     }
 }
 
-unsigned char text_buffer[4096];
+#define TEXT_BUFFER_SIZE 32768  // 32KB total
+
+// Calcular cuántas líneas caben en pantalla con tamaño mínimo
+#define MIN_TEXT_SIZE 12
+#define MAX_TEXT_SIZE 64
+#define MAX_SCREEN_LINES (768 / MIN_TEXT_SIZE)  // = 64 líneas
+
+// Queremos recordar ~1.5 pantallas
+#define LINES_TO_REMEMBER (MAX_SCREEN_LINES * 3 / 2)  // = 96 líneas
+
+unsigned char text_buffer[TEXT_BUFFER_SIZE];
 int cursor = 0;
 char selected_style = 0x0F;
-uint16_t text_size = 20;
 int offset = 0;
 
 void textMode() {
 	text_mode_enabled = true;
 	clearCanvas();
     swapBuffers();
-	printBuffer(offset, cursor);
+	printBuffer(offset, cursor, true);
 }
 
 void selectStyle(char style) {
 	selected_style = style;
+}
+
+void setTextSize(uint16_t height) {
+    if (height < MIN_TEXT_SIZE || height > MAX_TEXT_SIZE) return;
+    uint16_t old_size = text_size;
+    text_size = height;
+    if (old_size != text_size) checkAndAutoScroll(true);
+    printBuffer(offset, cursor, true);
 }
 
 void clearTextBuffer() {
@@ -238,7 +262,7 @@ void clearTextBuffer() {
 	cursor = 0;
 	offset = 0;
 	clearCanvas();
-    swapBuffers();                      //lo actualiza para que se vea el cambio                
+    swapBuffers();  //lo actualiza para que se vea el cambio
 }
 
 
@@ -271,66 +295,149 @@ static uint32_t getHexColor(char style) {
 	return 0;
 }
 
-void printBuffer(int from, int to) {
-	int width = VBE_mode_info->width / 8;
-	int height = VBE_mode_info->height / 16;
-	int line = 0;
-	int ch = 0;
-	int i = offset;
-	while(line < height && ch < width && i < to) {
-		if (text_buffer[i] == '\n') {
-			ch = 0;
-			line++;
-		} else {
-			if (i >= from) {
-				for (int x = 0; x < 8; x++) {
-					for (int y = 0; y < 16; y++) {
-						unsigned char mask = 0x80 >> x;
-						if (mask & font8x16[text_buffer[i]][y])
-							putPixel(getHexColor(text_buffer[i+1]), ch*8+x, line*16+y, true);
-						else
-							putPixel(getHexColor(text_buffer[i+1] >> 4), ch*8+x, line*16+y, true);
+/*
+ * printBuffer - Renderiza el buffer de texto en pantalla
+ * @param from: índice inicial del rango a dibujar (ignorado si fullRedraw=true)
+ * @param to: índice final del rango a dibujar
+ * @param fullRedraw: true = limpia pantalla y redibuja todo desde offset /
+ *              false = dibuja solo caracteres nuevos directamente al framebuffer (rápido)
+ */
+void printBuffer(int from, int to, bool fullRedraw) {
+	if (fullRedraw) {
+		clearCanvas();
+	}
+	
+	uint16_t char_width = 8;
+	float scale_factor = (float)text_size / 16.0f;
+	uint16_t scaled_width = (uint16_t)(char_width * scale_factor);
+	int chars_per_line = VBE_mode_info->width / scaled_width;
+	
+	int start_index = fullRedraw ? offset : from;
+	int current_x = 0;
+	int current_y = 0;
+	int col = 0;
+	
+	// Si es dibujado incremental, calcular posición (x,y) del carácter 'from'
+	if (!fullRedraw) {
+		for (int i = offset; i < from; i += 2) {
+			char c = text_buffer[i];
+			if (c == '\n') {
+				current_x = 0;
+				current_y += text_size;
+				col = 0;
+			} else if (c >= 32 && c <= 126) {
+				current_x += scaled_width;
+				col++;
+				if (col >= chars_per_line) {
+					current_x = 0;
+					current_y += text_size;
+					col = 0;
+				}
+			}
+		}
+	}
+	
+	bool directWrite = !fullRedraw;
+	
+	for (int i = start_index; i < to; i += 2) {
+		char c = text_buffer[i];
+		char style = text_buffer[i + 1];
+		
+		if (c == '\n') {
+			current_x = 0;
+			current_y += text_size;
+			col = 0;
+		} else if (c >= 32 && c <= 126) {
+			uint32_t fg_color = getHexColor(style);
+			uint32_t bg_color = getHexColor(style >> 4);
+			
+			uint16_t char_height = 16;
+			const uint8_t* char_bitmap = font8x16[(unsigned char)c];
+			
+			for (uint16_t row_out = 0; row_out < text_size; row_out++) {
+				for (uint16_t col_out = 0; col_out < scaled_width; col_out++) {
+					float y_src = (float)row_out / scale_factor;
+					float x_src = (float)col_out / scale_factor;
+					
+					uint16_t y_int = (uint16_t)y_src;
+					uint16_t x_int = (uint16_t)x_src;
+					
+					if (y_int >= char_height || x_int >= 8) continue;
+					
+					unsigned char mask = 0x80 >> x_int;
+					if (mask & char_bitmap[y_int]) {
+						putPixel(fg_color, current_x + col_out, current_y + row_out, directWrite);
+					} else {
+						putPixel(bg_color, current_x + col_out, current_y + row_out, directWrite);
 					}
 				}
 			}
-			if (++ch >= width) {
-				ch = 0;
-				line++;
+			
+			current_x += scaled_width;
+			col++;
+			
+			if (col >= chars_per_line) {
+				current_x = 0;
+				current_y += text_size;
+				col = 0;
 			}
 		}
-		i+=2;
 	}
+	
+	if (fullRedraw) {
+		swapBuffers();
+	}
+}
+
+static void addToBuffer(char c) {
+    text_buffer[cursor++] = c;
+    text_buffer[cursor++] = selected_style;
+    checkBufferOverflow();
 }
 
 void print(const char* text) {
-	int initial = cursor;
-	while (*text != 0) {
-		text_buffer[cursor++] = *text;
-		text_buffer[cursor++] = selected_style;
-		text++;
-	}
-	if (text_mode_enabled) printBuffer(initial, cursor);
+    int initial = cursor;
+    while (*text != 0) {
+        addToBuffer(*text);
+        text++;
+    }
+    
+    if (text_mode_enabled) {
+        if (checkAndAutoScroll(true)) {
+            printBuffer(offset, cursor, true);
+        } else {
+            printBuffer(initial, cursor, false);
+        }
+    }
 }
 
 void printChar(char c) {
-	text_buffer[cursor++] = c;
-	text_buffer[cursor++] = selected_style;
-	if (text_mode_enabled) printBuffer(cursor - 2, cursor);
+    addToBuffer(c);
+    if (text_mode_enabled) {
+        printBuffer(cursor - 2, cursor, false);
+        if (checkAndAutoScroll(false)) {
+            printBuffer(offset, cursor, true);
+        }
+    }
 }
 
 void deleteChar() {
-	if (cursor > 1) {
-		text_buffer[cursor--] = 0;
-		text_buffer[cursor--] = 0;
-	}
-	if (text_mode_enabled) printBuffer(cursor, cursor + 2);
+    if (cursor <= 1) return;
+    // Reemplazar con espacio en blanco (no borrar del buffer todavía)
+    text_buffer[cursor - 2] = ' ';  // espacio en blanco
+    printBuffer(cursor - 2, cursor, false); // Redibujar solo ese carácter
+    /* (si quería borrar el caracter así nomás, debía redibujar todo. Por eso se dibuja un espacio) */
+    
+    // AHORA se borrar del buffer el caracter
+    text_buffer[cursor--] = 0;
+    text_buffer[cursor--] = 0;
 }
 
 void scrollDown() {
 	if (!text_mode_enabled) return;
 	while (*(text_buffer+offset) != '\n') offset++;
 	offset++;
-	printBuffer(offset, cursor);
+	printBuffer(offset, cursor, true);
 }
 
 void scrollUp() {
@@ -339,10 +446,96 @@ void scrollUp() {
 	offset-=2;
 	while (*(text_buffer+offset) != '\n') offset--;
 	offset++;
-	printBuffer(offset, cursor);
+	printBuffer(offset, cursor, true);
 }
 
+void checkBufferOverflow() {
+    if (cursor < TEXT_BUFFER_SIZE - 512) return;  // Hay espacio (~256 chars), no hacer nada
+    
+    // Buffer casi lleno, eliminar líneas viejas. Para calcular cuántas líneas lógicas tenemos
+    int total_logical_lines = 0;
+    for (int i = 0; i < cursor; i += 2) {
+        if (text_buffer[i] == '\n') total_logical_lines++;
+    }
 
+    if (total_logical_lines > LINES_TO_REMEMBER) {
+        int lines_to_delete = 20;
+        int new_start = 0;
+        int deleted = 0;
+        
+        for (int i = 0; i < cursor && deleted < lines_to_delete; i += 2) {
+            if (text_buffer[i] == '\n') {
+                deleted++;
+                new_start = i + 2;
+            }
+        }
+        // Mover contenido hacia adelante
+        int bytes_to_move = cursor - new_start;
+        for (int i = 0; i < bytes_to_move; i++) {
+            text_buffer[i] = text_buffer[new_start + i];
+        }
+        cursor = bytes_to_move;
+        if (offset >= new_start) offset -= new_start;
+        else offset = 0;
+    }
+}
+
+int checkAndAutoScroll(bool redraw_all) {
+    int screen_height = VBE_mode_info->height;
+    int max_visual_lines = screen_height / text_size;
+    
+    float scale = (float)text_size / 16.0f;
+    int char_width = (int)(8 * scale);
+    int chars_per_line = VBE_mode_info->width / char_width;
+    
+    // Contar líneas visuales desde offset hasta cursor
+    int visual_lines = 1;
+    int col = 0;
+    
+    for (int i = offset; i < cursor; i += 2) {
+        char ch = text_buffer[i];
+        
+        if (ch == '\n') {
+            visual_lines++;
+            col = 0;
+        } else if (ch >= 32 && ch <= 126) {
+            col++;
+            if (col >= chars_per_line) {
+                visual_lines++;
+                col = 0;
+            }
+        }
+    }
+    
+    // Si excede las líneas visibles, hacer scroll
+    if (visual_lines > max_visual_lines) {
+        int lines_to_skip = redraw_all ? (visual_lines - max_visual_lines) : 1;
+        int skipped = 0;
+        col = 0;
+        
+        while (skipped < lines_to_skip && offset < cursor - 2) {
+            char ch = text_buffer[offset];
+            
+            if (ch == '\n') {
+                skipped++;
+                col = 0;
+                offset += 2;
+            } else if (ch >= 32 && ch <= 126) {
+                col++;
+                offset += 2;
+                
+                if (col >= chars_per_line) {
+                    skipped++;
+                    col = 0;
+                }
+            } else {
+                offset += 2;
+            }
+        }
+        return 1;  // Hubo scroll
+    }
+    return 0;  // No hubo scroll
+}
 
 /////////////// ver si aca 
 

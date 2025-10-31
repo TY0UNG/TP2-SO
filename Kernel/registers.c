@@ -39,12 +39,12 @@ static RegisterDump regs;
 
 extern void addregs(RegisterDump* regs_ptr);
 
-
-
 #define MAX_DUMP_SIZE 2048   // tamaño máximo del texto 
 
 static char dump_buffer[MAX_DUMP_SIZE];
 static int dump_index = 0;
+
+static void appendChar(char c);
 
 /////////
 
@@ -65,14 +65,14 @@ void printHex64ToBuffer(uint64_t value) {
 }
 
 // agrega una cadena al buffer
-void append(const char *text) {
+static void append(const char *text) {
     while (*text && dump_index < MAX_DUMP_SIZE - 1)
         dump_buffer[dump_index++] = *text++;
     dump_buffer[dump_index] = '\0'; // null-terminate
 }
 
 // agrega un solo carácter
-void appendChar(char c) {
+static void appendChar(char c) {
     if (dump_index < MAX_DUMP_SIZE - 1)
         dump_buffer[dump_index++] = c;
     dump_buffer[dump_index] = '\0';

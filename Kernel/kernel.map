@@ -168,7 +168,7 @@ Linker script and memory map
  .note.gnu.property
                 0x00000000001047c8       0x20 drivers/tick.o
 
-.data           0x0000000000105000      0x894
+.data           0x0000000000105000      0x898
                 0x0000000000105000                data = .
  *(.data*)
  .data          0x0000000000105000        0x0 exceptions.o
@@ -186,15 +186,15 @@ Linker script and memory map
  .data          0x0000000000105049        0x0 drivers/tick.o
  .data          0x0000000000105049        0x0 drivers/time.o
  *fill*         0x0000000000105049       0x17 
- .data          0x0000000000105060      0x814 drivers/video.o
+ .data          0x0000000000105060      0x815 drivers/video.o
                 0x0000000000105060                font8x16
                 0x0000000000105860                VBE_mode_info
                 0x0000000000105868                backbuffer
                 0x0000000000105870                text_mode_enabled
-                0x0000000000105871                selected_style
-                0x0000000000105872                text_size
- .data          0x0000000000105874       0x20 asm/interrupts.o
-                0x0000000000105894                endOfKernelBinary = .
+                0x0000000000105874                selected_style
+ *fill*         0x0000000000105875        0x3 
+ .data          0x0000000000105878       0x20 asm/interrupts.o
+                0x0000000000105898                endOfKernelBinary = .
 
 .bss            0x0000000000106000     0x1e80
                 0x0000000000106000                bss = .
@@ -233,8 +233,8 @@ Linker script and memory map
                 0x0000000000107e70                saved_stack_ptr
                 0x0000000000107e78                initial_saved_stack_ptr
  *(EXCLUDE_FILE(*.o) COMMON)
-                0x0000000000108000                . = ALIGN (0x1000)
-                0x0000000000108000                endOfKernel = .
+                0x0000000000109000                . = ALIGN (0x1000)
+                0x0000000000109000                endOfKernel = .
 LOAD loader.o
 LOAD exceptions.o
 LOAD idtLoader.o

@@ -18,14 +18,13 @@ void swapBuffers();
 void textMode();
 void clearTextBuffer();
 void selectStyle(char style);
+void setTextSize(uint16_t height);
 void print(const char* text);
 void printChar(char c);
 void deleteChar();
 void scrollDown();
 void scrollUp();
 
-
-///
 void printHex16(uint16_t value);
 void printHex32(uint32_t value);
 void printHex64(uint64_t value);
