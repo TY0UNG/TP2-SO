@@ -3,7 +3,11 @@
     #include <stdint.h>
     #include <tick.h>
 
-    void getTime(uint8_t *time_buffer);
+    typedef struct date_time {
+        uint8_t year, month, daymonth, hour, minutes, seconds
+    } DateTime;
+
+    void getTime(DateTime * output);
     uint64_t getMilisFromBoot();
     void calibrateMilis();
 

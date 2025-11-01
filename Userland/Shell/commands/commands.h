@@ -5,8 +5,9 @@
 #include <draw.h>
 #include <stddef.h>
 #include "../lib/time.h"
+#include <str.h>
 
-int commandDispatcher(char * input);
+int commandDispatcher(char ** argsv, int argsc);
 
 int help(char ** argv, int argc);
 int echo(char ** argv, int argc);

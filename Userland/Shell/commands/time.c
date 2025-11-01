@@ -9,13 +9,14 @@ int time(char ** argv, int argc) {
 
     printTime(datetime);
 
-
     print("MS: ");
-    printDec(sys_get_ms());
+    printDec(getMilisFromBoot());
     printChar('\n');
     
     return 0;
 }
+
+
 
 
 

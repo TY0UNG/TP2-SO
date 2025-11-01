@@ -13,32 +13,31 @@ int main() {
     while(1) {
         print("OS> ");
         read(input);
-        commandDispatcher(input);
+        char* argsv[256];
+        int argc = strparse(input, argsv, " ");
+        commandDispatcher(argsv, argc);
     }
     return 0;
 }
 
-int commandDispatcher(char * input) {
-    char* argsv[256];
-    int argc = strparse(input, argsv, " ");
+int commandDispatcher(char ** argsv, int argsc) {
     char * cmd = argsv[0];
-
-    if (strcmp(cmd, "help") == 0) return help(argsv, argc);
+    if (strcmp(cmd, "help") == 0) return help(argsv, argsc);
     if (strcmp(cmd, "clear") == 0) {
         clear();
         return 1;
     }
-    if (strcmp(cmd, "echo") == 0) return echo(argsv, argc);
-    if (strcmp(cmd, "exit") == 0) shutdown(argsv, argc);
+    if (strcmp(cmd, "echo") == 0) return echo(argsv, argsc);
+    if (strcmp(cmd, "exit") == 0) shutdown(argsv, argsc);
     
-    if (strcmp(input, "registros") == 0) return regs(argsv, argc);
-    if (strcmp(cmd, "time") == 0) return time(argsv, argc);
-    if (strcmp(cmd, "fps") == 0) return fps(argsv, argc);
-    if (strcmp(cmd, "speed") == 0) return speed(argsv, argc);
-    if (strcmp(cmd, "resize") == 0) return resize(argsv, argc);
+    if (strcmp(cmd, "registros") == 0) return regs(argsv, argsc);
+    if (strcmp(cmd, "time") == 0) return time(argsv, argsc);
+    if (strcmp(cmd, "fps") == 0) return fps(argsv, argsc);
+    if (strcmp(cmd, "speed") == 0) return speed(argsv, argsc);
+    if (strcmp(cmd, "resize") == 0) return resize(argsv, argsc);
     
-    if (strcmp(cmd, "tron") == 0) return tron(argsv, argc);
-    if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argc);
+    if (strcmp(cmd, "tron") == 0) return tron(argsv, argsc);
+    if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argsc);
     
 
     if (strcmp(cmd, "dividezero") == 0) dividezero();

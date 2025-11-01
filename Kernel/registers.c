@@ -1,6 +1,6 @@
 #include <video.h>
 #include <stdint.h>
-#include <time.h>
+#include "./drivers/time.h"
 
 typedef struct RegisterDump {
     uint64_t rax;      // Offset 0
@@ -33,6 +33,7 @@ typedef struct RegisterDump {
     uint64_t int_no;   // Número de la interrupción
     uint64_t err_code; // Código de error
 
+    DateTime time;
 } __attribute__((packed)) RegisterDump;
 
 static RegisterDump regs;
@@ -79,7 +80,7 @@ static void appendChar(char c) {
 }
 
 /////////
-void DoArray() {
+void printStruct() {
     dump_index = 0; // reiniciamos el buffer
 
     /* append(" TIME: "); append("Fecha: ");
@@ -136,7 +137,7 @@ void DoArray() {
 void dump_registers() {
     // getTime(regs.time); 
     addregs(&regs);
-    DoArray();
+    printStruct();
 }
 
 
