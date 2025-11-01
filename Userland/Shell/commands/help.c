@@ -12,14 +12,14 @@ Commands command_list[] = {
     {"clear", "limpia la pantalla", "  SISTEMA"},
     {"exit", "apaga el sistema", "  SISTEMA"},
 
-    // INFORMACIÓN DEL SISTEMA
-    {"time", "muestra fecha y hora actuales", "  INFORMACIÓN"},
-    {"show fps", "habilita o deshabilita el overlay de FPS", "  INFORMACIÓN"},
-    {"registros", "muestra los registros del CPU", "  INFORMACIÓN"},
+    // INFORMACION DEL SISTEMA
+    {"time", "muestra fecha y hora actuales", "  INFORMACION"},
+    {"show fps", "habilita o deshabilita el overlay de FPS", "  INFORMACION"},
+    {"registros", "muestra los registros del CPU", "  INFORMACION"},
 
     // BENCHMARKS
     {"fps", "mide cuadros por segundo del render", "  BENCHMARKS"},
-    {"speed <comando>", "cronometra la ejecución de un comando", "  BENCHMARKS"},
+    {"speed <comando>", "cronometra la ejecucion de un comando", "  BENCHMARKS"},
     {"benchfloat [ms]", "mide divisiones de coma flotante por segundo", "  BENCHMARKS"},
     {"benchhw [ms]", "mide lecturas del RTC por segundo", "  BENCHMARKS"},
     {"benchmem [ms]", "mide copias de memoria por segundo", "  BENCHMARKS"},
@@ -31,11 +31,11 @@ Commands command_list[] = {
 
     // JUEGOS Y DEMOS
     {"tron", "inicia el juego Tron", "  JUEGOS"},
-    {"bounce", "muestra la animación de rebote", "  JUEGOS"},
+    {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
 
     // PRUEBAS Y EXCEPCIONES
-    {"dividezero", "genera la excepción de división por cero", "  PRUEBAS"},
-    {"invalidop", "genera la excepción de instrucción inválida", "  PRUEBAS"},
+    {"dividezero", "genera la excepcion de division por cero", "  PRUEBAS"},
+    {"invalidop", "genera la excepcion de instruccion inválida", "  PRUEBAS"},
 
     {NULL, NULL, NULL}
 };

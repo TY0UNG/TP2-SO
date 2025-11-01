@@ -88,7 +88,7 @@ void bench_print_summary(const char *titulo, const char *detalle_operaciones, ui
 
     bench_print_separator('-');
 
-    print("Duración (ms): ");
+    print("Duracion (ms): ");
     printDec(elapsed_ms);
     print("\n");
 
