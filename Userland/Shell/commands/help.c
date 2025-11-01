@@ -8,19 +8,34 @@ typedef struct {
 
 Commands command_list[] = {
     // SISTEMA
-    {"help", " display online manual documentation pages", "  SISTEM"},
-    {"exit", " close down the system at a given time", "  SISTEM"},
-    // OTRAS FUNC
-    {"time", " Muestra fecha y hora actual", "  DATA SIST."},
-    {"registros", " Muestra registros del CPU", "  DATA SIST."},
-    //BENCHMARKING
-    {"fps", " Muestra frames por segundo", "  BENCHMARKING"},
-    {"speed <COMAND>", " show processing time of command", "  BENCHMARKING"},
+    {"help", "muestra este listado de ayuda", "  SISTEMA"},
+    {"clear", "limpia la pantalla", "  SISTEMA"},
+    {"exit", "apaga el sistema", "  SISTEMA"},
+
+    // INFORMACIÓN DEL SISTEMA
+    {"time", "muestra fecha y hora actuales", "  INFORMACIÓN"},
+    {"registros", "muestra los registros del CPU", "  INFORMACIÓN"},
+
+    // BENCHMARKS
+    {"fps", "mide cuadros por segundo del render", "  BENCHMARKS"},
+    {"speed <comando>", "cronometra la ejecución de un comando", "  BENCHMARKS"},
+    {"benchfloat [ms]", "mide divisiones de coma flotante por segundo", "  BENCHMARKS"},
+    {"benchhw [ms]", "mide lecturas del RTC por segundo", "  BENCHMARKS"},
+    {"benchmem [ms]", "mide copias de memoria por segundo", "  BENCHMARKS"},
+    {"benchkbd [ms]", "mide lecturas del teclado por segundo", "  BENCHMARKS"},
+
     // UTILIDADES
-    {"echo", " write arguments to the standard output", "  UTILITIES"},
-    // JUEGO
-    {"tron", " Juego Tron", "  GAME"},
-    {"bounce", " Animacion rebotando", "  GAME"},
+    {"echo", "imprime los argumentos en pantalla", "  UTILIDADES"},
+    {"resize <size>", "cambia el tamaño del texto (12-64)", "  UTILIDADES"},
+
+    // JUEGOS Y DEMOS
+    {"tron", "inicia el juego Tron", "  JUEGOS"},
+    {"bounce", "muestra la animación de rebote", "  JUEGOS"},
+
+    // PRUEBAS Y EXCEPCIONES
+    {"dividezero", "genera la excepción de división por cero", "  PRUEBAS"},
+    {"invalidop", "genera la excepción de instrucción inválida", "  PRUEBAS"},
+
     {NULL, NULL, NULL}
 };
 
@@ -41,21 +56,22 @@ void print_command(const char *name, const char *description) {
 
 
 int help(char ** argv, int argc) {
-    println("  Lista de comandos:\n help - Obtiene la lista de comandos\n");
+    println("  Lista de comandos disponibles\n");
 
     println("========= COMANDOS DISPONIBLES ================================");
-    
+
     char *current = NULL;
-    
+
     for (int i = 0; command_list[i].name != NULL; i++) {
-        // Si cambia de categ
         if (current == NULL || strcmp(current, command_list[i].category) != 0) {
             current = command_list[i].category;
-            printChar('\n');  println(current);
+            printChar('\n');
+            println(current);
         }
-        
-         print_command(command_list[i].name, command_list[i].description);
+
+        print_command(command_list[i].name, command_list[i].description);
     }
+
     println("\n===============================================================");
 
     return 0;

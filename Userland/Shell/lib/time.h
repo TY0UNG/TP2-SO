@@ -3,7 +3,7 @@
     #include <stdint.h>
 
     typedef struct date_time {
-        uint8_t year, month, daymonth, hour, minutes, seconds
+        uint8_t year, month, daymonth, hour, minutes, seconds;
     } DateTime;
 
     void getDateTime(DateTime * output);

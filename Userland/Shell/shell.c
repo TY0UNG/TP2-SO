@@ -35,6 +35,10 @@ int commandDispatcher(char ** argsv, int argsc) {
     if (strcmp(cmd, "fps") == 0) return fps(argsv, argsc);
     if (strcmp(cmd, "speed") == 0) return speed(argsv, argsc);
     if (strcmp(cmd, "resize") == 0) return resize(argsv, argsc);
+    if (strcmp(cmd, "benchfloat") == 0) return benchfloat(argsv, argsc);
+    if (strcmp(cmd, "benchhw") == 0) return benchhw(argsv, argsc);
+    if (strcmp(cmd, "benchmem") == 0) return benchmem(argsv, argsc);
+    if (strcmp(cmd, "benchkbd") == 0) return benchkbd(argsv, argsc);
     
     if (strcmp(cmd, "tron") == 0) return tron(argsv, argsc);
     if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argsc);

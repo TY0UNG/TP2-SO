@@ -19,6 +19,10 @@ int fps(char ** argv, int argc);
 int regs(char ** argv, int argc);
 int speed(char ** argv, int argc);
 int resize(char ** argv, int argc);
+int benchfloat(char ** argv, int argc);
+int benchhw(char ** argv, int argc);
+int benchmem(char ** argv, int argc);
+int benchkbd(char ** argv, int argc);
 
 /* Para probar excepciones, borrarse (junto con test.c) cuando se terminen de validar */
 int dividezero();

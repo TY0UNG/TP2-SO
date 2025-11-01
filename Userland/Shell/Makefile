@@ -2,8 +2,13 @@ include ../Makefile.inc
 
 MODULE=0000-shell.bin
 
-SOURCES_C  := $(wildcard [^_]*.c) $(wildcard **/*.c)
-SOURCES_ASM:= $(wildcard [^_]*.asm) $(wildcard **/*.asm)
+SOURCES_C  := $(wildcard [^_]*.c) \
+			  $(wildcard commands/*.c) \
+			  $(wildcard commands/benchmark/*.c) \
+			  $(wildcard lib/*.c)
+SOURCES_ASM:= $(wildcard [^_]*.asm) \
+			   $(wildcard commands/*.asm) \
+			   $(wildcard lib/*.asm)
 
 # Todos los objetos
 OBJECTS_C   := $(SOURCES_C:.c=.o)
