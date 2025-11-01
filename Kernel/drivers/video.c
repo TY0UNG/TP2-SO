@@ -51,12 +51,42 @@ extern void vsync_wait();
 static void printBuffer(int from, int to, bool fullRedraw);
 static void checkBufferOverflow();
 static int checkAndAutoScroll(bool redraw_all);
+static int calculateTailOffset(void);
 
 bool text_mode_enabled = true;
 
 static uint16_t text_size = 16;  // tamaño de texto default
 
 static uint32_t getHexColor(char style);
+
+static inline uint16_t scaled_char_width(uint16_t height) {
+    uint32_t width = 8u * height;
+    width /= 16u;
+    if (width == 0) {
+        width = 1;
+    }
+    return (uint16_t)width;
+}
+
+static inline uint16_t chars_per_line_for(uint16_t height) {
+    uint16_t width = scaled_char_width(height);
+    uint16_t per_line = width ? (uint16_t)(VBE_mode_info->width / width) : VBE_mode_info->width;
+    if (per_line == 0) {
+        per_line = 1;
+    }
+    return per_line;
+}
+
+static inline uint16_t max_visual_lines_for(uint16_t height) {
+    if (height == 0) {
+        return 1;
+    }
+    uint16_t lines = (uint16_t)(VBE_mode_info->height / height);
+    if (lines == 0) {
+        lines = 1;
+    }
+    return lines;
+}
 
 static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite) {
     uint8_t * framebuffer = directWrite ? (uint8_t *)(uintptr_t)VBE_mode_info->framebuffer : backbuffer;
@@ -225,38 +255,42 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
 
     uint64_t current_x = x;
     uint64_t current_y = y;
-    uint16_t char_width = 8;
-    uint16_t char_height = 16;
-    
-    float scale_factor = (float)height / (float)char_height;
-    
-    if (scale_factor < 1.0f) {
-        scale_factor = 1.0f;
+    const uint16_t char_width = 8;
+    const uint16_t char_height = 16;
+
+    if (height == 0) {
+        return;
     }
+
+    if (height < char_height) {
+        height = char_height;
+    }
+
+    uint16_t scaled_width = scaled_char_width(height);
 
     while (*text) {
         unsigned char character = *text;
         const uint8_t* char_bitmap = font8x16[character];
         for (uint16_t row_out = 0; row_out < height; row_out++) {
-            for (uint16_t col_out = 0; col_out < (uint16_t)(char_width * scale_factor); col_out++) {
-                float y_src = (float)row_out / scale_factor;
-                float x_src = (float)col_out / scale_factor;
-                
-                uint16_t y_int = (uint16_t)y_src;
-                uint16_t x_int = (uint16_t)x_src;
-
-                if (y_int >= char_height || x_int >= char_width) {
+            uint16_t y_int = (row_out * char_height) / height;
+            if (y_int >= char_height) {
+                continue;
+            }
+            unsigned char glyph_row = char_bitmap[y_int];
+            for (uint16_t col_out = 0; col_out < scaled_width; col_out++) {
+                uint16_t x_int = (col_out * char_width) / scaled_width;
+                if (x_int >= char_width) {
                     continue;
                 }
 
-                unsigned char mask = 0x80 >> x_int;
-                if (mask & char_bitmap[y_int]) {
+                unsigned char mask = 0x80u >> x_int;
+                if (mask & glyph_row) {
                     putPixel(color, current_x + col_out, current_y + row_out, false);
                 }
             }
         }
         
-        current_x += (uint16_t)(char_width * scale_factor);
+        current_x += scaled_width;
         text++;
     }
 }
@@ -280,6 +314,7 @@ void textMode() {
 	text_mode_enabled = true;
 	clearCanvas();
     swapBuffers();
+    checkAndAutoScroll(true);
 	printBuffer(offset, cursor, true);
 }
 
@@ -303,6 +338,74 @@ void clearTextBuffer() {
 	offset = 0;
 	clearCanvas();
     swapBuffers();  //lo actualiza para que se vea el cambio
+}
+
+static int calculateTailOffset(void) {
+    if (cursor <= 0) {
+        return 0;
+    }
+
+    uint16_t max_lines = max_visual_lines_for(text_size);
+    uint16_t chars_per_line = chars_per_line_for(text_size);
+    if (chars_per_line == 0) {
+        chars_per_line = 1;
+    }
+
+    int capacity = max_lines + 2;
+    if (capacity > (MAX_SCREEN_LINES + 2)) {
+        capacity = MAX_SCREEN_LINES + 2;
+    }
+
+    int line_starts[MAX_SCREEN_LINES + 2];
+    int count = 1;
+    line_starts[0] = 0;
+    int current_line_start = 0;
+    int col = 0;
+
+    for (int i = 0; i < cursor; i += 2) {
+        char ch = text_buffer[i];
+        bool start_new_line = false;
+
+        if (ch == '\n') {
+            current_line_start = i + 2;
+            col = 0;
+            start_new_line = true;
+        } else if (ch >= 32 && ch <= 126) {
+            col++;
+            if (col >= chars_per_line) {
+                current_line_start = i + 2;
+                col = 0;
+                start_new_line = true;
+            }
+        }
+
+        if (start_new_line) {
+            if (count == capacity) {
+                for (int j = 0; j < capacity - 1; j++) {
+                    line_starts[j] = line_starts[j + 1];
+                }
+                count = capacity - 1;
+            }
+
+            if (count < capacity) {
+                line_starts[count++] = current_line_start;
+            }
+        }
+    }
+
+    if (count <= max_lines) {
+        return 0;
+    }
+
+    int index = count - max_lines;
+    if (index < 0) {
+        index = 0;
+    }
+    if (index >= count) {
+        index = count - 1;
+    }
+
+    return line_starts[index];
 }
 
 
@@ -347,10 +450,16 @@ void printBuffer(int from, int to, bool fullRedraw) {
 		clearCanvas();
 	}
 	
-	uint16_t char_width = 8;
-	float scale_factor = (float)text_size / 16.0f;
-	uint16_t scaled_width = (uint16_t)(char_width * scale_factor);
-	int chars_per_line = VBE_mode_info->width / scaled_width;
+    const uint16_t char_width = 8;
+    const uint16_t char_height = 16;
+    uint16_t scaled_width = scaled_char_width(text_size);
+    if (scaled_width == 0) {
+        scaled_width = 1;
+    }
+    int chars_per_line = chars_per_line_for(text_size);
+    if (chars_per_line <= 0) {
+        chars_per_line = 1;
+    }
 	
 	int start_index = fullRedraw ? offset : from;
 	int current_x = 0;
@@ -380,37 +489,42 @@ void printBuffer(int from, int to, bool fullRedraw) {
 	bool directWrite = !fullRedraw;
 	
 	for (int i = start_index; i < to; i += 2) {
-		char c = text_buffer[i];
+        if (current_y >= (int)VBE_mode_info->height) {
+            break;
+        }
+
+        char c = text_buffer[i];
 		char style = text_buffer[i + 1];
 		
 		if (c == '\n') {
 			current_x = 0;
 			current_y += text_size;
 			col = 0;
+            continue;
 		} else if (c >= 32 && c <= 126) {
 			uint32_t fg_color = getHexColor(style);
 			uint32_t bg_color = getHexColor(style >> 4);
 			
-			uint16_t char_height = 16;
 			const uint8_t* char_bitmap = font8x16[(unsigned char)c];
 			
-			for (uint16_t row_out = 0; row_out < text_size; row_out++) {
-				for (uint16_t col_out = 0; col_out < scaled_width; col_out++) {
-					float y_src = (float)row_out / scale_factor;
-					float x_src = (float)col_out / scale_factor;
-					
-					uint16_t y_int = (uint16_t)y_src;
-					uint16_t x_int = (uint16_t)x_src;
-					
-					if (y_int >= char_height || x_int >= 8) continue;
-					
-					unsigned char mask = 0x80 >> x_int;
-					if (mask & char_bitmap[y_int]) {
-						putPixel(fg_color, current_x + col_out, current_y + row_out, directWrite);
-					} else {
-						putPixel(bg_color, current_x + col_out, current_y + row_out, directWrite);
-					}
-				}
+            for (uint16_t row_out = 0; row_out < text_size; row_out++) {
+                uint16_t y_int = (row_out * char_height) / text_size;
+                if (y_int >= char_height) {
+                    continue;
+                }
+                unsigned char glyph_row = char_bitmap[y_int];
+                for (uint16_t col_out = 0; col_out < scaled_width; col_out++) {
+                    uint16_t x_int = (col_out * char_width) / scaled_width;
+                    if (x_int >= char_width) {
+                        continue;
+                    }
+                    unsigned char mask = 0x80u >> x_int;
+                    if (mask & glyph_row) {
+                        putPixel(fg_color, current_x + col_out, current_y + row_out, directWrite);
+                    } else {
+                        putPixel(bg_color, current_x + col_out, current_y + row_out, directWrite);
+                    }
+                }
 			}
 			
 			current_x += scaled_width;
@@ -521,60 +635,16 @@ void checkBufferOverflow() {
 }
 
 int checkAndAutoScroll(bool redraw_all) {
-    int screen_height = VBE_mode_info->height;
-    int max_visual_lines = screen_height / text_size;
-    
-    float scale = (float)text_size / 16.0f;
-    int char_width = (int)(8 * scale);
-    int chars_per_line = VBE_mode_info->width / char_width;
-    
-    // Contar líneas visuales desde offset hasta cursor
-    int visual_lines = 1;
-    int col = 0;
-    
-    for (int i = offset; i < cursor; i += 2) {
-        char ch = text_buffer[i];
-        
-        if (ch == '\n') {
-            visual_lines++;
-            col = 0;
-        } else if (ch >= 32 && ch <= 126) {
-            col++;
-            if (col >= chars_per_line) {
-                visual_lines++;
-                col = 0;
-            }
-        }
+    int previous_offset = offset;
+    int optimal_offset = calculateTailOffset();
+
+    if (redraw_all) {
+        offset = optimal_offset;
+    } else if (optimal_offset > offset) {
+        offset = optimal_offset;
     }
-    
-    // Si excede las líneas visibles, hacer scroll
-    if (visual_lines > max_visual_lines) {
-        int lines_to_skip = redraw_all ? (visual_lines - max_visual_lines) : 1;
-        int skipped = 0;
-        col = 0;
-        
-        while (skipped < lines_to_skip && offset < cursor - 2) {
-            char ch = text_buffer[offset];
-            
-            if (ch == '\n') {
-                skipped++;
-                col = 0;
-                offset += 2;
-            } else if (ch >= 32 && ch <= 126) {
-                col++;
-                offset += 2;
-                
-                if (col >= chars_per_line) {
-                    skipped++;
-                    col = 0;
-                }
-            } else {
-                offset += 2;
-            }
-        }
-        return 1;  // Hubo scroll
-    }
-    return 0;  // No hubo scroll
+
+    return offset != previous_offset;
 }
 
 /////////////// ver si aca 
