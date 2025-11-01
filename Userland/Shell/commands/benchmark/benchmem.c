@@ -7,9 +7,9 @@ static volatile uint8_t origen[BENCH_MEM_BLOCK_SIZE];
 static volatile uint8_t destino[BENCH_MEM_BLOCK_SIZE];
 
 int benchmem(char **argv, int argc) {
-    const char *uso = "Uso: benchmem [duracion_ms]\n  duracion_ms opcional entre 1 y 60000 (por defecto 1000).\n";
-    uint64_t duracion_ms;
-    if (!bench_parse_duration(argc, argv, &duracion_ms, uso)) {
+    const char *uso = "Uso: benchmem [duracion_s]\n  duracion_s opcional entre 1 y 60 (por defecto 1).\n";
+    uint64_t duracion_s;
+    if (!bench_parse_duration(argc, argv, &duracion_s, uso)) {
         return 1;
     }
 
@@ -19,18 +19,21 @@ int benchmem(char **argv, int argc) {
     }
 
     uint64_t iteraciones = 0;
-    uint64_t inicio = getMilisFromBoot();
-    uint64_t ahora = inicio;
+    uint64_t inicio = bench_wait_for_next_second();
+    uint64_t objetivo = inicio + duracion_s;
+    uint64_t actual = inicio;
 
     do {
         for (int i = 0; i < BENCH_MEM_BLOCK_SIZE; i++) {
             destino[i] = origen[i] + (uint8_t)iteraciones;
         }
         iteraciones++;
-        ahora = getMilisFromBoot();
-    } while (ahora - inicio < duracion_ms);
+        actual = bench_now_seconds();
+    } while (actual < objetivo);
 
-    uint64_t transcurrido = ahora - inicio;
+    uint64_t fin = (actual < objetivo) ? objetivo : actual;
+    uint64_t transcurrido = (fin > inicio) ? (fin - inicio) : duracion_s;
+
     uint64_t ops_por_segundo = bench_ops_per_second(iteraciones, transcurrido);
     uint64_t bytes_por_segundo = ops_por_segundo * BENCH_MEM_BLOCK_SIZE;
 

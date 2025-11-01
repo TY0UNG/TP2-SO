@@ -20,10 +20,10 @@ Commands command_list[] = {
     // BENCHMARKS
     {"fps", "mide cuadros por segundo del render", "  BENCHMARKS"},
     {"speed <comando>", "cronometra la ejecucion de un comando", "  BENCHMARKS"},
-    {"benchfloat [ms]", "mide divisiones de coma flotante por segundo", "  BENCHMARKS"},
-    {"benchhw [ms]", "mide lecturas del RTC por segundo", "  BENCHMARKS"},
-    {"benchmem [ms]", "mide copias de memoria por segundo", "  BENCHMARKS"},
-    {"benchkbd [ms]", "mide lecturas del teclado por segundo", "  BENCHMARKS"},
+    {"benchfloat [s]", "mide divisiones de coma flotante por segundo (1-60s)", "  BENCHMARKS"},
+    {"benchhw [s]", "mide lecturas del RTC por segundo (1-60s)", "  BENCHMARKS"},
+    {"benchmem [s]", "mide copias de memoria por segundo (1-60s)", "  BENCHMARKS"},
+    {"benchkbd [s]", "mide lecturas del teclado por segundo (1-60s)", "  BENCHMARKS"},
 
     // UTILIDADES
     {"echo", "imprime los argumentos en pantalla", "  UTILIDADES"},
