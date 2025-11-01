@@ -1,6 +1,7 @@
 #include <video.h>
 #include <font8x16.h>
 #include <stdint.h>
+#include "time.h"
 
 struct vbe_mode_info_structure {
 	uint16_t attributes;		// deprecated, only bit 7 should be of interest to you, and it indicates the mode supports a linear frame buffer.
@@ -52,10 +53,18 @@ static void printBuffer(int from, int to, bool fullRedraw);
 static void checkBufferOverflow();
 static int checkAndAutoScroll(bool redraw_all);
 static int calculateTailOffset(void);
+static void updateFpsOverlay(void);
+static void drawFpsOverlay(void);
 
 bool text_mode_enabled = true;
 
 static uint16_t text_size = 16;  // tamaño de texto default
+
+static bool fps_overlay_enabled = false;
+static uint64_t fps_last_measure_ms = 0;
+static uint32_t fps_accumulated_frames = 0;
+static uint32_t fps_last_value = 0;
+static char fps_text_buffer[32] = "FPS: 0";
 
 static uint32_t getHexColor(char style);
 
@@ -99,11 +108,23 @@ static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite
 extern void *fast_memcpy(void *dest, const void *src, uint64_t n);
 extern void *fast_memset(void *s, int c, uint64_t n);
 
+void setFpsOverlayEnabled(bool enabled) {
+    fps_overlay_enabled = enabled;
+    fps_accumulated_frames = 0;
+    fps_last_measure_ms = 0;
+    fps_last_value = 0;
+    uintToBase(0, fps_text_buffer + 5, 10);
+}
+
 /*
 /   Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer 
 /
 */
 void swapBuffers() {
+    if (fps_overlay_enabled && !text_mode_enabled) {
+        updateFpsOverlay();
+        drawFpsOverlay();
+    }
     // vsync_wait();
     fast_memcpy((void*)(uintptr_t)VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
@@ -293,6 +314,40 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
         current_x += scaled_width;
         text++;
     }
+}
+
+static void updateFpsOverlay(void) {
+    uint64_t now = getMilisFromBoot();
+
+    if (fps_last_measure_ms == 0) {
+        fps_last_measure_ms = now;
+    }
+
+    fps_accumulated_frames++;
+
+    uint64_t elapsed = now - fps_last_measure_ms;
+    if (elapsed >= 1000) {
+        if (elapsed == 0) {
+            elapsed = 1;
+        }
+
+        fps_last_value = (uint32_t)((fps_accumulated_frames * 1000ULL) / elapsed);
+        fps_accumulated_frames = 0;
+        fps_last_measure_ms = now;
+
+        uintToBase(fps_last_value, fps_text_buffer + 5, 10);
+    }
+}
+
+static void drawFpsOverlay(void) {
+    const uint64_t overlay_x1 = 16;
+    const uint64_t overlay_y1 = 16;
+    const uint64_t overlay_x2 = overlay_x1 + 160;
+    const uint64_t overlay_y2 = overlay_y1 + 40;
+    const uint16_t overlay_text_height = 24;
+
+    drawFilledRectangle(overlay_x1, overlay_y1, overlay_x2, overlay_y2, 0x00202020);
+    drawText(overlay_x1 + 8, overlay_y1 + 6, fps_text_buffer, overlay_text_height, 0x00FFFFFF);
 }
 
 #define TEXT_BUFFER_SIZE 32768  // 32KB total

@@ -33,6 +33,7 @@ static uint64_t syscall_ms(Registers *registers);
 static KeyEvent * syscall_get_key(Registers *registers);
 static uint64_t sycall_getRegs(Registers * registers);
 static int syscall_set_text_size(Registers * registers);
+static int syscall_set_fps_overlay(Registers * registers);
 
 static int syscall_audio_handler(Registers *registers);
 static int syscall_play_sound(Registers *registers);
@@ -91,6 +92,8 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_clear_audio_buffer(registers);
     case 22:
         return syscall_draw_fill_screen(registers);
+    case 23:
+        return syscall_set_fps_overlay(registers);
     default:
         break;
     }
@@ -324,5 +327,10 @@ KeyEvent * syscall_get_key(Registers * registers) {
 static int syscall_set_text_size(Registers * registers) {
     uint16_t height = (uint16_t)registers->rbx;
     setTextSize(height);
+    return 0;
+}
+
+static int syscall_set_fps_overlay(Registers * registers) {
+    setFpsOverlayEnabled(registers->rbx != 0);
     return 0;
 }

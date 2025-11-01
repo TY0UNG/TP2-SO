@@ -23,6 +23,7 @@ GLOBAL sys_audio_handler
 GLOBAL sys_play_sound
 GLOBAL sys_is_audio_buffer_empty
 GLOBAL sys_clear_audio_buffer
+GLOBAL sys_set_fps_overlay
 
 EXTERN printHex
 
@@ -206,6 +207,13 @@ sys_clear_audio_buffer:
 sys_draw_fill_screen:
     START_SYSCALL
     mov rax, 22
+    mov rbx, rdi
+    int 80h
+    END_SYSCALL
+
+sys_set_fps_overlay:
+    START_SYSCALL
+    mov rax, 23
     mov rbx, rdi
     int 80h
     END_SYSCALL

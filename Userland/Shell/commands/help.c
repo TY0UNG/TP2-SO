@@ -14,6 +14,7 @@ Commands command_list[] = {
 
     // INFORMACIÓN DEL SISTEMA
     {"time", "muestra fecha y hora actuales", "  INFORMACIÓN"},
+    {"show fps", "habilita o deshabilita el overlay de FPS", "  INFORMACIÓN"},
     {"registros", "muestra los registros del CPU", "  INFORMACIÓN"},
 
     // BENCHMARKS
