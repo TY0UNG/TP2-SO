@@ -19,13 +19,12 @@ int fps(char ** argv, int argc) {
 
         uint64_t startMS = getMilisFromBoot();
 
-        drawFilledRectangle(0, 0, 1023, 767, color);
+        drawFillScreen(color);
 
         parseInt(actual_fps, fps_buffer+5, 25);
         drawText(275, 200, fps_buffer, 100, 0xFFFFFFFF);
 
         if (fps_count != 0) {
-            strcpy(promedio_buffer, "Promedio: ");
             parseInt(fps_sum / fps_count, promedio_buffer+10, 20);
             drawText(200, 300, promedio_buffer, 100, 0xFFFFFFFF);
         }

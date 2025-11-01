@@ -7,6 +7,7 @@ GLOBAL sys_graphics_mode
 GLOBAL sys_draw_line
 GLOBAL sys_draw_rectangle
 GLOBAL sys_draw_filled_rectangle
+GLOBAL sys_draw_fill_screen
 GLOBAL sys_draw_circle
 GLOBAL sys_draw_filled_circle
 GLOBAL sys_draw_text
@@ -202,5 +203,10 @@ sys_clear_audio_buffer:
     int 80h
     END_SYSCALL
 
-
+sys_draw_fill_screen:
+    START_SYSCALL
+    mov rax, 22
+    mov rbx, rdi
+    int 80h
+    END_SYSCALL
 

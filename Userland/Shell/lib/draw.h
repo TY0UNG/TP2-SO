@@ -21,6 +21,10 @@ typedef struct {
 } FilledRectangleParameters;
 
 typedef struct {
+    uint32_t color;
+} FillScreenParameters;
+
+typedef struct {
     uint64_t x, y;
     uint16_t radius;
     uint16_t thickness;
@@ -49,6 +53,8 @@ void drawLine(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t thick
 void drawRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t thickness, uint32_t color);
 
 void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color);
+
+void drawFillScreen(uint32_t color);
 
 void drawCircle(uint64_t x_center, uint64_t y_center, uint16_t radius, uint16_t thickness, uint32_t color);
 

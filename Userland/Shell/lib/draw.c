@@ -5,6 +5,7 @@ extern int sys_graphics_mode(int enabled);
 extern int sys_draw_line(void* params);
 extern int sys_draw_rectangle(void* params);
 extern int sys_draw_filled_rectangle(void* params);
+extern int sys_draw_fill_screen(void* params);
 extern int sys_draw_circle(void* params);
 extern int sys_draw_filled_circle(void* params);
 extern int sys_draw_text(void* params);
@@ -52,6 +53,13 @@ void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uin
         .color = color
     };
     sys_draw_filled_rectangle(&params);
+}
+
+void drawFillScreen(uint32_t color) {
+    FillScreenParameters params = {
+        .color = color
+    };
+    sys_draw_fill_screen(&params);
 }
 
 void drawCircle(uint64_t x_center, uint64_t y_center, uint16_t radius, uint16_t thickness, uint32_t color) {

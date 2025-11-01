@@ -67,6 +67,7 @@ static void putPixel(uint32_t hexColor, uint64_t x, uint64_t y, bool directWrite
 }
 
 extern void *fast_memcpy(void *dest, const void *src, uint64_t n);
+extern void *fast_memset(void *s, int c, uint64_t n);
 
 /*
 /   Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer 
@@ -84,7 +85,7 @@ void canvasMode() {
 }
 
 void clearCanvas() {
-    memset(backbuffer, 0, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
+    fast_memset(backbuffer, 0, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
 
 void drawPixel(uint64_t x, uint64_t y, uint32_t color) {
@@ -118,6 +119,42 @@ void drawLine(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t thick
             err += dx;
             y1 += sy;
         }
+    }
+}
+
+void fillScreen(uint32_t hexColor) {
+    uint8_t* fb = backbuffer; // O el framebuffer directo
+    uint64_t width = VBE_mode_info->width;
+    uint64_t height = VBE_mode_info->height;
+    uint64_t pitch = VBE_mode_info->pitch; // Ancho en bytes de una línea
+    uint64_t bpp_bytes = VBE_mode_info->bpp / 8; // Debería ser 3
+    
+    uint8_t* first_row = fb;
+    uint8_t b = (hexColor) & 0xFF;
+    uint8_t g = (hexColor >> 8) & 0xFF;
+    uint8_t r = (hexColor >> 16) & 0xFF;
+
+    for (uint64_t x = 0; x < width; x++) {
+        uint64_t offset = x * bpp_bytes; // offset = x * 3
+        first_row[offset]   = b;
+        first_row[offset+1] = g;
+        first_row[offset+2] = r;
+    }
+
+    // --- Paso 2: Copiar esa primera fila al resto de la pantalla ---
+    
+    // La longitud de datos a copiar por fila
+    uint64_t row_data_size_bytes = width * bpp_bytes; 
+    
+    // Apuntador a la fuente (siempre será la primera fila)
+    const void* src_row = (const void*)first_row;
+
+    for (uint64_t y = 1; y < height; y++) {
+        // Calcula el apuntador de destino para la fila actual
+        void* dest_row = (void*)(fb + (y * pitch));
+        
+        // ¡Usa tu función rápida!
+        fast_memcpy(dest_row, src_row, row_data_size_bytes);
     }
 }
 

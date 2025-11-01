@@ -22,6 +22,7 @@ static int syscall_graphics_mode(Registers * registers);
 static int syscall_draw_line(Registers * registers);
 static int syscall_draw_rectangle(Registers * registers);
 static int syscall_draw_filled_rectangle(Registers * registers);
+static int syscall_draw_fill_screen(Registers * registers);
 static int syscall_draw_circle(Registers * registers);
 static int syscall_draw_filled_circle(Registers * registers);
 static int syscall_draw_text(Registers * registers);
@@ -88,7 +89,8 @@ uint64_t sysCallDispatcher(Registers * registers) {
             
     case 21:
         return syscall_clear_audio_buffer(registers);
-
+    case 22:
+        return syscall_draw_fill_screen(registers);
     default:
         break;
     }
@@ -189,6 +191,10 @@ typedef struct {
 } FilledRectangleParameters;
 
 typedef struct {
+    uint32_t color;
+} FillScreenParameters;
+
+typedef struct {
     uint64_t x, y;
     uint16_t radius;
     uint16_t thickness;
@@ -223,6 +229,12 @@ int syscall_draw_rectangle(Registers * registers) {
 int syscall_draw_filled_rectangle(Registers * registers) {
     FilledRectangleParameters * params = (FilledRectangleParameters *) registers->rbx;
     drawFilledRectangle(params->x1, params->y1, params->x2, params->y2, params->color);
+    return 0;
+}
+
+int syscall_draw_fill_screen(Registers * registers) {
+    FillScreenParameters * params = (FillScreenParameters *) registers->rbx;
+    fillScreen(params->color);
     return 0;
 }
 
