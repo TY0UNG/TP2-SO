@@ -131,24 +131,18 @@ void MusicSO(){
 void sleep(uint64_t ms) {
     uint64_t start_time = getMilisFromBoot();
     uint64_t end_time = start_time + ms;
-
-    
-    while (getMilisFromBoot() < end_time) {
-       
-    }
+    while (getMilisFromBoot() < end_time);
 }
 
 int main()
 {	
 	load_idt();
     ncSetStyle(0x0F);
-	
-	calibrateMilis();
-
 	start_T();
 	MusicSO();
 	imagenSO();
-	sleep(2000);
+	
+	calibrateMilis();
 
 	clearTextBuffer();
 
