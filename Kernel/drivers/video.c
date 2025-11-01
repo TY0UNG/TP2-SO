@@ -295,6 +295,14 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
     }
 }
 
+uint16_t getScreenWidth() {
+    return VBE_mode_info->width;
+}
+
+uint16_t getScreenHeight() {
+    return VBE_mode_info->height;
+}
+
 #define TEXT_BUFFER_SIZE 32768  // 32KB total
 
 // Calcular cuántas líneas caben en pantalla con tamaño mínimo

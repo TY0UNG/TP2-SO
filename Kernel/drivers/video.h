@@ -15,6 +15,8 @@ void drawCircle(uint64_t x, uint64_t y, uint16_t radius, uint16_t thickness, uin
 void drawFilledCircle(uint64_t x, uint64_t y, uint16_t radius, uint32_t color);
 void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_t color);
 void swapBuffers();
+uint16_t getScreenWidth();
+uint16_t getScreenHeight();
 
 void textMode();
 void clearTextBuffer();
