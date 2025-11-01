@@ -350,6 +350,14 @@ static void drawFpsOverlay(void) {
     drawText(overlay_x1 + 8, overlay_y1 + 6, fps_text_buffer, overlay_text_height, 0x00FFFFFF);
 }
 
+uint16_t getScreenWidth() {
+    return VBE_mode_info->width;
+}
+
+uint16_t getScreenHeight() {
+    return VBE_mode_info->height;
+}
+
 #define TEXT_BUFFER_SIZE 32768  // 32KB total
 
 // Calcular cuántas líneas caben en pantalla con tamaño mínimo
