@@ -106,6 +106,8 @@ typedef struct {
     int row;
 } CrashMarker;
 
+typedef uint8_t (*TronCellFn)(int col, int row);
+
 static void writeTwoDigitNumber(char *dest, int value) {
     if (value < 0) {
         value = 0;

@@ -1,15 +1,25 @@
 #include "tronUI.h"
 
 #include <stddef.h>
-#include "../../lib/time.h"
+
+typedef enum {
+    BOOST_STATE_READY = 0,
+    BOOST_STATE_ACTIVE = 1,
+    BOOST_STATE_SPENT = 2
+} BoostState;
+
+static const int PANEL_LABEL_OFFSET = 18;
+static const int BOOST_LABEL_Y = HUD_TOP + 110;
+static const int BOOST_VALUE_Y = BOOST_LABEL_Y + 22;
+static const int BOOST_VALUE_CLEAR_PADDING = 4;
 
 typedef struct {
     bool baseInitialized;
     int mode;
     int lives1;
     int lives2;
-    bool boostReady1;
-    bool boostReady2;
+    int boostState1;
+    int boostState2;
     bool boostFlash;
     const char *statusText;
     uint32_t statusColor;
@@ -97,13 +107,9 @@ static void drawTopHud(int mode,
     drawLivesBar(rightPanelLeft, PANEL_RIGHT_WIDTH, barY, lives2, p2->uiColor);
 }
 
-static void drawSidePanels(int mode,
-                           const Cycle *p1,
-                           const Cycle *p2,
-                           bool boostFlash) {
+static void drawSidePanelBase(int mode, const Cycle *p1, const Cycle *p2) {
     const int leftPanelLeft = 0;
     const int rightPanelLeft = SCREEN_WIDTH - PANEL_RIGHT_WIDTH;
-    const int labelOffset = 18;
 
     drawFilledRectangle(leftPanelLeft, HUD_TOP, PANEL_LEFT_WIDTH, ARENA_BOTTOM, COLOR_PANEL_ACCENT);
     drawFilledRectangle(PANEL_LEFT_WIDTH - 4, HUD_TOP, PANEL_LEFT_WIDTH, ARENA_BOTTOM, COLOR_PANEL_LIGHT);
@@ -113,32 +119,63 @@ static void drawSidePanels(int mode,
 
     const char *rightName = (mode == 1) ? "CPU" : "P2";
 
-    drawText(leftPanelLeft + labelOffset, HUD_TOP + 54, "P1", 26, p1->uiColor);
-    drawText(rightPanelLeft + labelOffset, HUD_TOP + 54, rightName, 26, p2->uiColor);
+    drawText(leftPanelLeft + PANEL_LABEL_OFFSET, HUD_TOP + 54, "P1", 26, p1->uiColor);
+    drawText(rightPanelLeft + PANEL_LABEL_OFFSET, HUD_TOP + 54, rightName, 26, p2->uiColor);
 
-    bool boostActive1 = (p1->boostUntil > getMilisFromBoot());
-    bool boostActive2 = (p2->boostUntil > getMilisFromBoot());
+    drawText(leftPanelLeft + PANEL_LABEL_OFFSET, BOOST_LABEL_Y, "Boost", 18, COLOR_TEXT_MUTED);
+    drawText(rightPanelLeft + PANEL_LABEL_OFFSET, BOOST_LABEL_Y, "Boost", 18, COLOR_TEXT_MUTED);
 
-        const char *boost1 = p1->boostUsed ? "Spent" : (boostActive1 ? "Active" : "Ready");
-        const char *boost2 = p2->boostUsed ? "Spent" : (boostActive2 ? "Active" : "Ready");
-        uint32_t color1 = boostActive1 ? COLOR_STATUS_SUCCESS : (p1->boostUsed ? COLOR_TEXT_MUTED : (boostFlash ? COLOR_STATUS_SUCCESS : COLOR_TEXT_MUTED));
-        uint32_t color2 = boostActive2 ? COLOR_STATUS_SUCCESS : (p2->boostUsed ? COLOR_TEXT_MUTED : (boostFlash ? COLOR_STATUS_SUCCESS : COLOR_TEXT_MUTED));
+    drawText(leftPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 134, "Controls:", 18, COLOR_TEXT_MUTED);
+    drawText(leftPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 106, "Arrows + P", 18, COLOR_TEXT_MUTED);
+    drawText(leftPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 78, "ESC to exit", 18, COLOR_TEXT_MUTED);
 
-        const int boostLabelY = HUD_TOP + 110;
-        const int boostValueY = boostLabelY + 22;
+    drawText(rightPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 134, "Controls:", 18, COLOR_TEXT_MUTED);
+    drawText(rightPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 106, "WASD + Q", 18, COLOR_TEXT_MUTED);
+}
 
-        drawText(leftPanelLeft + labelOffset, boostLabelY, "Boost", 18, COLOR_TEXT_MUTED);
-        drawText(leftPanelLeft + labelOffset, boostValueY, boost1, 18, color1);
+static void drawBoostValue(int panelLeft,
+                           int panelWidth,
+                           const char *text,
+                           uint32_t color) {
+    int clearLeft = panelLeft + PANEL_LABEL_OFFSET;
+    int clearRight = panelLeft + panelWidth - PANEL_LABEL_OFFSET;
+    int clearTop = BOOST_VALUE_Y - BOOST_VALUE_CLEAR_PADDING;
+    int clearBottom = BOOST_VALUE_Y + 22;
+    drawFilledRectangle(clearLeft, clearTop, clearRight, clearBottom, COLOR_PANEL_ACCENT);
+    drawText(clearLeft, BOOST_VALUE_Y, text, 18, color);
+}
 
-        drawText(rightPanelLeft + labelOffset, boostLabelY, "Boost", 18, COLOR_TEXT_MUTED);
-        drawText(rightPanelLeft + labelOffset, boostValueY, boost2, 18, color2);
+static BoostState computeBoostState(const Cycle *cycle, uint64_t now) {
+    if (cycle->boostUntil > now) {
+        return BOOST_STATE_ACTIVE;
+    }
+    if (cycle->boostUsed) {
+        return BOOST_STATE_SPENT;
+    }
+    return BOOST_STATE_READY;
+}
 
-    drawText(leftPanelLeft + labelOffset, ARENA_BOTTOM - 134, "Controls:", 18, COLOR_TEXT_MUTED);
-    drawText(leftPanelLeft + labelOffset, ARENA_BOTTOM - 106, "Arrows + P", 18, COLOR_TEXT_MUTED);
-    drawText(leftPanelLeft + labelOffset, ARENA_BOTTOM - 78, "ESC to exit", 18, COLOR_TEXT_MUTED);
+static const char *boostStateLabel(BoostState state) {
+    switch (state) {
+    case BOOST_STATE_ACTIVE:
+        return "Active";
+    case BOOST_STATE_SPENT:
+        return "Spent";
+    default:
+        return "Ready";
+    }
+}
 
-    drawText(rightPanelLeft + labelOffset, ARENA_BOTTOM - 134, "Controls:", 18, COLOR_TEXT_MUTED);
-    drawText(rightPanelLeft + labelOffset, ARENA_BOTTOM - 106, "WASD + Q", 18, COLOR_TEXT_MUTED);
+static uint32_t boostStateColor(BoostState state, bool flash) {
+    switch (state) {
+    case BOOST_STATE_ACTIVE:
+        return COLOR_STATUS_SUCCESS;
+    case BOOST_STATE_SPENT:
+        return COLOR_TEXT_MUTED;
+    case BOOST_STATE_READY:
+    default:
+        return flash ? COLOR_STATUS_SUCCESS : COLOR_TEXT_MUTED;
+    }
 }
 
 static void drawStatusBar(const char *text, uint32_t color, bool flash) {
@@ -155,30 +192,35 @@ void tronUiResetCache(void) {
     uiCache.mode = -1;
     uiCache.lives1 = -1;
     uiCache.lives2 = -1;
-    uiCache.boostReady1 = false;
-    uiCache.boostReady2 = false;
+    uiCache.boostState1 = -1;
+    uiCache.boostState2 = -1;
     uiCache.boostFlash = false;
     uiCache.statusText = NULL;
     uiCache.statusColor = 0;
     uiCache.statusFlash = false;
 }
 
-void tronUiEnsureStatic(int mode,
+bool tronUiEnsureStatic(int mode,
                         int lives1,
                         int lives2,
                         const Cycle *p1,
                         const Cycle *p2,
-                        bool boostFlash) {
-    bool boostReady1 = !p1->boostUsed;
-    bool boostReady2 = !p2->boostUsed;
+                        bool boostFlash,
+                        uint64_t now) {
+    bool dirty = false;
+    BoostState state1 = computeBoostState(p1, now);
+    BoostState state2 = computeBoostState(p2, now);
 
+    bool baseInvalidated = false;
     if (!uiCache.baseInitialized) {
         drawFillScreen(COLOR_BACKGROUND);
         drawArenaBase();
         uiCache.baseInitialized = true;
+        baseInvalidated = true;
         uiCache.mode = -1;
         uiCache.lives1 = -1;
         uiCache.lives2 = -1;
+        dirty = true;
     }
 
     bool modeChanged = (uiCache.mode != mode);
@@ -188,29 +230,58 @@ void tronUiEnsureStatic(int mode,
         uiCache.mode = mode;
         uiCache.lives1 = lives1;
         uiCache.lives2 = lives2;
+        dirty = true;
     }
 
-    if (modeChanged || uiCache.boostReady1 != boostReady1 || uiCache.boostReady2 != boostReady2 || uiCache.boostFlash != boostFlash) {
-        drawSidePanels(mode, p1, p2, boostFlash);
-        uiCache.boostReady1 = boostReady1;
-        uiCache.boostReady2 = boostReady2;
-        uiCache.boostFlash = boostFlash;
+    if (modeChanged || baseInvalidated) {
+        drawSidePanelBase(mode, p1, p2);
+        uiCache.boostState1 = -1;
+        uiCache.boostState2 = -1;
+        dirty = true;
     }
+
+    bool boostNeedsUpdate1 = (uiCache.boostState1 != (int)state1) ||
+                             ((uiCache.boostFlash != boostFlash) && state1 == BOOST_STATE_READY);
+    bool boostNeedsUpdate2 = (uiCache.boostState2 != (int)state2) ||
+                             ((uiCache.boostFlash != boostFlash) && state2 == BOOST_STATE_READY);
+
+    if (boostNeedsUpdate1) {
+        drawBoostValue(0, PANEL_LEFT_WIDTH, boostStateLabel(state1), boostStateColor(state1, boostFlash));
+        uiCache.boostState1 = (int)state1;
+        dirty = true;
+    }
+
+    if (boostNeedsUpdate2) {
+        drawBoostValue(SCREEN_WIDTH - PANEL_RIGHT_WIDTH,
+                       PANEL_RIGHT_WIDTH,
+                       boostStateLabel(state2),
+                       boostStateColor(state2, boostFlash));
+        uiCache.boostState2 = (int)state2;
+        dirty = true;
+    }
+
+    uiCache.boostFlash = boostFlash;
+    return dirty;
 }
 
-void tronUiUpdateStatus(const char *text, uint32_t color, bool flash) {
+bool tronUiUpdateStatus(const char *text, uint32_t color, bool flash) {
     if (uiCache.statusText != text || uiCache.statusColor != color || uiCache.statusFlash != flash) {
         drawStatusBar(text, color, flash);
         uiCache.statusText = text;
         uiCache.statusColor = color;
         uiCache.statusFlash = flash;
+        return true;
     }
+    return false;
 }
 
-void tronUiRedrawArena(const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]) {
+void tronUiRedrawArena(TronCellFn cellAt) {
+    if (cellAt == NULL) {
+        return;
+    }
     for (int r = 0; r < ARENA_ROWS; r++) {
         for (int c = 0; c < ARENA_COLS; c++) {
-            uint8_t cell = occupancy[r][c];
+            uint8_t cell = cellAt(c, r);
             if (cell == OCC_EMPTY) {
                 continue;
             }

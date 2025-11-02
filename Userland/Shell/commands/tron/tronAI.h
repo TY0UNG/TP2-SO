@@ -7,12 +7,12 @@
 
 Direction tronAiChooseDirection(const Cycle *ai,
                                 const Cycle *target,
-                                const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]);
+                                TronCellFn cellAt);
 
 void tronAiManageBoost(Cycle *ai,
                        const Cycle *target,
                        uint64_t now,
                        uint64_t roundStart,
-                       const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]);
+                       TronCellFn cellAt);
 
 #endif

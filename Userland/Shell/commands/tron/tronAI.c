@@ -21,7 +21,7 @@ static int score_direction(int col,
                            int row,
                            Direction dir,
                            int depth,
-                           const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]) {
+                           TronCellFn cellAt) {
     int score = 0;
     int currentCol = col;
     int currentRow = row;
@@ -33,7 +33,7 @@ static int score_direction(int col,
         if (!inside_arena(currentCol, currentRow)) {
             break;
         }
-        if (occupancy[currentRow][currentCol] != OCC_EMPTY) {
+        if (cellAt(currentCol, currentRow) != OCC_EMPTY) {
             break;
         }
 
@@ -45,10 +45,10 @@ static int score_direction(int col,
         int leftRow = currentRow + TRON_DELTA_ROW[left];
         int rightCol = currentCol + TRON_DELTA_COL[right];
         int rightRow = currentRow + TRON_DELTA_ROW[right];
-        if (inside_arena(leftCol, leftRow) && occupancy[leftRow][leftCol] == OCC_EMPTY) {
+        if (inside_arena(leftCol, leftRow) && cellAt(leftCol, leftRow) == OCC_EMPTY) {
             score++;
         }
-        if (inside_arena(rightCol, rightRow) && occupancy[rightRow][rightCol] == OCC_EMPTY) {
+        if (inside_arena(rightCol, rightRow) && cellAt(rightCol, rightRow) == OCC_EMPTY) {
             score++;
         }
     }
@@ -60,7 +60,7 @@ static bool path_clear_to_target(const Cycle *from,
                                  const Cycle *target,
                                  Direction dir,
                                  int maxSteps,
-                                 const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]) {
+                                 TronCellFn cellAt) {
     if (target == NULL || !target->alive) {
         return false;
     }
@@ -75,7 +75,7 @@ static bool path_clear_to_target(const Cycle *from,
         if (col == target->col && row == target->row) {
             return true;
         }
-        if (occupancy[row][col] != OCC_EMPTY) {
+        if (cellAt(col, row) != OCC_EMPTY) {
             return false;
         }
     }
@@ -89,7 +89,7 @@ static const int AI_BOOST_PATH_STEPS = 23;
 
 Direction tronAiChooseDirection(const Cycle *ai,
                                 const Cycle *target,
-                                const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]) {
+                                TronCellFn cellAt) {
     int depth = AI_DECISION_DEPTH;
 
     Direction options[3];
@@ -110,7 +110,7 @@ Direction tronAiChooseDirection(const Cycle *ai,
         if (!inside_arena(nextCol, nextRow)) {
             continue;
         }
-        uint8_t occ = occupancy[nextRow][nextCol];
+        uint8_t occ = cellAt(nextCol, nextRow);
         bool targetCell = false;
         if (target != NULL && target->alive) {
             targetCell = (nextCol == target->col && nextRow == target->row);
@@ -119,7 +119,7 @@ Direction tronAiChooseDirection(const Cycle *ai,
             continue;
         }
 
-        int spaceScore = score_direction(ai->col, ai->row, dir, depth, occupancy) * 3;
+    int spaceScore = score_direction(ai->col, ai->row, dir, depth, cellAt) * 3;
 
         int chaseScore = 0;
         if (target != NULL && target->alive) {
@@ -141,7 +141,7 @@ void tronAiManageBoost(Cycle *ai,
                        const Cycle *target,
                        uint64_t now,
                        uint64_t roundStart,
-                       const uint8_t occupancy[ARENA_ROWS][ARENA_COLS]) {
+                       TronCellFn cellAt) {
     if (ai->boostUsed || (ai->boostUntil > now)) {
         return;
     }
@@ -169,7 +169,7 @@ void tronAiManageBoost(Cycle *ai,
                           (target->col < ai->col && chaseDir == DIR_LEFT))) ||
         (alignedVert && ((target->row > ai->row && chaseDir == DIR_DOWN) ||
                          (target->row < ai->row && chaseDir == DIR_UP)))) {
-        if (path_clear_to_target(ai, target, chaseDir, distance + 2, occupancy)) {
+        if (path_clear_to_target(ai, target, chaseDir, distance + 2, cellAt)) {
             ai->boostUsed = true;
             ai->boostUntil = now + BOOST_DURATION_MS;
             return;
@@ -177,7 +177,7 @@ void tronAiManageBoost(Cycle *ai,
     }
 
     if (distance <= AI_BOOST_DISTANCE_THRESHOLD &&
-        path_clear_to_target(ai, target, chaseDir, AI_BOOST_PATH_STEPS, occupancy)) {
+        path_clear_to_target(ai, target, chaseDir, AI_BOOST_PATH_STEPS, cellAt)) {
         ai->boostUsed = true;
         ai->boostUntil = now + BOOST_DURATION_MS;
     }
