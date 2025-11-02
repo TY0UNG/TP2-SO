@@ -15,6 +15,7 @@ uint8_t head = 0;
 uint8_t tail = 0;
 
 bool isShiftPressed = false;
+static bool keyboard_enabled = true;
 
 static const char scancode_to_ascii[] = {
     0,   27,  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
@@ -45,6 +46,18 @@ void clearKeyBuffer() {
     size = 0;
     head = 0;
     tail = 0;
+    isShiftPressed = false;
+}
+
+void keyboard_set_enabled(bool enabled) {
+    keyboard_enabled = enabled;
+    if (!keyboard_enabled) {
+        clearKeyBuffer();
+    }
+}
+
+bool keyboard_is_enabled() {
+    return keyboard_enabled;
 }
 
 void queue(KeyEvent event) {
@@ -73,13 +86,19 @@ void keyboard_handler() {
     uint8_t scancode = raw_scancode & 0x7F;
     if (scancode == SCANCODE_LSHIFT || scancode == SCANCODE_RSHIFT) 
         isShiftPressed = !is_release;
-    char ascii = isShiftPressed ? scancode_to_ascii_shift[scancode] : scancode_to_ascii[scancode];
+    char ascii = 0;
+    if (scancode < sizeof(scancode_to_ascii)) {
+        ascii = isShiftPressed ? scancode_to_ascii_shift[scancode] : scancode_to_ascii[scancode];
+    }
     KeyEvent event = {
         raw_scancode,
         ascii,
         is_release,
         isPrintable(scancode)
     };
+    if (!keyboard_enabled) {
+        return;
+    }
     queue(event);
 
     if (!is_release && scancode == 0x29 && isShiftPressed) {

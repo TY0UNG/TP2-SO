@@ -7,6 +7,7 @@
 #include <idtLoader.h>
 #include <interrupts.h>
 #include <video.h>
+#include <keyboard.h>
 #include "./drivers/time.h"
 
 #include <audio.h>
@@ -143,20 +144,6 @@ void sleep(uint64_t ms) {
 }
 
 static void bootAnimation(void) {
-	static const int16_t path_cos[32] = {
-		1024, 994, 903, 757, 566, 342, 102, -142,
-		-366, -557, -703, -794, -824, -794, -703, -557,
-		-366, -142, 102, 342, 566, 757, 903, 994,
-		1024, 994, 903, 757, 566, 342, 102, -142
-	};
-	static const int16_t path_sin[32] = {
-		0, 206, 397, 557, 674, 737, 737, 674,
-		557, 397, 206, 0, -206, -397, -557, -674,
-		-737, -737, -674, -557, -397, -206, 0, 206,
-		397, 557, 674, 737, 737, 674, 557, 397
-	};
-	const int fp_one = 1024;
-
 	const uint32_t bg_color = 0x050518;
 	const uint32_t ring_color = 0x00A8FF;
 	const uint32_t fill_outer_color = 0x35B4FF;
@@ -173,113 +160,11 @@ static void bootAnimation(void) {
 		base_radius = 56;
 	}
 
-	int path_radius = min_dimension / 3;
-	if (path_radius <= base_radius) {
-		path_radius = base_radius + 32;
-	}
-
-	const uint64_t frame_delay = 16;
-	const int rotation_frames = 28;
-	int last_offset_x = 0;
-	int last_offset_y = 0;
-	int last_perspective = fp_one;
-	int last_radius_x = base_radius;
-	int last_radius_y = base_radius;
-
 	canvasMode();
 	fillScreen(bg_color);
 	swapBuffers();
 
-	for (int i = 0; i < rotation_frames; i++) {
-		int idx = i % 32;
-		int current_radius = path_radius - ((path_radius - base_radius) * i) / (rotation_frames - 1);
-		int offset_x = (path_cos[idx] * current_radius) / fp_one;
-		int offset_y = (path_sin[idx] * current_radius) / fp_one;
-
-		int coin_x = center_x + offset_x;
-		int coin_y = center_y + offset_y;
-
-		int perspective = (path_cos[idx] + fp_one) / 2;
-		if (perspective < 128) {
-			perspective = 128;
-		}
-		int radius_y = (base_radius * (256 - perspective / 3)) / 256;
-		if (radius_y < 12) {
-			radius_y = 12;
-		}
-		int radius_x = (base_radius * (384 - perspective / 2)) / 384;
-		if (radius_x < 18) {
-			radius_x = 18;
-		}
-
-		fillScreen(bg_color);
-
-		const int ellipse_points = 32;
-		for (int p = 0; p < ellipse_points; p++) {
-			int cx = (radius_x * path_cos[p]) / fp_one;
-			int cy = (radius_y * path_sin[p]) / fp_one;
-			int x = coin_x + cx;
-			int y = coin_y + cy;
-			drawCircle((uint64_t)x, (uint64_t)y, 1, 1, ring_color);
-		}
-
-		int rim_radius = radius_y / 3;
-		if (rim_radius < 4) {
-			rim_radius = 4;
-		}
-		drawCircle((uint64_t)coin_x, (uint64_t)coin_y, (uint16_t)rim_radius, 2, ring_color);
-
-		swapBuffers();
-		sleep(frame_delay);
-
-		last_offset_x = offset_x;
-		last_offset_y = offset_y;
-		last_perspective = perspective;
-		last_radius_x = radius_x;
-		last_radius_y = radius_y;
-	}
-
-	const int settle_frames = 14;
-	const int final_perspective = fp_one;
-	int settle_divisor = settle_frames > 1 ? (settle_frames - 1) : 1;
-	for (int i = 0; i < settle_frames; i++) {
-		int fraction_num = settle_frames - i - 1;
-		if (fraction_num < 0) {
-			fraction_num = 0;
-		}
-		int coin_x = center_x + (last_offset_x * fraction_num) / settle_divisor;
-		int coin_y = center_y + (last_offset_y * fraction_num) / settle_divisor;
-
-		int perspective = last_perspective + ((final_perspective - last_perspective) * i) / settle_divisor;
-		if (perspective < 128) {
-			perspective = 128;
-		}
-		(void)perspective;
-
-		int radius_x = last_radius_x + ((base_radius - last_radius_x) * i) / settle_divisor;
-		int radius_y = last_radius_y + ((base_radius - last_radius_y) * i) / settle_divisor;
-
-		fillScreen(bg_color);
-
-		const int ellipse_points = 32;
-		for (int p = 0; p < ellipse_points; p++) {
-			int cx = (radius_x * path_cos[p]) / fp_one;
-			int cy = (radius_y * path_sin[p]) / fp_one;
-			int x = coin_x + cx;
-			int y = coin_y + cy;
-			drawCircle((uint64_t)x, (uint64_t)y, 1, 1, ring_color);
-		}
-
-		int rim_radius = radius_y / 3;
-		if (rim_radius < base_radius / 4) {
-			rim_radius = base_radius / 4;
-		}
-		drawCircle((uint64_t)coin_x, (uint64_t)coin_y, (uint16_t)rim_radius, 2, ring_color);
-		swapBuffers();
-		sleep(frame_delay);
-	}
-
-	const int fill_steps = 12;
+	const int fill_steps = 10;
 	for (int step = 0; step <= fill_steps; step++) {
 		uint16_t outer_radius = (uint16_t)((base_radius * step) / fill_steps);
 		uint16_t inner_radius = (uint16_t)((outer_radius * 2) / 3);
@@ -294,11 +179,11 @@ static void bootAnimation(void) {
 		drawCircle((uint64_t)center_x, (uint64_t)center_y, outer_radius, 3, ring_color);
 		drawCircle((uint64_t)center_x, (uint64_t)center_y, inner_radius / 2, 2, ring_color);
 		swapBuffers();
-		sleep(32);
+		sleep(28);
 	}
 
 	const char * label = "TobaOS";
-	const int text_frames = 12;
+	const int text_frames = 10;
 	uint16_t text_height = (uint16_t)base_radius;
 	if (text_height < 48) {
 		text_height = 48;
@@ -319,19 +204,19 @@ static void bootAnimation(void) {
 		drawCircle((uint64_t)center_x, (uint64_t)center_y, (uint16_t)(base_radius / 3), 2, ring_color);
 		drawText(text_x, text_y, label, text_height, text_color);
 		swapBuffers();
-		sleep(35);
+		sleep(32);
 	}
 
-	sleep(380);
+	sleep(220);
 	textMode();
 }
 
-int main()
-{	
+int main() {	
 	load_idt();
     ncSetStyle(0x0F);
 	start_T();
 	MusicSO();
+	keyboard_set_enabled(false);
 	
 	canvasMode();
 	fillScreen(0x050518);
@@ -339,15 +224,12 @@ int main()
 	calibrateMilis();
 	bootAnimation();
 
+	keyboard_set_enabled(true);
 	clearTextBuffer();
-	
 
     ((EntryPoint)shell)();
 
     print("Returned from shell (unexpected)\n");
     
     return 0;
-	
-
-
 }

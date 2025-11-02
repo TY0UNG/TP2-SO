@@ -21,6 +21,9 @@ KeyEvent getNextKey();
 
 void clearKeyBuffer();
 
+void keyboard_set_enabled(bool enabled);
+bool keyboard_is_enabled();
+
 
 
 #endif
