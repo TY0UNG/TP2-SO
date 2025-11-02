@@ -10,7 +10,7 @@
 #include "./drivers/time.h"
 
 #include <audio.h>
-
+extern void diagnostic_test(); 					////
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -112,14 +112,28 @@ void * initializeKernelBinary() {
 
 /////ESTO ES APARTE
 void MusicSO(){
+	
+	play_sound(440, 500);
+    play_sound(440, 500);
+    play_sound(440, 500);
+    play_sound(349, 350);
+    play_sound(523, 150);
+    play_sound(440, 500);
+    play_sound(349, 350);
+    play_sound(523, 150);
+    play_sound(440, 1000);
 
-    play_sound(700, 200);
+	
+
+	/*
+  play_sound(700, 200);
     play_sound(900, 200);
 
     // Cierre descendente rápido (hum futurista)
     play_sound(600, 150);
     play_sound(400, 150);
     play_sound(300, 200);
+	*/
 	
 }
 void sleep(uint64_t ms) {
@@ -318,6 +332,7 @@ int main()
     ncSetStyle(0x0F);
 	start_T();
 	MusicSO();
+	
 	canvasMode();
 	fillScreen(0x050518);
 	swapBuffers();
@@ -325,6 +340,7 @@ int main()
 	bootAnimation();
 
 	clearTextBuffer();
+	
 
     ((EntryPoint)shell)();
 

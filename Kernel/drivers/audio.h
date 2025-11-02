@@ -13,7 +13,8 @@ typedef struct {
 
 bool isAudioBufferEmpty(void);
 void clearAudioBuffer(void);
-AudioEvent getNextAudioEvent(void);
+//AudioEvent getNextAudioEvent(void);
+AudioEvent getNextAudioEvent();
 void audio_handler(void);
 void play_sound(uint16_t freq, uint16_t duration);
 void stop_current_sound(void);

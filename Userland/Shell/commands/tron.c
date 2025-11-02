@@ -46,8 +46,8 @@ void initGrid() {       // Senaliza en  0
     }
 }
 ////
-void inGameMusic(){                 /// esto se corre en segundo plano toca ver donde poner 
-    clear_audio_buffer();
+void inGameMusic(){                 
+    
     play_sound(440, 220);   // La4
     play_sound(0,   55);    // Pausa
     play_sound(660, 220);   // Mi5
@@ -63,40 +63,33 @@ void inGameMusic(){                 /// esto se corre en segundo plano toca ver 
     play_sound(880, 220);   // La5
     play_sound(0,   55);    // Pausa
     play_sound(440, 220);   // La4
-   
+    play_sound(0, 400); 
     
 }
 void crashSound(){
     clear_audio_buffer();
 
-    play_sound(200, 110);  // Tono grave (2 ticks)
-    play_sound(0, 55);     // Pausa (1 tick)
-    play_sound(80, 110);   // Tono más grave (2 ticks)
+    play_sound(200, 110);  
+    play_sound(0, 55);     
+    play_sound(80, 110);   
     play_sound(0, 55);     // Pausa (1 tick)
     play_sound(50, 110);   // Tono bajísimo (2 ticks)
 
 }
 
 void MenuMusic(){
-    clear_audio_buffer();
 
-    play_sound(440, 110);   // La4 (2 ticks)
-    play_sound(0,   55);    // Pausa (1 tick)
-    play_sound(523, 110);   // Do5 (2 ticks)
-    play_sound(0,   55);    // Pausa (1 tick)
-    play_sound(659, 110);   // Mi5 (2 ticks)
-    play_sound(0,   55);    // Pausa (1 tick)
-    play_sound(784, 165);   // Sol5 (3 ticks)
-    play_sound(0,   110);   // Pausa larga (2 ticks)
-    play_sound(784, 110);   // Sol5 (2 ticks)
-    play_sound(0,   55);    // Pausa (1 tick)
-    play_sound(587, 110);   // Re5 (2 ticks)
-    play_sound(0,   55);    // Pausa (1 tick)
-    play_sound(493, 110);   // Si4 (2 ticks)
-    play_sound(0,   55);    // Pausa (1 tick)
-    play_sound(392, 165);   // Sol4 (3 ticks)
-
-    play_sound(0,   330);
+    play_sound(523, 200);   // C5
+     play_sound(0, 110);
+    play_sound(659, 200);   // E5
+     play_sound(0, 110);
+    play_sound(784, 250);   // G5
+    play_sound(0, 110);
+    play_sound(659, 200);   // E5
+    play_sound(0, 110);
+    play_sound(523, 250);
+    play_sound(0, 400);
+       
 
 }
 
@@ -109,16 +102,6 @@ void drawWalls() {
     drawFilledRectangle(SCREEN_WIDTH - GRID_SIZE, 0, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_WALL);
 }
 void drawPlayer(Player *p) {
-/*  
-    //Para que este alineado 
-    p->x = (p->x / GRID_SIZE) * GRID_SIZE;
-    p->y = (p->y / GRID_SIZE) * GRID_SIZE;
-    
-    int gx = p->x / GRID_SIZE, gy = p->y / GRID_SIZE;
-    
-    if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
-        grid[gy][gx] = (p->color == COLOR_P1) ? 1 : 2;
-    } */
     drawFilledRectangle(p->x, p->y, p->x + GRID_SIZE, p->y + GRID_SIZE, p->color);
 }
 
@@ -135,7 +118,7 @@ void drawLivesCounter(int *livesP1, int *livesP2, int maxLives) {
 void drawTable(int mode ,int *livesP1, int *livesP2, int maxLives){
     drawWalls();
     drawLivesCounter(livesP1, livesP2,  maxLives);
-    drawText(10, 20, "DEL: Menu | ESC: Salir", 23, 0xAAAAAA);
+    drawText(10, 20, "DEL: Menu ", 23, 0xAAAAAA);
     drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", MARGINSUP - 40 , 25, 0x00FFFF, SCREEN_WIDTH);               //ver
     drawFilledRectangle(0, MARGINSUP - GRID_SIZE, SCREEN_WIDTH, MARGINSUP, COLOR_WALL);                                             //VER 
     
@@ -174,18 +157,6 @@ void movePlayer(Player *p) {
         case LEFT:  p->x -= GRID_SIZE; break;
         case RIGHT: p->x += GRID_SIZE; break;
     }
-     /*
-    int distance = (p->power > 0) ? GRID_SIZE * 2 : GRID_SIZE;  
-    
-    switch (p->dir) {
-        case UP:    p->y -= distance; break;
-        case DOWN:  p->y += distance; break;
-        case LEFT:  p->x -= distance; break;
-        case RIGHT: p->x += distance; break;
-    }
-    
-    if (p->power > 0) p->power--;
-    */
 }
 
 //Ver temas de switch 
@@ -231,34 +202,38 @@ void updateMachine(Player *mach, Player *player) {                          /// 
 
 
 int menu(){
-    int mode = 0; // 1 jugador o 2 jugadores 
+     
     // MENU
     clearCanvas();
-    MenuMusic();
+    
 
     drawTextCentered("=== TRON GAME ===", 200, 28, 0x00FFFF,SCREEN_WIDTH);
     drawTextCentered("Presiona 1 para un jugador", 300, 20, 0xFFFFFF,SCREEN_WIDTH);
     drawTextCentered("Presiona 2 para dos jugadores", 340, 20, 0xFFFFFF,SCREEN_WIDTH);
     drawTextCentered("Presiona ESC para salir", 400, 20, 0xAAAAAA,SCREEN_WIDTH);
 
-    swapBuffers();
-   
-    while (mode == 0) {
+   swapBuffers();
+   clear_audio_buffer();
+
+   MenuMusic();
+
+    while (1) {
+        if (is_audio_buffer_empty()) MenuMusic(); // vuelve a encolar la secuencia de notas
+        
         KeyEvent *key = getKey();
         if (key != NULL) {
+            
             if (key->scancode == 2) { // Tecla '1'
-                mode = 1;
+                return  1;
             } else if (key->scancode == 3) { // Tecla '2'
-                    mode = 2;
+                    return 2;
             } else if (key->scancode == 1) { // ESC
-                 disableGraphicsMode();
                  return 0;
             }
 
         }
     }
 
-    return mode;
 }
 
 
@@ -282,21 +257,24 @@ void  waitForContinue() {
 }
 
 int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {                
+    
     initGrid();
     Player p2 = {SCREEN_WIDTH/4, SCREEN_HEIGHT/2, RIGHT, 1, 0,COLOR_P2};
     Player p1 = {3*SCREEN_WIDTH/4, SCREEN_HEIGHT/2, LEFT, 1, 0,COLOR_P1};
     
     uint64_t last_move = getMilisFromBoot();
-    clearCanvas();
-    drawTable(mode,livesP1, livesP2,  maxLives);   
-    
-    while (1) {
-        
+    clearCanvas();   clear_audio_buffer();
+    drawTable(mode,livesP1, livesP2,  maxLives);
 
+    inGameMusic();
+
+    while (1) {
+        if (is_audio_buffer_empty()) inGameMusic();
         KeyEvent *key = getKey();
         
         // Control P1 
         if (key != NULL) {                                                                                          // se puede hacer generico 
+            
             if (key->scancode == 72 && p1.dir != DOWN) p1.dir = UP;             //  Arriba
             else if (key->scancode == 80 && p1.dir != UP) p1.dir = DOWN;        //  Abajo
             else if (key->scancode == 75 && p1.dir != RIGHT) p1.dir = LEFT;     // Izqu
@@ -309,17 +287,17 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 else if (key->ascii == 's' && p2.dir != UP) p2.dir = DOWN;
                 else if (key->ascii == 'a' && p2.dir != RIGHT) p2.dir = LEFT;
                 else if (key->ascii == 'd' && p2.dir != LEFT) p2.dir = RIGHT;
+                else if (key->ascii == 'q' ) p2.power = 3;                          // Speedboost 
+                 
             }
             
-            if (key->scancode == 1) return 0;  // ESC
-            if (key->scancode == 14) return 1; // DEL
+            if (key->scancode == 1) return 0;  // ESC                   ///sacar 
+            if (key->scancode == 14) return 0; // DEL
         }
         
         uint64_t current_time = getMilisFromBoot();
         if (current_time - last_move >= DELAY) {
             last_move = current_time;
-            
-            // Actualizar maquina 
             if (mode == 1) {
                 updateMachine(&p2, &p1);
             }
@@ -327,8 +305,6 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
         int col1 = 0, col2 = 0;
             
     
-        
-
     // Mover P1 
     if (p1.alive) {
         int moves_p1 = (p1.power > 0) ? 5 : 1;
@@ -341,16 +317,17 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 col1 = 1;
                 break;
             }
-            
             //marcar en grid
             //Para que este alineado 
              p1.x = (p1.x / GRID_SIZE) * GRID_SIZE;   p1.y = (p1.y / GRID_SIZE) * GRID_SIZE;
-            int gx = p1.x / GRID_SIZE;
-            int gy = p1.y / GRID_SIZE;
+            int gx = p1.x / GRID_SIZE;  int gy = p1.y / GRID_SIZE;
             if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && 
                 gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
                 grid[gy][gx] = 1;
             }
+
+             drawPlayer(&p1);
+            
         }
         
         if (p1.power > 0) p1.power = 0;
@@ -366,16 +343,14 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
                 col2 = 1;
                 break;
             }
-
              //Para que este alineado 
              p2.x = (p2.x / GRID_SIZE) * GRID_SIZE;   p2.y = (p2.y / GRID_SIZE) * GRID_SIZE;
+            int gx = p2.x / GRID_SIZE;   int gy = p2.y / GRID_SIZE;
 
-            int gx = p2.x / GRID_SIZE;
-            int gy = p2.y / GRID_SIZE;
-            if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && 
-                gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
+            if (gx >= 0 && gx < SCREEN_WIDTH/GRID_SIZE && gy >= 0 && gy < SCREEN_HEIGHT/GRID_SIZE) {
                 grid[gy][gx] = 2;
             }
+            drawPlayer(&p2);
         }
         
         if (p2.power > 0) p2.power = 0;                             //ver
@@ -403,38 +378,13 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
             else {
                 drawTextCentered(mode == 1 ? "CPU gana!" : "Player 2 gana!", 100, 30, COLOR_P2, SCREEN_WIDTH);
             }
-        } /*else {
-            drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", 100, 25, 0x00FFFF, SCREEN_WIDTH);
-            char livesText[50];
-            if (mode == 1) {
-                drawTextCentered("Player", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
-            } else {
-                drawTextCentered("Player 1", SCREEN_HEIGHT/2 - 100, 25, COLOR_P1, SCREEN_WIDTH);
-                drawTextCentered("Player 2", SCREEN_HEIGHT/2 - 50, 25, COLOR_P2, SCREEN_WIDTH);
-            }
-        }*/
+        } 
         
         //waitForContinue();
-        drawTextCentered("Presiona DEL para continuar", SCREEN_HEIGHT/2 + 100, 20, 0xFFFF00, SCREEN_WIDTH);
+        drawTextCentered("Presiona ESC para continuar o DEl para volver  menu ", SCREEN_HEIGHT/2 + 100, 30, 0xFFFF00, SCREEN_WIDTH);
         swapBuffers();
-        check();
-        return ;
+        return check();
     }
-
-
-    // Dibujar lineas
-     for (int i = 0; i < SCREEN_HEIGHT/GRID_SIZE; i++) {
-        for (int j = 0; j < SCREEN_WIDTH/GRID_SIZE; j++) {
-            if (grid[i][j] == 1) {
-                 drawFilledRectangle(j*GRID_SIZE, i*GRID_SIZE, j*GRID_SIZE + GRID_SIZE, i*GRID_SIZE + GRID_SIZE, COLOR_P1);
-            } else if (grid[i][j] == 2) {
-                 drawFilledRectangle(j*GRID_SIZE, i*GRID_SIZE, j*GRID_SIZE + GRID_SIZE, i*GRID_SIZE + GRID_SIZE, COLOR_P2);
-            }
-        }
-    }
-            
-        if (p1.alive) drawPlayer(&p1);
-        if (p2.alive) drawPlayer(&p2);
     
         swapBuffers();
             
@@ -446,46 +396,27 @@ void startText(){
     clearCanvas();
     drawTextCentered( "Iniciando juego...",200, 25, 0x00FF00,SCREEN_WIDTH);
     swapBuffers();
-    sleep(9);   
+    sleep(3);   
 }
 
 int tron(char **argv, int argc) {
     enableGraphicsMode();
-
-    int mode = menu();
     
     // --- INICIALIZAR JUEGO ---
     
     uint64_t last_time = getMilisFromBoot();
-   if(mode!=0){
+   
+    int maxLives = 3, livesP1 = 0, livesP2 = 0, flag=0;
+    int mode;
 
-   if (mode != 0) {
-        startText();
-        int maxLives = 3, livesP1 = 0, livesP2 = 0, flag=0;
+    while ( ( mode=menu() )!=0) {
+        startText();   
+        while(playRound(mode, &livesP1, &livesP2, maxLives)){
 
-        while (1) {
-            inGameMusic();                      ///VERRR 
-
-            KeyEvent *key = getKey();
-            if (key != NULL && key->scancode == 1) break; // ESC
-            
-            if (key != NULL && key->scancode == 14) { // DEL
-                mode = menu();
-                if (mode == 0) break;
-                livesP1 = 0; livesP2 = 0;
-                startText();
-            }
-            
             if (livesP1 >= maxLives || livesP2 >= maxLives) {
-                livesP1 = 0; livesP2 = 0;
+                    livesP1 = 0; livesP2 = 0;
             }
-            
-            flag = playRound(mode, &livesP1, &livesP2, maxLives);
-
-            //ver de no repetir code  y de en caso de DEL            
-            if(flag==0) break;
         }
-    }
     }
 
     clear_audio_buffer();
@@ -493,13 +424,15 @@ int tron(char **argv, int argc) {
     return 0;
 }
 
-void check(){       // Aca lo q haria es para ver el tema de dDEL ESC para salir y ahorrar codido 
+int check(){       // Aca lo q haria es para ver el tema de dDEL ESC para salir y ahorrar codido 
    
     while(1){
         KeyEvent *key = getKey();
-            if (key != NULL && key->scancode == 1){} // ESC
+
+            if (key != NULL && key->scancode == 1)return 1 ;                   // enter toca ver por ahor pongo esc
+            
                 
-            if (key != NULL && key->scancode == 14) break;// DEL
+            if (key != NULL && key->scancode == 14) return 0;// DEL
                    // ver bien 
     }
 

@@ -60,12 +60,11 @@ stop_audio:
     ret
 
 start_T:
-;Configurar PIT canal 0 para 100 Hz (tick = 10 ms)
+    ; Configurar PIT canal 0 para ~18.2 Hz (tick ≈ 55 ms)
     mov al, 0x36            ; Modo 3, LSB/MSB, canal 0
     out 0x43, al
-    mov ax, 11932            ; 1193180 / 100 Hz ≈ 11932
-    out 0x40, al             ; LSB
+    mov ax, 0xFFFF          ; 65535 → 1193180 / 65535 ≈ 18.2 Hz
+    out 0x40, al            ; LSB
     mov al, ah
-    out 0x40, al             ; MSB
-
+    out 0x40, al            ; MSB
     ret

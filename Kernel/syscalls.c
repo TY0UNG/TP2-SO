@@ -152,7 +152,7 @@ int syscall_play_sound(Registers *registers) {
 }
 
 int syscall_is_audio_buffer_empty(Registers *registers) {
-    return /*isAudioBufferEmpty() ? 1 :*/ 1;
+    return isAudioBufferEmpty() ? 1 :0;
 }
 
 int syscall_clear_audio_buffer(Registers *registers) {
