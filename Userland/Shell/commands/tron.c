@@ -399,7 +399,7 @@ void startText(){
     sleep(3);   
 }
 
-int tron(char **argv, int argc) {
+int tronBeta(char **argv, int argc) {
     enableGraphicsMode();
     
     // --- INICIALIZAR JUEGO ---

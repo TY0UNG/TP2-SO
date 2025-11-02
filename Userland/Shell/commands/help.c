@@ -30,7 +30,8 @@ Commands command_list[] = {
     {"resize <size>", "cambia el tamaño del texto (12-64)", "  UTILIDADES"},
 
     // JUEGOS Y DEMOS
-    {"tron", "inicia el juego Tron", "  JUEGOS"},
+    {"tron", "inicia el juego Tron Neon Grid", "  JUEGOS"},
+    {"tron_beta", "lanza la versión beta del juego Tron", "  JUEGOS"},
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
 
     // PRUEBAS Y EXCEPCIONES

@@ -11,7 +11,8 @@ int commandDispatcher(char ** argsv, int argsc);
 
 int help(char ** argv, int argc);
 int echo(char ** argv, int argc);
-int tron(char ** argv, int argc);
+int tronBeta(char ** argv, int argc);
+int tronGame(char ** argv, int argc);
 int bounce(char ** argv, int argc);
 int shutdown(char ** argv, int argc);
 int time(char ** argv, int argc);

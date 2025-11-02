@@ -5,9 +5,11 @@ MODULE=0000-shell.bin
 SOURCES_C  := $(wildcard [^_]*.c) \
 			  $(wildcard commands/*.c) \
 			  $(wildcard commands/benchmark/*.c) \
+			  $(wildcard commands/tron/*.c) \
 			  $(wildcard lib/*.c)
 SOURCES_ASM:= $(wildcard [^_]*.asm) \
 			   $(wildcard commands/*.asm) \
+			   $(wildcard commands/tron/*.asm) \
 			   $(wildcard lib/*.asm)
 
 # Todos los objetos
