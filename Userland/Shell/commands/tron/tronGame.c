@@ -568,7 +568,7 @@ static int playRound(int mode, int *lives1, int *lives2) {
         tronUiDrawBoostMeter(&p1, true, now, true);
         tronUiDrawBoostMeter(&p2, false, now, true);
 
-        sleep(6);
+        sleep(50);
     }
 
     // Actualizo vidas
