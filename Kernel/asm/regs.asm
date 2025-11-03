@@ -59,14 +59,31 @@ addregs:
     ; RIP original (Instruction Pointer)
     mov rax, [rsi + 120]
     mov [rdi + 120], rax
-    
-    ; CS original (Code Segment)
-    mov ax, [rsi + 128]
-    mov [rdi + 144], ax ; Se guarda el QWORD completo por alineación
 
     ; RFLAGS original
     mov rax, [rsi + 136]
     mov [rdi + 128], rax
+    
+    ; CS original (Code Segment)
+    mov ax, [rsi + 128]
+    mov [rdi + 144], ax ; Se guarda el QWORD completo por alineación
+    mov cx, ax
+    and cx, 0x7
+    mov ax, cs
+    and ax, 0x7
+    cmp ax, cx
+    jne .privilege_changed
+
+    ; RSP original (Stack Pointer)
+    mov rax, [initial_saved_stack_ptr]
+    mov [rdi + 136], rax
+
+    ; SS original (Stack Segment)
+    mov ax, ss
+    mov [rdi + 148], ax ; Se guarda el QWORD completo por alineación
+    jmp .stack_done
+
+.privilege_changed:
 
     ; RSP original (Stack Pointer)
     mov rax, [rsi + 144]
@@ -75,6 +92,8 @@ addregs:
     ; SS original (Stack Segment)
     mov ax, [rsi + 152]
     mov [rdi + 148], ax ; Se guarda el QWORD completo por alineación
+
+.stack_done:
 
 ; -----------------------------------------------------------------------------
 ; Copia de otros Segmentos (no se guardan automáticamente)
