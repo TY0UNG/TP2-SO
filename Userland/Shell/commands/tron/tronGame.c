@@ -732,15 +732,14 @@ static int playRound(int mode, int *lives1, int *lives2) {
     uint64_t tickInterval = computeTickInterval();
     uint64_t previousTime = frameTime;
     uint64_t roundStart = frameTime;
-    uint64_t accumulator = 0;
+    uint64_t aiAccumulator = 0;
+    const uint64_t aiDecisionInterval = (tickInterval > 45u) ? tickInterval : 45u;
 
     uint64_t lastStatusToggle = previousTime;
     uint64_t lastBoostToggle = previousTime;
 
     bool statusFlash = false;
     bool boostFlash = false;
-
-    uint64_t nextAiDecision = previousTime;
 
     clear_audio_buffer();
     playRoundTheme();
@@ -753,7 +752,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
         uint64_t now = getMilisFromBoot();
         uint64_t delta = now - previousTime;
         previousTime = now;
-        accumulator += delta;
 
         statsRecordFrame();
         statsMaybeReport(now);
@@ -778,10 +776,15 @@ static int playRound(int mode, int *lives1, int *lives2) {
             break;
         }
 
-        if (mode == 1 && now >= nextAiDecision) {
-            Direction chosen = tronAiChooseDirection(&p2, &p1, arenaCellAt);
-            p2.pendingDir = chosen;
-            nextAiDecision = now + (tickInterval > 45 ? tickInterval : 45);
+        if (mode == 1) {
+            aiAccumulator += delta;
+            while (aiAccumulator >= aiDecisionInterval) {
+                Direction chosen = tronAiChooseDirection(&p2, &p1, arenaCellAt);
+                p2.pendingDir = chosen;
+                aiAccumulator -= aiDecisionInterval;
+            }
+        } else {
+            aiAccumulator = 0;
         }
 
         maybeExpireBoost(&p1, now);
@@ -791,64 +794,75 @@ static int playRound(int mode, int *lives1, int *lives2) {
             tronAiManageBoost(&p2, &p1, now, roundStart, arenaCellAt);
         }
 
-    bool frameUpdated = false;
+        bool frameUpdated = false;
 
-        while (accumulator >= tickInterval && !p1Crashed && !p2Crashed) {
-            accumulator -= tickInterval;
+        bool p1Moved = false;
+        bool p2Moved = false;
 
-            bool p1Moved = false;
-            bool p2Moved = false;
+        int prevCol1 = p1.col;
+        int prevRow1 = p1.row;
+        int prevCol2 = p2.col;
+        int prevRow2 = p2.row;
 
-            int prevCol1 = p1.col;
-            int prevRow1 = p1.row;
-            int prevCol2 = p2.col;
-            int prevRow2 = p2.row;
+        TrailUpdate updates[MAX_TRAIL_UPDATES];
+        CrashMarker crash1 = {0};
+        CrashMarker crash2 = {0};
+        int updateCount = 0;
 
-            TrailUpdate updates[MAX_TRAIL_UPDATES];
-            CrashMarker crash1;
-            CrashMarker crash2;
-            int updateCount = stepCycles(&p1,
-                                         &p2,
-                                         now,
-                                         &p1Crashed,
-                                         &p2Crashed,
-                                         updates,
-                                         MAX_TRAIL_UPDATES,
-                                         &p1Moved,
-                                         &p2Moved,
-                                         &crash1,
-                                         &crash2);
+        if (!p1Crashed && !p2Crashed) {
+            updateCount = stepCycles(&p1,
+                                     &p2,
+                                     now,
+                                     &p1Crashed,
+                                     &p2Crashed,
+                                     updates,
+                                     MAX_TRAIL_UPDATES,
+                                     &p1Moved,
+                                     &p2Moved,
+                                     &crash1,
+                                     &crash2);
+        }
 
-            if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
-                tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1);
-                statsRecordTrail(1);
-            }
-            if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
-                tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2);
-                statsRecordTrail(1);
-            }
+        if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
+            tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1);
+            statsRecordTrail(1);
+            frameUpdated = true;
+        }
+        if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
+            tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2);
+            statsRecordTrail(1);
+            frameUpdated = true;
+        }
 
-            for (int i = 0; i < updateCount; i++) {
-                tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner);
-            }
+        for (int i = 0; i < updateCount; i++) {
+            tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner);
+        }
+        if (updateCount > 0) {
             statsRecordTrail((uint32_t)updateCount);
+            frameUpdated = true;
+        }
 
-            if (p1Moved && p1.alive) {
-                tronUiDrawCycleHead(&p1);
-                statsRecordHead(1);
-            }
-            if (p2Moved && p2.alive) {
-                tronUiDrawCycleHead(&p2);
-                statsRecordHead(1);
-            }
+        if (p1Moved && p1.alive) {
+            tronUiDrawCycleHead(&p1);
+            statsRecordHead(1);
+            frameUpdated = true;
+        }
+        if (p2Moved && p2.alive) {
+            tronUiDrawCycleHead(&p2);
+            statsRecordHead(1);
+            frameUpdated = true;
+        }
 
-            if (p1Crashed && crash1.active) {
-                tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL);
-            }
-            if (p2Crashed && crash2.active) {
-                tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL);
-            }
+        if (p1Crashed && crash1.active) {
+            tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL);
+            frameUpdated = true;
+        }
+        if (p2Crashed && crash2.active) {
+            tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL);
+            frameUpdated = true;
+        }
 
+        if (p1Crashed || p2Crashed) {
             frameUpdated = true;
         }
 
@@ -1029,4 +1043,3 @@ int tronGame(char **argv, int argc) {
     disableGraphicsMode();
     return 0;
 }
-
