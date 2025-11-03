@@ -22,10 +22,10 @@ addregs:
     mov rax, [rsi + 80]     ; Cargar RBP
     mov [rdi + 32], rax
 
-    mov rax, [rsi + 64]     ; Cargar RSI (el valor que tenía ANTES de los push)
+    mov rax, [rsi + 72]     ; Cargar RDI
     mov [rdi + 40], rax
 
-    mov rax, [rsi + 72]     ; Cargar RDI (el valor que tenía ANTES de los push)
+    mov rax, [rsi + 64]     ; Cargar RSI
     mov [rdi + 48], rax
 
     mov rax, [rsi + 56]     ; Cargar R8

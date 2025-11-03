@@ -8,8 +8,8 @@ typedef struct RegisterDump {
     uint64_t rcx;      // Offset 16
     uint64_t rdx;      // Offset 24
     uint64_t rbp;      // Offset 32
-    uint64_t rsi;      // Offset 40
-    uint64_t rdi;      // Offset 48
+    uint64_t rdi;      // Offset 40
+    uint64_t rsi;      // Offset 48
     uint64_t r8;       // Offset 56
     uint64_t r9;       // Offset 64
     uint64_t r10;      // Offset 72
