@@ -216,10 +216,10 @@ void drawRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t 
     drawLine(x1, y1, x1, y2, thickness, color);
 }
 
-void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color) {
+void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color, bool directWrite) {
 	for (uint64_t y = y1; y <= y2; y++) {
         for (uint64_t x = x1; x <= x2; x++) {
-            putPixel(color, x, y, false);
+            putPixel(color, x, y, directWrite);
         }
     }
 }
@@ -346,7 +346,7 @@ static void drawFpsOverlay(void) {
     const uint64_t overlay_y2 = overlay_y1 + 40;
     const uint16_t overlay_text_height = 24;
 
-    drawFilledRectangle(overlay_x1, overlay_y1, overlay_x2, overlay_y2, 0x00202020);
+    drawFilledRectangle(overlay_x1, overlay_y1, overlay_x2, overlay_y2, 0x00202020, false);
     drawText(overlay_x1 + 8, overlay_y1 + 6, fps_text_buffer, overlay_text_height, 0x00FFFFFF);
 }
 

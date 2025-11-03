@@ -191,6 +191,7 @@ typedef struct {
 typedef struct {
     uint64_t x1, y1, x2, y2;
     uint32_t color;
+    bool directWrite;
 } FilledRectangleParameters;
 
 typedef struct {
@@ -231,7 +232,7 @@ int syscall_draw_rectangle(Registers * registers) {
 
 int syscall_draw_filled_rectangle(Registers * registers) {
     FilledRectangleParameters * params = (FilledRectangleParameters *) registers->rbx;
-    drawFilledRectangle(params->x1, params->y1, params->x2, params->y2, params->color);
+    drawFilledRectangle(params->x1, params->y1, params->x2, params->y2, params->color, params->directWrite);
     return 0;
 }
 

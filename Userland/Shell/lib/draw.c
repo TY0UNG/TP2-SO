@@ -44,13 +44,14 @@ void drawRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t 
     sys_draw_rectangle(&params);
 }
 
-void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color) {
+void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color, bool directWrite) {
     FilledRectangleParameters params = {
         .x1 = x1, 
         .y1 = y1, 
         .x2 = x2, 
         .y2 = y2, 
-        .color = color
+        .color = color,
+        .directWrite = directWrite
     };
     sys_draw_filled_rectangle(&params);
 }

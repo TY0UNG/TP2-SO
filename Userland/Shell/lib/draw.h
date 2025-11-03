@@ -1,6 +1,7 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct {
@@ -18,6 +19,7 @@ typedef struct {
 typedef struct {
     uint64_t x1, y1, x2, y2;
     uint32_t color;
+    bool directWrite;
 } FilledRectangleParameters;
 
 typedef struct {
@@ -52,7 +54,7 @@ void drawLine(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t thick
 
 void drawRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint16_t thickness, uint32_t color);
 
-void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color);
+void drawFilledRectangle(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t color, bool directWrite);
 
 void drawFillScreen(uint32_t color);
 
