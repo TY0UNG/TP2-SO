@@ -34,21 +34,21 @@ static void drawPanelFrame(uint64_t x1,
                            uint64_t y2,
                            uint32_t fill,
                            uint32_t outline) {
-    drawFilledRectangle(x1, y1, x2, y2, fill);
+    drawFilledRectangle(x1, y1, x2, y2, fill, false);
     drawRectangle(x1, y1, x2, y2, 2, outline);
 }
 
 static void drawArenaBase(void) {
-    drawFilledRectangle(ARENA_LEFT - 6, ARENA_TOP - 6, ARENA_RIGHT + 6, ARENA_BOTTOM + 6, COLOR_PANEL_LIGHT);
-    drawFilledRectangle(ARENA_LEFT, ARENA_TOP, ARENA_RIGHT, ARENA_BOTTOM, COLOR_PANEL_DARK);
+    drawFilledRectangle(ARENA_LEFT - 6, ARENA_TOP - 6, ARENA_RIGHT + 6, ARENA_BOTTOM + 6, COLOR_PANEL_LIGHT, false);
+    drawFilledRectangle(ARENA_LEFT, ARENA_TOP, ARENA_RIGHT, ARENA_BOTTOM, COLOR_PANEL_DARK, false);
 
     for (int c = 0; c <= ARENA_COLS; c++) {
         uint64_t x = ARENA_LEFT + (uint64_t)c * CELL_SIZE;
-        drawFilledRectangle(x, ARENA_TOP, x + 1, ARENA_BOTTOM, (c % 4 == 0) ? COLOR_GRID_GLOW : COLOR_GRID_LINE);
+        drawFilledRectangle(x, ARENA_TOP, x + 1, ARENA_BOTTOM, (c % 4 == 0) ? COLOR_GRID_GLOW : COLOR_GRID_LINE, false);
     }
     for (int r = 0; r <= ARENA_ROWS; r++) {
         uint64_t y = ARENA_TOP + (uint64_t)r * CELL_SIZE;
-        drawFilledRectangle(ARENA_LEFT, y, ARENA_RIGHT, y + 1, (r % 4 == 0) ? COLOR_GRID_GLOW : COLOR_GRID_LINE);
+        drawFilledRectangle(ARENA_LEFT, y, ARENA_RIGHT, y + 1, (r % 4 == 0) ? COLOR_GRID_GLOW : COLOR_GRID_LINE, false);
     }
 }
 
@@ -76,7 +76,7 @@ static void drawLivesBar(int panelLeft,
         int left = startX + i * (segmentWidth + spacing);
         int right = left + segmentWidth;
         uint32_t color = (i < lives) ? activeColor : COLOR_GRID_LINE;
-        drawFilledRectangle(left, y, right, y + segmentHeight, color);
+        drawFilledRectangle(left, y, right, y + segmentHeight, color, false);
         drawRectangle(left, y, right, y + segmentHeight, 1, COLOR_PANEL_LIGHT);
     }
 }
@@ -86,8 +86,8 @@ static void drawTopHud(int mode,
                        int lives2,
                        const Cycle *p1,
                        const Cycle *p2) {
-    drawFilledRectangle(0, 0, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_DARK);
-    drawFilledRectangle(0, HUD_TOP - 6, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_ACCENT);
+    drawFilledRectangle(0, 0, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_DARK, false);
+    drawFilledRectangle(0, HUD_TOP - 6, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_ACCENT, false);
 
     drawText(40, 32, "TRON NEON GRID", 32, COLOR_TEXT_PRIMARY);
 
@@ -111,11 +111,11 @@ static void drawSidePanelBase(int mode, const Cycle *p1, const Cycle *p2) {
     const int leftPanelLeft = 0;
     const int rightPanelLeft = SCREEN_WIDTH - PANEL_RIGHT_WIDTH;
 
-    drawFilledRectangle(leftPanelLeft, HUD_TOP, PANEL_LEFT_WIDTH, ARENA_BOTTOM, COLOR_PANEL_ACCENT);
-    drawFilledRectangle(PANEL_LEFT_WIDTH - 4, HUD_TOP, PANEL_LEFT_WIDTH, ARENA_BOTTOM, COLOR_PANEL_LIGHT);
+    drawFilledRectangle(leftPanelLeft, HUD_TOP, PANEL_LEFT_WIDTH, ARENA_BOTTOM, COLOR_PANEL_ACCENT, false);
+    drawFilledRectangle(PANEL_LEFT_WIDTH - 4, HUD_TOP, PANEL_LEFT_WIDTH, ARENA_BOTTOM, COLOR_PANEL_LIGHT, false);
 
-    drawFilledRectangle(ARENA_RIGHT, HUD_TOP, SCREEN_WIDTH, ARENA_BOTTOM, COLOR_PANEL_ACCENT);
-    drawFilledRectangle(ARENA_RIGHT, HUD_TOP, ARENA_RIGHT + 4, ARENA_BOTTOM, COLOR_PANEL_LIGHT);
+    drawFilledRectangle(ARENA_RIGHT, HUD_TOP, SCREEN_WIDTH, ARENA_BOTTOM, COLOR_PANEL_ACCENT, false);
+    drawFilledRectangle(ARENA_RIGHT, HUD_TOP, ARENA_RIGHT + 4, ARENA_BOTTOM, COLOR_PANEL_LIGHT, false);
 
     const char *rightName = (mode == 1) ? "CPU" : "P2";
 
@@ -141,7 +141,7 @@ static void drawBoostValue(int panelLeft,
     int clearRight = panelLeft + panelWidth - PANEL_LABEL_OFFSET;
     int clearTop = BOOST_VALUE_Y - BOOST_VALUE_CLEAR_PADDING;
     int clearBottom = BOOST_VALUE_Y + 22;
-    drawFilledRectangle(clearLeft, clearTop, clearRight, clearBottom, COLOR_PANEL_ACCENT);
+    drawFilledRectangle(clearLeft, clearTop, clearRight, clearBottom, COLOR_PANEL_ACCENT, false);
     drawText(clearLeft, BOOST_VALUE_Y, text, 18, color);
 }
 
@@ -179,8 +179,8 @@ static uint32_t boostStateColor(BoostState state, bool flash) {
 }
 
 static void drawStatusBar(const char *text, uint32_t color, bool flash) {
-    drawFilledRectangle(0, ARENA_BOTTOM, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_STATUS);
-    drawFilledRectangle(0, ARENA_BOTTOM, SCREEN_WIDTH, ARENA_BOTTOM + 6, COLOR_PANEL_ACCENT);
+    drawFilledRectangle(0, ARENA_BOTTOM, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_STATUS, false);
+    drawFilledRectangle(0, ARENA_BOTTOM, SCREEN_WIDTH, ARENA_BOTTOM + 6, COLOR_PANEL_ACCENT, false);
     if (text != NULL) {
         uint32_t tint = flash ? color : COLOR_TEXT_MUTED;
         drawTextCentered(text, ARENA_BOTTOM + 26, 24, tint, SCREEN_WIDTH);
@@ -285,32 +285,50 @@ void tronUiRedrawArena(TronCellFn cellAt) {
             if (cell == OCC_EMPTY) {
                 continue;
             }
-            tronUiDrawTrailCell(c, r, cell);
+            tronUiDrawTrailCell(c, r, cell, false);
         }
     }
 }
 
-void tronUiDrawTrailCell(int col, int row, uint8_t owner) {
+void tronUiDrawTrailCell(int col, int row, uint8_t owner, bool directWrite) {
     if (col < 0 || col >= ARENA_COLS || row < 0 || row >= ARENA_ROWS) {
         return;
     }
     uint32_t color = (owner == OCC_P1) ? COLOR_P1_TRAIL : COLOR_P2_TRAIL;
     uint64_t x1 = ARENA_LEFT + (uint64_t)col * CELL_SIZE;
     uint64_t y1 = ARENA_TOP + (uint64_t)row * CELL_SIZE;
-    drawFilledRectangle(x1 + 1, y1 + 1, x1 + CELL_SIZE - 1, y1 + CELL_SIZE - 1, color);
+    drawFilledRectangle(x1 + 1, y1 + 1, x1 + CELL_SIZE - 1, y1 + CELL_SIZE - 1, color, directWrite);
 }
 
-void tronUiDrawCycleHead(const Cycle *cycle) {
+void tronUiDrawCycleHead(const Cycle *cycle, bool directWrite) {
     if (cycle == NULL || !cycle->alive) {
         return;
     }
     uint64_t x1 = ARENA_LEFT + (uint64_t)cycle->col * CELL_SIZE;
     uint64_t y1 = ARENA_TOP + (uint64_t)cycle->row * CELL_SIZE;
-    drawFilledRectangle(x1 + 2, y1 + 2, x1 + CELL_SIZE - 2, y1 + CELL_SIZE - 2, cycle->headColor);
-    drawRectangle(x1 + 1, y1 + 1, x1 + CELL_SIZE - 1, y1 + CELL_SIZE - 1, 1, cycle->uiColor);
+    uint64_t innerLeft = x1 + 2;
+    uint64_t innerTop = y1 + 2;
+    uint64_t innerRight = x1 + CELL_SIZE - 2;
+    uint64_t innerBottom = y1 + CELL_SIZE - 2;
+
+    drawFilledRectangle(innerLeft, innerTop, innerRight, innerBottom, cycle->headColor, directWrite);
+
+    uint64_t borderLeft = x1 + 1;
+    uint64_t borderRight = x1 + CELL_SIZE - 1;
+    uint64_t borderTop = y1 + 1;
+    uint64_t borderBottom = y1 + CELL_SIZE - 1;
+
+    if (directWrite) {
+        drawFilledRectangle(borderLeft, borderTop, borderRight, borderTop, cycle->uiColor, true);
+        drawFilledRectangle(borderLeft, borderBottom, borderRight, borderBottom, cycle->uiColor, true);
+        drawFilledRectangle(borderLeft, borderTop, borderLeft, borderBottom, cycle->uiColor, true);
+        drawFilledRectangle(borderRight, borderTop, borderRight, borderBottom, cycle->uiColor, true);
+    } else {
+        drawRectangle(borderLeft, borderTop, borderRight, borderBottom, 1, cycle->uiColor);
+    }
 }
 
-void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor) {
+void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor, bool directWrite) {
     if (marker == NULL || !marker->active) {
         return;
     }
@@ -319,8 +337,21 @@ void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor) {
     }
     uint64_t x1 = ARENA_LEFT + (uint64_t)marker->col * CELL_SIZE;
     uint64_t y1 = ARENA_TOP + (uint64_t)marker->row * CELL_SIZE;
-    drawFilledRectangle(x1 + 1, y1 + 1, x1 + CELL_SIZE - 1, y1 + CELL_SIZE - 1, fillColor);
-    drawRectangle(x1 + 1, y1 + 1, x1 + CELL_SIZE - 1, y1 + CELL_SIZE - 1, 1, COLOR_STATUS_ALERT);
+    uint64_t innerLeft = x1 + 1;
+    uint64_t innerTop = y1 + 1;
+    uint64_t innerRight = x1 + CELL_SIZE - 1;
+    uint64_t innerBottom = y1 + CELL_SIZE - 1;
+
+    drawFilledRectangle(innerLeft, innerTop, innerRight, innerBottom, fillColor, directWrite);
+
+    if (directWrite) {
+        drawFilledRectangle(innerLeft, innerTop, innerRight, innerTop, COLOR_STATUS_ALERT, true);
+        drawFilledRectangle(innerLeft, innerBottom, innerRight, innerBottom, COLOR_STATUS_ALERT, true);
+        drawFilledRectangle(innerLeft, innerTop, innerLeft, innerBottom, COLOR_STATUS_ALERT, true);
+        drawFilledRectangle(innerRight, innerTop, innerRight, innerBottom, COLOR_STATUS_ALERT, true);
+    } else {
+        drawRectangle(innerLeft, innerTop, innerRight, innerBottom, 1, COLOR_STATUS_ALERT);
+    }
 }
 
 void tronUiDrawMenuFrame(int selection, int animPhase) {
@@ -331,11 +362,11 @@ void tronUiDrawMenuFrame(int selection, int animPhase) {
         int bandTop = offset;
         int bandBottom = offset + 24;
         uint32_t tint = (i % 2 == 0) ? COLOR_GRID_GLOW : COLOR_PANEL_LIGHT;
-        drawFilledRectangle(0, bandTop, SCREEN_WIDTH, bandBottom, tint);
+        drawFilledRectangle(0, bandTop, SCREEN_WIDTH, bandBottom, tint, false);
     }
 
-    drawFilledRectangle(0, 0, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_DARK);
-    drawFilledRectangle(0, HUD_TOP - 6, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_ACCENT);
+    drawFilledRectangle(0, 0, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_DARK, false);
+    drawFilledRectangle(0, HUD_TOP - 6, SCREEN_WIDTH, HUD_TOP, COLOR_PANEL_ACCENT, false);
 
     drawTextCentered("TRON: NEON GRID", 180, 40, COLOR_TEXT_PRIMARY, SCREEN_WIDTH);
     drawTextCentered("select protocol", 232, 24, COLOR_TEXT_MUTED, SCREEN_WIDTH);

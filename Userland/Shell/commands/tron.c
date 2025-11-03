@@ -96,18 +96,18 @@ void MenuMusic(){
 ////////////// dibuja ////////////////////////////
 
 void drawWalls() {    
-    drawFilledRectangle(0, 0, SCREEN_WIDTH, GRID_SIZE, COLOR_WALL);
-    drawFilledRectangle(0, SCREEN_HEIGHT - GRID_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_WALL);
-    drawFilledRectangle(0, 0, GRID_SIZE, SCREEN_HEIGHT, COLOR_WALL);
-    drawFilledRectangle(SCREEN_WIDTH - GRID_SIZE, 0, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_WALL);
+    drawFilledRectangle(0, 0, SCREEN_WIDTH, GRID_SIZE, COLOR_WALL, false);
+    drawFilledRectangle(0, SCREEN_HEIGHT - GRID_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_WALL, false);
+    drawFilledRectangle(0, 0, GRID_SIZE, SCREEN_HEIGHT, COLOR_WALL, false);
+    drawFilledRectangle(SCREEN_WIDTH - GRID_SIZE, 0, SCREEN_WIDTH, SCREEN_HEIGHT, COLOR_WALL, false);
 }
 void drawPlayer(Player *p) {
-    drawFilledRectangle(p->x, p->y, p->x + GRID_SIZE, p->y + GRID_SIZE, p->color);
+    drawFilledRectangle(p->x, p->y, p->x + GRID_SIZE, p->y + GRID_SIZE, p->color, false);
 }
 
 void drawLivesCounter(int *livesP1, int *livesP2, int maxLives) {
 
-    drawFilledRectangle(840, 10, 1010, 40, 0x222222); drawRectangle(840, 10, 1010, 40, 2, COLOR_WALL);
+    drawFilledRectangle(840, 10, 1010, 40, 0x222222, false); drawRectangle(840, 10, 1010, 40, 2, COLOR_WALL);
     
     char lvText[26] = "P1=     P2= ";
     lvText[4] = '0' + (maxLives - *livesP1);
@@ -120,16 +120,16 @@ void drawTable(int mode ,int *livesP1, int *livesP2, int maxLives){
     drawLivesCounter(livesP1, livesP2,  maxLives);
     drawText(10, 20, "DEL: Menu ", 23, 0xAAAAAA);
     drawTextCentered(mode == 1 ? "Modo 1 Jugador" : "Modo 2 Jugadores", MARGINSUP - 40 , 25, 0x00FFFF, SCREEN_WIDTH);               //ver
-    drawFilledRectangle(0, MARGINSUP - GRID_SIZE, SCREEN_WIDTH, MARGINSUP, COLOR_WALL);                                             //VER 
+    drawFilledRectangle(0, MARGINSUP - GRID_SIZE, SCREEN_WIDTH, MARGINSUP, COLOR_WALL, false);                                             //VER 
     
     // Fondo dentro de tablero 
-    drawFilledRectangle(GRID_SIZE, MARGINSUP, SCREEN_WIDTH - GRID_SIZE, SCREEN_HEIGHT - GRID_SIZE, COLOR_BACKGROUND);               //
+    drawFilledRectangle(GRID_SIZE, MARGINSUP, SCREEN_WIDTH - GRID_SIZE, SCREEN_HEIGHT - GRID_SIZE, COLOR_BACKGROUND, false);               //
     
     for (int x = GRID_SIZE; x <= SCREEN_WIDTH - GRID_SIZE; x += GRID_SIZE*6) {
-        drawFilledRectangle(x, MARGINSUP, x + 1, SCREEN_HEIGHT - GRID_SIZE, COLOR_GRID);
+        drawFilledRectangle(x, MARGINSUP, x + 1, SCREEN_HEIGHT - GRID_SIZE, COLOR_GRID, false);
     }
     for (int y = MARGINSUP; y <= SCREEN_HEIGHT - GRID_SIZE; y += GRID_SIZE*6) {
-        drawFilledRectangle(GRID_SIZE, y, SCREEN_WIDTH - GRID_SIZE, y + 1, COLOR_GRID);
+        drawFilledRectangle(GRID_SIZE, y, SCREEN_WIDTH - GRID_SIZE, y + 1, COLOR_GRID, false);
     }
 
 }
@@ -271,7 +271,6 @@ int playRound(int mode, int *livesP1, int *livesP2, int maxLives) {
     while (1) {
         if (is_audio_buffer_empty()) inGameMusic();
         KeyEvent *key = getKey();
-        
         // Control P1 
         if (key != NULL) {                                                                                          // se puede hacer generico 
             

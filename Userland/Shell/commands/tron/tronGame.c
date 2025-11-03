@@ -645,11 +645,11 @@ static int waitForSpaceOrEsc(const Cycle *p1,
                 statsRecordTrail(arenaCountOccupied());
             }
             if (p1->alive) {
-                tronUiDrawCycleHead(p1);
+                tronUiDrawCycleHead(p1, false);
                 statsRecordHead(1);
             }
             if (p2->alive) {
-                tronUiDrawCycleHead(p2);
+                tronUiDrawCycleHead(p2, false);
                 statsRecordHead(1);
             }
             frameReady = true;
@@ -722,8 +722,8 @@ static int playRound(int mode, int *lives1, int *lives2) {
     if (statsEnabled) {
         statsRecordTrail(arenaCountOccupied());
     }
-    tronUiDrawCycleHead(&p1);
-    tronUiDrawCycleHead(&p2);
+    tronUiDrawCycleHead(&p1, false);
+    tronUiDrawCycleHead(&p2, false);
     statsRecordHead(2);
     tronUiUpdateStatus("... game in progress ...", COLOR_TEXT_MUTED, false);
     statsRecordStatus();
@@ -748,6 +748,9 @@ static int playRound(int mode, int *lives1, int *lives2) {
     bool exitRequested = false;
     bool p1Crashed = false;
     bool p2Crashed = false;
+    bool arenaDirty = false;
+    CrashMarker lastCrash1 = {0};
+    CrashMarker lastCrash2 = {0};
 
     while (!p1Crashed && !p2Crashed && !exitRequested) {
         uint64_t now = getMilisFromBoot();
@@ -791,7 +794,7 @@ static int playRound(int mode, int *lives1, int *lives2) {
             tronAiManageBoost(&p2, &p1, now, roundStart, arenaCellAt);
         }
 
-    bool frameUpdated = false;
+        bool frameUpdated = false;
 
         while (accumulator >= tickInterval && !p1Crashed && !p2Crashed) {
             accumulator -= tickInterval;
@@ -820,46 +823,70 @@ static int playRound(int mode, int *lives1, int *lives2) {
                                          &crash2);
 
             if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
-                tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1);
+                tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1, true);
                 statsRecordTrail(1);
             }
             if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
-                tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2);
+                tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2, true);
                 statsRecordTrail(1);
             }
 
             for (int i = 0; i < updateCount; i++) {
-                tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner);
+                tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner, true);
             }
             statsRecordTrail((uint32_t)updateCount);
 
             if (p1Moved && p1.alive) {
-                tronUiDrawCycleHead(&p1);
+                tronUiDrawCycleHead(&p1, true);
                 statsRecordHead(1);
             }
             if (p2Moved && p2.alive) {
-                tronUiDrawCycleHead(&p2);
+                tronUiDrawCycleHead(&p2, true);
                 statsRecordHead(1);
             }
 
             if (p1Crashed && crash1.active) {
-                tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL);
+                tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL, true);
             }
             if (p2Crashed && crash2.active) {
-                tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL);
+                tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL, true);
             }
 
+            lastCrash1 = crash1;
+            lastCrash2 = crash2;
             frameUpdated = true;
         }
 
-    const char *statusText = (statsEnabled && statsMessage != NULL)
+        if (frameUpdated) {
+            arenaDirty = true;
+        }
+
+        const char *statusText = (statsEnabled && statsMessage != NULL)
                       ? statsMessage
                       : "... game in progress ...";
         bool statusChanged = tronUiUpdateStatus(statusText, COLOR_TEXT_MUTED, statusFlash || frameUpdated);
         if (statusChanged) {
             statsRecordStatus();
         }
-        if (uiChanged || frameUpdated || statusChanged) {
+
+        bool needsSwap = uiChanged || statusChanged;
+        if (needsSwap) {
+            if (arenaDirty) {
+                tronUiRedrawArena(arenaCellAt);
+                if (p1.alive) {
+                    tronUiDrawCycleHead(&p1, false);
+                }
+                if (p2.alive) {
+                    tronUiDrawCycleHead(&p2, false);
+                }
+                if (lastCrash1.active) {
+                    tronUiDrawCrashMarker(&lastCrash1, COLOR_P1_TRAIL, false);
+                }
+                if (lastCrash2.active) {
+                    tronUiDrawCrashMarker(&lastCrash2, COLOR_P2_TRAIL, false);
+                }
+                arenaDirty = false;
+            }
             tronSwapBuffers();
         }
 

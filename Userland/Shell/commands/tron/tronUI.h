@@ -16,9 +16,9 @@ bool tronUiEnsureStatic(int mode,
                         uint64_t now);
 bool tronUiUpdateStatus(const char *text, uint32_t color, bool flash);
 void tronUiRedrawArena(TronCellFn cellAt);
-void tronUiDrawTrailCell(int col, int row, uint8_t owner);
-void tronUiDrawCycleHead(const Cycle *cycle);
-void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor);
+void tronUiDrawTrailCell(int col, int row, uint8_t owner, bool directWrite);
+void tronUiDrawCycleHead(const Cycle *cycle, bool directWrite);
+void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor, bool directWrite);
 void tronUiDrawMenuFrame(int selection, int animPhase);
 
 #endif
