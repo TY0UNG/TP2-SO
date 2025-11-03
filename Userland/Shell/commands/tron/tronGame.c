@@ -3,280 +3,13 @@
 #include <stdbool.h>
 #include <string.h>
 #include <draw.h>
-#include <sound.h>
 #include <inout.h>
 #include "../../lib/time.h"
 #include "tronConfig.h"
 #include "tronAI.h"
 #include "tronUI.h"
-
-#define INPUT_QUEUE_CAPACITY 32
-#define INPUT_FETCH_LIMIT 12
-#define INPUT_PROCESS_LIMIT 16
-
-typedef struct {
-    KeyEvent items[INPUT_QUEUE_CAPACITY];
-    int head;
-    int tail;
-    int size;
-} InputQueue;
-
-static InputQueue pendingEvents;
-
-static void inputQueueClear(void) {
-    pendingEvents.head = 0;
-    pendingEvents.tail = 0;
-    pendingEvents.size = 0;
-}
-
-static void inputQueuePush(const KeyEvent *event) {
-    pendingEvents.items[pendingEvents.head] = *event;
-    pendingEvents.head = (pendingEvents.head + 1) % INPUT_QUEUE_CAPACITY;
-    if (pendingEvents.size == INPUT_QUEUE_CAPACITY) {
-        pendingEvents.tail = (pendingEvents.tail + 1) % INPUT_QUEUE_CAPACITY;
-    } else {
-        pendingEvents.size++;
-    }
-}
-
-static bool inputQueuePop(KeyEvent *event) {
-    if (pendingEvents.size == 0) {
-        return false;
-    }
-    *event = pendingEvents.items[pendingEvents.tail];
-    pendingEvents.tail = (pendingEvents.tail + 1) % INPUT_QUEUE_CAPACITY;
-    pendingEvents.size--;
-    return true;
-}
-
-static void inputQueueFetch(int limit) {
-    for (int count = 0; count < limit; count++) {
-        KeyEvent *raw = getKey();
-        if (raw == NULL) {
-            break;
-        }
-        inputQueuePush(raw);
-    }
-}
-
-static bool insideArena(int col, int row);
-
-static uint8_t arenaBits[((ARENA_ROWS * ARENA_COLS) * 2 + 7) / 8];
-
-static size_t arenaCellIndex(int col, int row) {
-    return (size_t)row * ARENA_COLS + (size_t)col;
-}
-
-static uint8_t arenaGet(int col, int row) {
-    if (!insideArena(col, row)) {
-        return OCC_EMPTY;
-    }
-    size_t index = arenaCellIndex(col, row);
-    size_t bitOffset = index * 2;
-    size_t byteIndex = bitOffset >> 3;
-    uint8_t shift = (uint8_t)(bitOffset & 7u);
-    uint8_t mask = (uint8_t)(0x3u << shift);
-    return (uint8_t)((arenaBits[byteIndex] & mask) >> shift);
-}
-
-static void arenaSet(int col, int row, uint8_t owner) {
-    if (!insideArena(col, row)) {
-        return;
-    }
-    size_t index = arenaCellIndex(col, row);
-    size_t bitOffset = index * 2;
-    size_t byteIndex = bitOffset >> 3;
-    uint8_t shift = (uint8_t)(bitOffset & 7u);
-    uint8_t mask = (uint8_t)(0x3u << shift);
-    arenaBits[byteIndex] = (uint8_t)((arenaBits[byteIndex] & ~mask) | ((owner & 0x3u) << shift));
-}
-
-static void arenaClear(void) {
-    memset(arenaBits, 0, sizeof(arenaBits));
-}
-
-static uint8_t arenaCellAt(int col, int row) {
-    return arenaGet(col, row);
-}
-
-static uint32_t arenaCountOccupied(void) {
-    uint32_t total = 0;
-    for (int r = 0; r < ARENA_ROWS; r++) {
-        for (int c = 0; c < ARENA_COLS; c++) {
-            if (arenaGet(c, r) != OCC_EMPTY) {
-                total++;
-            }
-        }
-    }
-    return total;
-}
-
-static bool insideArena(int col, int row) {
-    return col >= 0 && col < ARENA_COLS && row >= 0 && row < ARENA_ROWS;
-}
-
-typedef struct {
-    uint32_t frameCount;
-    uint32_t trailCells;
-    uint32_t headDraws;
-    uint32_t hudUpdates;
-    uint32_t statusUpdates;
-    uint32_t swaps;
-} StatsCounters;
-
-static bool statsEnabled = false;
-static StatsCounters statsBucket;
-static uint64_t statsWindowStart = 0;
-static char statsBuffers[2][64];
-static int statsBufferIndex = 0;
-static const char *statsMessage = NULL;
-
-static char *statsWriteLiteral(char *dst, const char *text) {
-    while (*text != '\0') {
-        *dst++ = *text++;
-    }
-    return dst;
-}
-
-static char *statsWriteUnsigned(char *dst, uint32_t value) {
-    char tmp[10];
-    int len = 0;
-    if (value == 0) {
-        tmp[len++] = '0';
-    } else {
-        while (value > 0 && len < (int)sizeof(tmp)) {
-            tmp[len++] = (char)('0' + (value % 10u));
-            value /= 10u;
-        }
-    }
-    while (len > 0) {
-        *dst++ = tmp[--len];
-    }
-    return dst;
-}
-
-static void statsReset(uint64_t now) {
-    memset(&statsBucket, 0, sizeof(statsBucket));
-    statsWindowStart = now;
-    statsBufferIndex = 0;
-    char *buf = statsBuffers[0];
-    buf = statsWriteLiteral(buf, "stats ready");
-    *buf = '\0';
-    statsBuffers[1][0] = '\0';
-    statsMessage = statsBuffers[0];
-}
-
-static void statsToggle(void) {
-    statsEnabled = !statsEnabled;
-    if (statsEnabled) {
-        statsReset(getMilisFromBoot());
-    }
-}
-
-static void statsRecordFrame(void) {
-    if (statsEnabled) {
-        statsBucket.frameCount++;
-    }
-}
-
-static void statsRecordTrail(uint32_t amount) {
-    if (statsEnabled) {
-        statsBucket.trailCells += amount;
-    }
-}
-
-static void statsRecordHead(uint32_t amount) {
-    if (statsEnabled) {
-        statsBucket.headDraws += amount;
-    }
-}
-
-static void statsRecordHud(void) {
-    if (statsEnabled) {
-        statsBucket.hudUpdates++;
-    }
-}
-
-static void statsRecordStatus(void) {
-    if (statsEnabled) {
-        statsBucket.statusUpdates++;
-    }
-}
-
-static void statsRecordSwap(void) {
-    if (statsEnabled) {
-        statsBucket.swaps++;
-    }
-}
-
-static void statsMaybeReport(uint64_t now) {
-    if (!statsEnabled) {
-        return;
-    }
-    if (statsWindowStart == 0) {
-        statsWindowStart = now;
-        return;
-    }
-    uint64_t elapsed = now - statsWindowStart;
-    if (elapsed < 250) {
-        return;
-    }
-
-    uint32_t fps = (elapsed > 0) ? (uint32_t)((statsBucket.frameCount * 1000u) / elapsed) : 0u;
-
-    statsBufferIndex ^= 1;
-    char *buffer = statsBuffers[statsBufferIndex];
-    char *cursor = buffer;
-    cursor = statsWriteLiteral(cursor, "fps:");
-    cursor = statsWriteUnsigned(cursor, fps);
-    cursor = statsWriteLiteral(cursor, " sw:");
-    cursor = statsWriteUnsigned(cursor, statsBucket.swaps);
-    cursor = statsWriteLiteral(cursor, " tr:");
-    cursor = statsWriteUnsigned(cursor, statsBucket.trailCells);
-    cursor = statsWriteLiteral(cursor, " hd:");
-    cursor = statsWriteUnsigned(cursor, statsBucket.headDraws);
-    cursor = statsWriteLiteral(cursor, " hu:");
-    cursor = statsWriteUnsigned(cursor, statsBucket.hudUpdates);
-    *cursor = '\0';
-    statsMessage = buffer;
-
-    statsWindowStart = now;
-    memset(&statsBucket, 0, sizeof(statsBucket));
-}
-
-static void tronSwapBuffers(void) {
-    swapBuffers();
-    statsRecordSwap();
-}
-
-static void playMenuTheme(void) {
-    clear_audio_buffer();
-    play_sound(392, 160);
-    play_sound(0, 40);
-    play_sound(523, 160);
-    play_sound(0, 40);
-    play_sound(659, 220);
-    play_sound(0, 40);
-    play_sound(784, 260);
-    play_sound(0, 120);
-}
-
-static void playRoundTheme(void) {
-    play_sound(440, 110);
-    play_sound(587, 110);
-    play_sound(784, 110);
-    play_sound(0, 55);
-    play_sound(659, 110);
-    play_sound(523, 110);
-    play_sound(0, 55);
-}
-
-static void playCrashSound(void) {
-    clear_audio_buffer();
-    play_sound(120, 120);
-    play_sound(80, 120);
-    play_sound(40, 180);
-}
+#include "tronInputQueue.h"
+#include "tronArena.h"
 
 static void configureCycle(Cycle *cycle,
                            int col,
@@ -516,11 +249,6 @@ static void handleCycleInput(Cycle *p1, Cycle *p2, int mode, bool *exitRequested
             ascii = (char)(ascii - 'A' + 'a');
         }
 
-        if (printable && ascii == 'f') {
-            statsToggle();
-            continue;
-        }
-
         bool activateBoostP1 = printable && ascii == 'p';
         bool activateBoostP2 = printable && ascii == 'q';
 
@@ -592,6 +320,8 @@ static int showMainMenu(void) {
 
     playMenuTheme();
 
+    // Dibujo el MainMenu y actualizo sus animaciones
+
     while (!confirm && !exitRequest) {
         uint64_t now = getMilisFromBoot();
         if (now - lastAnim >= MENU_ANIM_INTERVAL) {
@@ -616,6 +346,8 @@ static int showMainMenu(void) {
 
 static int waitForSpaceOrEsc(const Cycle *p1,
                              const Cycle *p2,
+                             const CrashMarker *lastCrash1,
+                             const CrashMarker *lastCrash2,
                              int mode,
                              int lives1,
                              int lives2,
@@ -636,30 +368,31 @@ static int waitForSpaceOrEsc(const Cycle *p1,
         }
 
         if (!frameReady) {
-            bool hudChanged = tronUiEnsureStatic(mode, lives1, lives2, p1, p2, false, now);
-            if (hudChanged) {
-                statsRecordHud();
-            }
-            tronUiRedrawArena(arenaCellAt);
-            if (statsEnabled) {
-                statsRecordTrail(arenaCountOccupied());
-            }
+            tronUiEnsureStatic(mode, lives1, lives2, p1, p2, now);
+            tronUiRedrawArena(arenaGet);
+            tronUiDrawBoostMeter(p1, true, now, false);
+            tronUiDrawBoostMeter(p2, false, now, false);
             if (p1->alive) {
                 tronUiDrawCycleHead(p1, false);
-                statsRecordHead(1);
             }
             if (p2->alive) {
                 tronUiDrawCycleHead(p2, false);
-                statsRecordHead(1);
             }
+            if (lastCrash1 != NULL && lastCrash1->active) {
+                tronUiDrawCrashMarker(lastCrash1, COLOR_P1_TRAIL, false);
+            }
+            if (lastCrash2 != NULL && lastCrash2->active) {
+                tronUiDrawCrashMarker(lastCrash2, COLOR_P2_TRAIL, false);
+            }
+            tronUiUpdateStatus(message, color, flash);
             frameReady = true;
-            tronSwapBuffers();
+            swapBuffers();
+            continue;
         }
 
         bool statusChanged = tronUiUpdateStatus(message, color, flash);
         if (statusChanged) {
-            statsRecordStatus();
-            tronSwapBuffers();
+            swapBuffers();
         }
 
         inputQueueFetch(INPUT_FETCH_LIMIT);
@@ -680,30 +413,25 @@ static int waitForSpaceOrEsc(const Cycle *p1,
     }
 }
 
-typedef struct {
-    int lives1;
-    int lives2;
-    bool aborted;
-} MatchResult;
-
 static int playRound(int mode, int *lives1, int *lives2) {
     inputQueueClear();
     arenaClear();
 
+    // Configuro cada jugador e inicializo sus variables
     Cycle p1;
     Cycle p2;
 
     configureCycle(&p1,
-                   ARENA_COLS / 4,
-                   ARENA_ROWS / 2,
+                   ARENA_COLS / 4, // Empieza en un cuarto del ancho
+                   ARENA_ROWS / 2, // A la mitad de la altura
                    DIR_RIGHT,
                    COLOR_P1_TRAIL,
                    COLOR_P1_HEAD,
                    COLOR_P1_GLOW,
                    COLOR_P1_UI);
     configureCycle(&p2,
-                   (ARENA_COLS * 3) / 4,
-                   ARENA_ROWS / 2,
+                   (ARENA_COLS * 3) / 4, // En tres cuartos del ancho
+                   ARENA_ROWS / 2, // A la mitad de la altura
                    DIR_LEFT,
                    COLOR_P2_TRAIL,
                    COLOR_P2_HEAD,
@@ -712,33 +440,23 @@ static int playRound(int mode, int *lives1, int *lives2) {
 
     markInitialPositions(&p1, &p2);
 
+    // Dibujo la UI inicial.
+
     tronUiResetCache();
     uint64_t frameTime = getMilisFromBoot();
-    bool initHud = tronUiEnsureStatic(mode, *lives1, *lives2, &p1, &p2, false, frameTime);
-    if (initHud) {
-        statsRecordHud();
-    }
-    tronUiRedrawArena(arenaCellAt);
-    if (statsEnabled) {
-        statsRecordTrail(arenaCountOccupied());
-    }
+    tronUiEnsureStatic(mode, *lives1, *lives2, &p1, &p2, frameTime);
+    tronUiRedrawArena(arenaGet);
+    tronUiDrawBoostMeter(&p1, true, frameTime, false);
+    tronUiDrawBoostMeter(&p2, false, frameTime, false);
     tronUiDrawCycleHead(&p1, false);
     tronUiDrawCycleHead(&p2, false);
-    statsRecordHead(2);
     tronUiUpdateStatus("... game in progress ...", COLOR_TEXT_MUTED, false);
-    statsRecordStatus();
-    tronSwapBuffers();
+    swapBuffers();
 
     uint64_t tickInterval = computeTickInterval();
     uint64_t previousTime = frameTime;
     uint64_t roundStart = frameTime;
     uint64_t accumulator = 0;
-
-    uint64_t lastStatusToggle = previousTime;
-    uint64_t lastBoostToggle = previousTime;
-
-    bool statusFlash = false;
-    bool boostFlash = false;
 
     uint64_t nextAiDecision = previousTime;
 
@@ -748,54 +466,39 @@ static int playRound(int mode, int *lives1, int *lives2) {
     bool exitRequested = false;
     bool p1Crashed = false;
     bool p2Crashed = false;
-    bool arenaDirty = false;
     CrashMarker lastCrash1 = {0};
     CrashMarker lastCrash2 = {0};
 
+    // En cada turno:
     while (!p1Crashed && !p2Crashed && !exitRequested) {
         uint64_t now = getMilisFromBoot();
         uint64_t delta = now - previousTime;
         previousTime = now;
         accumulator += delta;
 
-        statsRecordFrame();
-        statsMaybeReport(now);
-
-        if (now - lastBoostToggle >= BOOST_FLASH_INTERVAL) {
-            boostFlash = !boostFlash;
-            lastBoostToggle = now;
-        }
-
-        if (now - lastStatusToggle >= STATUS_FLASH_INTERVAL) {
-            statusFlash = !statusFlash;
-            lastStatusToggle = now;
-        }
-
-        bool uiChanged = tronUiEnsureStatic(mode, *lives1, *lives2, &p1, &p2, boostFlash, now);
-        if (uiChanged) {
-            statsRecordHud();
-        }
-
+        // Cambio direcciones y activo boosts si es necesario
         handleCycleInput(&p1, &p2, mode, &exitRequested);
         if (exitRequested) {
             break;
         }
 
+        // Escucho decision de la IA de elegir direccion
         if (mode == 1 && now >= nextAiDecision) {
-            Direction chosen = tronAiChooseDirection(&p2, &p1, arenaCellAt);
+            Direction chosen = tronAiChooseDirection(&p2, &p1, arenaGet);
             p2.pendingDir = chosen;
             nextAiDecision = now + (tickInterval > 45 ? tickInterval : 45);
         }
 
+        // Deshabilito boosts si ya vencieron
         maybeExpireBoost(&p1, now);
         maybeExpireBoost(&p2, now);
 
+        // Escurcho la decision de la IA de activar boost
         if (mode == 1) {
-            tronAiManageBoost(&p2, &p1, now, roundStart, arenaCellAt);
+            tronAiManageBoost(&p2, &p1, now, roundStart, arenaGet);
         }
 
-        bool frameUpdated = false;
-
+        // Si se acumularon ticks actualiza las posiciones y dibuja los cambios
         while (accumulator >= tickInterval && !p1Crashed && !p2Crashed) {
             accumulator -= tickInterval;
 
@@ -807,42 +510,42 @@ static int playRound(int mode, int *lives1, int *lives2) {
             int prevCol2 = p2.col;
             int prevRow2 = p2.row;
 
+            // Guardo las actualizaciones para solo actualizar lo necesario
             TrailUpdate updates[MAX_TRAIL_UPDATES];
             CrashMarker crash1;
             CrashMarker crash2;
-            int updateCount = stepCycles(&p1,
-                                         &p2,
-                                         now,
-                                         &p1Crashed,
-                                         &p2Crashed,
-                                         updates,
-                                         MAX_TRAIL_UPDATES,
-                                         &p1Moved,
-                                         &p2Moved,
-                                         &crash1,
-                                         &crash2);
+            // Avanza las posiciones
+            int updateCount = stepCycles(
+                &p1,
+                &p2,
+                now,
+                &p1Crashed,
+                &p2Crashed,
+                updates,
+                MAX_TRAIL_UPDATES,
+                &p1Moved,
+                &p2Moved,
+                &crash1,
+                &crash2
+            );
 
+            // Dibuja si hubo cambios
             if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
                 tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1, true);
-                statsRecordTrail(1);
             }
             if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
                 tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2, true);
-                statsRecordTrail(1);
             }
 
             for (int i = 0; i < updateCount; i++) {
                 tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner, true);
             }
-            statsRecordTrail((uint32_t)updateCount);
 
             if (p1Moved && p1.alive) {
                 tronUiDrawCycleHead(&p1, true);
-                statsRecordHead(1);
             }
             if (p2Moved && p2.alive) {
                 tronUiDrawCycleHead(&p2, true);
-                statsRecordHead(1);
             }
 
             if (p1Crashed && crash1.active) {
@@ -854,48 +557,15 @@ static int playRound(int mode, int *lives1, int *lives2) {
 
             lastCrash1 = crash1;
             lastCrash2 = crash2;
-            frameUpdated = true;
         }
 
-        if (frameUpdated) {
-            arenaDirty = true;
-        }
-
-        const char *statusText = (statsEnabled && statsMessage != NULL)
-                      ? statsMessage
-                      : "... game in progress ...";
-        bool statusChanged = tronUiUpdateStatus(statusText, COLOR_TEXT_MUTED, statusFlash || frameUpdated);
-        if (statusChanged) {
-            statsRecordStatus();
-        }
-
-        bool needsSwap = uiChanged || statusChanged;
-        if (needsSwap) {
-            if (arenaDirty) {
-                tronUiRedrawArena(arenaCellAt);
-                if (p1.alive) {
-                    tronUiDrawCycleHead(&p1, false);
-                }
-                if (p2.alive) {
-                    tronUiDrawCycleHead(&p2, false);
-                }
-                if (lastCrash1.active) {
-                    tronUiDrawCrashMarker(&lastCrash1, COLOR_P1_TRAIL, false);
-                }
-                if (lastCrash2.active) {
-                    tronUiDrawCrashMarker(&lastCrash2, COLOR_P2_TRAIL, false);
-                }
-                arenaDirty = false;
-            }
-            tronSwapBuffers();
-        }
-
-        if (is_audio_buffer_empty()) {
-            playRoundTheme();
-        }
+        tronUiDrawBoostMeter(&p1, true, now, true);
+        tronUiDrawBoostMeter(&p2, false, now, true);
 
         sleep(6);
     }
+
+    // Actualizo vidas
 
     if (exitRequested) {
         return -1;
@@ -910,6 +580,8 @@ static int playRound(int mode, int *lives1, int *lives2) {
     if (p2Crashed && *lives2 > 0) {
         (*lives2)--;
     }
+
+    // Pauso el juego hasta que se reanuda
 
     const char *message = "Press Space to continue";
     uint32_t waitColor = COLOR_STATUS_SUCCESS;
@@ -930,7 +602,7 @@ static int playRound(int mode, int *lives1, int *lives2) {
         waitColor = COLOR_P1_UI;
     }
 
-    return waitForSpaceOrEsc(&p1, &p2, mode, *lives1, *lives2, message, waitColor);
+    return waitForSpaceOrEsc(&p1, &p2, &lastCrash1, &lastCrash2, mode, *lives1, *lives2, message, waitColor);
 }
 
 static int showMatchResult(int mode, int lives1, int lives2) {
@@ -954,6 +626,7 @@ static int showMatchResult(int mode, int lives1, int lives2) {
     uint64_t lastFlash = getMilisFromBoot();
     bool flash = false;
 
+    // Muestro las vidas de cada jugador
     char livesLine[32];
     const char *opponentLabel = (mode == 1) ? "CPU" : "P2";
     int idx = 0;
@@ -972,6 +645,7 @@ static int showMatchResult(int mode, int lives1, int lives2) {
     livesLine[idx++] = (char)('0' + (lives2 > 9 ? 9 : lives2));
     livesLine[idx] = '\0';
 
+    // Dibujo los textos con parpadeos
     while (true) {
         uint64_t now = getMilisFromBoot();
         if (now - lastFlash >= STATUS_FLASH_INTERVAL) {
@@ -984,11 +658,12 @@ static int showMatchResult(int mode, int lives1, int lives2) {
 
         drawTextCentered(livesLine, 366, 24, COLOR_TEXT_MUTED, SCREEN_WIDTH);
 
-    drawTextCentered(prompt, 432, 24, flash ? color : COLOR_TEXT_MUTED, SCREEN_WIDTH);
-    tronSwapBuffers();
+        drawTextCentered(prompt, 432, 24, flash ? color : COLOR_TEXT_MUTED, SCREEN_WIDTH);
+        swapBuffers();
 
         inputQueueFetch(INPUT_FETCH_LIMIT);
 
+        // Escucho nuevos inputs
         KeyEvent event;
         while (inputQueuePop(&event)) {
             if (event.is_release) {
@@ -1019,6 +694,7 @@ static MatchResult runMatch(int mode) {
         }
     }
 
+    // Imprimo pantalla de resultado
     int summary = showMatchResult(mode, result.lives1, result.lives2);
     if (summary == -1) {
         result.aborted = true;
@@ -1027,9 +703,6 @@ static MatchResult runMatch(int mode) {
 }
 
 int tronGame(char **argv, int argc) {
-    (void)argv;
-    (void)argc;
-
     inputQueueClear();
     enableGraphicsMode();
 
@@ -1039,16 +712,10 @@ int tronGame(char **argv, int argc) {
         if (mode == 0) {
             break;
         }
-        if (mode == 1) {
-            MatchResult result = runMatch(mode);
-            if (result.aborted) {
-                running = 0;
-            }
-        } else {
-            MatchResult versusResult = runMatch(mode);
-            if (versusResult.aborted) {
-                running = 0;
-            }
+
+        MatchResult result = runMatch(mode);
+        if (result.aborted) {
+            running = 0;
         }
     }
 

@@ -2,25 +2,17 @@
 
 #include <stddef.h>
 
-typedef enum {
-    BOOST_STATE_READY = 0,
-    BOOST_STATE_ACTIVE = 1,
-    BOOST_STATE_SPENT = 2
-} BoostState;
-
 static const int PANEL_LABEL_OFFSET = 18;
 static const int BOOST_LABEL_Y = HUD_TOP + 110;
-static const int BOOST_VALUE_Y = BOOST_LABEL_Y + 22;
-static const int BOOST_VALUE_CLEAR_PADDING = 4;
+static const int BOOST_BAR_Y = BOOST_LABEL_Y + 22;
+static const int BOOST_BAR_HEIGHT = 18;
+static const int BOOST_BAR_PADDING = 4;
 
 typedef struct {
     bool baseInitialized;
     int mode;
     int lives1;
     int lives2;
-    int boostState1;
-    int boostState2;
-    bool boostFlash;
     const char *statusText;
     uint32_t statusColor;
     bool statusFlash;
@@ -125,57 +117,24 @@ static void drawSidePanelBase(int mode, const Cycle *p1, const Cycle *p2) {
     drawText(leftPanelLeft + PANEL_LABEL_OFFSET, BOOST_LABEL_Y, "Boost", 18, COLOR_TEXT_MUTED);
     drawText(rightPanelLeft + PANEL_LABEL_OFFSET, BOOST_LABEL_Y, "Boost", 18, COLOR_TEXT_MUTED);
 
+    int barLeft = leftPanelLeft + PANEL_LABEL_OFFSET;
+    int barRight = leftPanelLeft + PANEL_LEFT_WIDTH - PANEL_LABEL_OFFSET;
+    int barTop = BOOST_BAR_Y - BOOST_BAR_PADDING;
+    int barBottom = BOOST_BAR_Y + BOOST_BAR_HEIGHT + BOOST_BAR_PADDING;
+    drawFilledRectangle(barLeft, barTop, barRight, barBottom, COLOR_PANEL_ACCENT, false);
+    drawRectangle(barLeft, barTop, barRight, barBottom, 1, COLOR_PANEL_LIGHT);
+
+    barLeft = rightPanelLeft + PANEL_LABEL_OFFSET;
+    barRight = rightPanelLeft + PANEL_RIGHT_WIDTH - PANEL_LABEL_OFFSET;
+    drawFilledRectangle(barLeft, barTop, barRight, barBottom, COLOR_PANEL_ACCENT, false);
+    drawRectangle(barLeft, barTop, barRight, barBottom, 1, COLOR_PANEL_LIGHT);
+
     drawText(leftPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 134, "Controls:", 18, COLOR_TEXT_MUTED);
     drawText(leftPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 106, "Arrows + P", 18, COLOR_TEXT_MUTED);
     drawText(leftPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 78, "ESC to exit", 18, COLOR_TEXT_MUTED);
 
     drawText(rightPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 134, "Controls:", 18, COLOR_TEXT_MUTED);
     drawText(rightPanelLeft + PANEL_LABEL_OFFSET, ARENA_BOTTOM - 106, "WASD + Q", 18, COLOR_TEXT_MUTED);
-}
-
-static void drawBoostValue(int panelLeft,
-                           int panelWidth,
-                           const char *text,
-                           uint32_t color) {
-    int clearLeft = panelLeft + PANEL_LABEL_OFFSET;
-    int clearRight = panelLeft + panelWidth - PANEL_LABEL_OFFSET;
-    int clearTop = BOOST_VALUE_Y - BOOST_VALUE_CLEAR_PADDING;
-    int clearBottom = BOOST_VALUE_Y + 22;
-    drawFilledRectangle(clearLeft, clearTop, clearRight, clearBottom, COLOR_PANEL_ACCENT, false);
-    drawText(clearLeft, BOOST_VALUE_Y, text, 18, color);
-}
-
-static BoostState computeBoostState(const Cycle *cycle, uint64_t now) {
-    if (cycle->boostUntil > now) {
-        return BOOST_STATE_ACTIVE;
-    }
-    if (cycle->boostUsed) {
-        return BOOST_STATE_SPENT;
-    }
-    return BOOST_STATE_READY;
-}
-
-static const char *boostStateLabel(BoostState state) {
-    switch (state) {
-    case BOOST_STATE_ACTIVE:
-        return "Active";
-    case BOOST_STATE_SPENT:
-        return "Spent";
-    default:
-        return "Ready";
-    }
-}
-
-static uint32_t boostStateColor(BoostState state, bool flash) {
-    switch (state) {
-    case BOOST_STATE_ACTIVE:
-        return COLOR_STATUS_SUCCESS;
-    case BOOST_STATE_SPENT:
-        return COLOR_TEXT_MUTED;
-    case BOOST_STATE_READY:
-    default:
-        return flash ? COLOR_STATUS_SUCCESS : COLOR_TEXT_MUTED;
-    }
 }
 
 static void drawStatusBar(const char *text, uint32_t color, bool flash) {
@@ -192,9 +151,6 @@ void tronUiResetCache(void) {
     uiCache.mode = -1;
     uiCache.lives1 = -1;
     uiCache.lives2 = -1;
-    uiCache.boostState1 = -1;
-    uiCache.boostState2 = -1;
-    uiCache.boostFlash = false;
     uiCache.statusText = NULL;
     uiCache.statusColor = 0;
     uiCache.statusFlash = false;
@@ -205,11 +161,9 @@ bool tronUiEnsureStatic(int mode,
                         int lives2,
                         const Cycle *p1,
                         const Cycle *p2,
-                        bool boostFlash,
                         uint64_t now) {
+    (void)now;
     bool dirty = false;
-    BoostState state1 = computeBoostState(p1, now);
-    BoostState state2 = computeBoostState(p2, now);
 
     bool baseInvalidated = false;
     if (!uiCache.baseInitialized) {
@@ -235,32 +189,8 @@ bool tronUiEnsureStatic(int mode,
 
     if (modeChanged || baseInvalidated) {
         drawSidePanelBase(mode, p1, p2);
-        uiCache.boostState1 = -1;
-        uiCache.boostState2 = -1;
         dirty = true;
     }
-
-    bool boostNeedsUpdate1 = (uiCache.boostState1 != (int)state1) ||
-                             ((uiCache.boostFlash != boostFlash) && state1 == BOOST_STATE_READY);
-    bool boostNeedsUpdate2 = (uiCache.boostState2 != (int)state2) ||
-                             ((uiCache.boostFlash != boostFlash) && state2 == BOOST_STATE_READY);
-
-    if (boostNeedsUpdate1) {
-        drawBoostValue(0, PANEL_LEFT_WIDTH, boostStateLabel(state1), boostStateColor(state1, boostFlash));
-        uiCache.boostState1 = (int)state1;
-        dirty = true;
-    }
-
-    if (boostNeedsUpdate2) {
-        drawBoostValue(SCREEN_WIDTH - PANEL_RIGHT_WIDTH,
-                       PANEL_RIGHT_WIDTH,
-                       boostStateLabel(state2),
-                       boostStateColor(state2, boostFlash));
-        uiCache.boostState2 = (int)state2;
-        dirty = true;
-    }
-
-    uiCache.boostFlash = boostFlash;
     return dirty;
 }
 
@@ -351,6 +281,82 @@ void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor, bool d
         drawFilledRectangle(innerRight, innerTop, innerRight, innerBottom, COLOR_STATUS_ALERT, true);
     } else {
         drawRectangle(innerLeft, innerTop, innerRight, innerBottom, 1, COLOR_STATUS_ALERT);
+    }
+}
+
+void tronUiDrawBoostMeter(const Cycle *cycle, bool leftPanel, uint64_t now, bool directWrite) {
+    int panelLeft = leftPanel ? 0 : (SCREEN_WIDTH - PANEL_RIGHT_WIDTH);
+    int panelWidth = leftPanel ? PANEL_LEFT_WIDTH : PANEL_RIGHT_WIDTH;
+
+    int frameLeft = panelLeft + PANEL_LABEL_OFFSET;
+    int frameRight = panelLeft + panelWidth - PANEL_LABEL_OFFSET;
+    int frameTop = BOOST_BAR_Y - BOOST_BAR_PADDING;
+    int frameBottom = BOOST_BAR_Y + BOOST_BAR_HEIGHT + BOOST_BAR_PADDING;
+
+    if (frameRight < frameLeft) {
+        frameRight = frameLeft;
+    }
+    if (frameBottom < frameTop) {
+        frameBottom = frameTop;
+    }
+
+    drawFilledRectangle(frameLeft, frameTop, frameRight, frameBottom, COLOR_PANEL_ACCENT, directWrite);
+
+    int fillLeft = frameLeft + 1;
+    int fillRightLimit = frameRight - 1;
+    int fillTop = BOOST_BAR_Y;
+    int fillBottom = BOOST_BAR_Y + BOOST_BAR_HEIGHT;
+
+    if (fillRightLimit < fillLeft) {
+        fillRightLimit = frameRight;
+        fillLeft = frameLeft;
+    }
+    if (fillBottom < fillTop) {
+        fillBottom = frameBottom;
+        fillTop = frameTop;
+    }
+
+    int fillWidth = 0;
+    uint32_t fillColor = COLOR_STATUS_SUCCESS;
+
+    if (cycle != NULL) {
+        if (cycle->boostUntil > now) {
+            uint64_t remaining = cycle->boostUntil - now;
+            if (remaining > BOOST_DURATION_MS) {
+                remaining = BOOST_DURATION_MS;
+            }
+            uint64_t span = (uint64_t)(fillRightLimit - fillLeft);
+            fillWidth = (int)((remaining * span) / BOOST_DURATION_MS);
+            if (fillWidth > (int)span) {
+                fillWidth = (int)span;
+            }
+            if (fillWidth > 0 && fillWidth < 2) {
+                fillWidth = 2;
+            }
+            fillColor = cycle->uiColor;
+        } else if (!cycle->boostUsed) {
+            fillWidth = fillRightLimit - fillLeft;
+            fillColor = COLOR_STATUS_SUCCESS;
+        } else {
+            fillWidth = 0;
+        }
+    }
+
+    if (fillWidth > 0) {
+        int fillRight = fillLeft + fillWidth;
+        if (fillRight > fillRightLimit) {
+            fillRight = fillRightLimit;
+        }
+        drawFilledRectangle(fillLeft, fillTop, fillRight, fillBottom, fillColor, directWrite);
+    }
+
+    if (directWrite) {
+        drawFilledRectangle(frameLeft, frameTop, frameRight, frameTop, COLOR_PANEL_LIGHT, true);
+        drawFilledRectangle(frameLeft, frameBottom, frameRight, frameBottom, COLOR_PANEL_LIGHT, true);
+        drawFilledRectangle(frameLeft, frameTop, frameLeft, frameBottom, COLOR_PANEL_LIGHT, true);
+        drawFilledRectangle(frameRight, frameTop, frameRight, frameBottom, COLOR_PANEL_LIGHT, true);
+    } else {
+        drawRectangle(frameLeft, frameTop, frameRight, frameBottom, 1, COLOR_PANEL_LIGHT);
     }
 }
 

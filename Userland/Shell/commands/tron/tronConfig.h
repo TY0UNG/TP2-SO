@@ -94,17 +94,26 @@ typedef struct {
     uint32_t uiColor;
 } Cycle;
 
+// Struct para cachear cuales fueron las actualizaciones en la arena
 typedef struct {
     int col;
     int row;
     uint8_t owner;
 } TrailUpdate;
 
+// Struct para guardar informacion sobre los choques y poder animarlos
 typedef struct {
     bool active;
     int col;
     int row;
 } CrashMarker;
+
+// Struct que guarda informacion sobre el resultado de una partida
+typedef struct {
+    int lives1;
+    int lives2;
+    bool aborted;
+} MatchResult;
 
 typedef uint8_t (*TronCellFn)(int col, int row);
 
