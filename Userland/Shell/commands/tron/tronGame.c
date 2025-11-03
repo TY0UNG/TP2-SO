@@ -456,7 +456,8 @@ static int playRound(int mode, int *lives1, int *lives2) {
     uint64_t tickInterval = computeTickInterval();
     uint64_t previousTime = frameTime;
     uint64_t roundStart = frameTime;
-    uint64_t accumulator = 0;
+    uint64_t aiAccumulator = 0;
+    const uint64_t aiDecisionInterval = (tickInterval > 45u) ? tickInterval : 45u;
 
     uint64_t nextAiDecision = previousTime;
 
@@ -474,7 +475,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
         uint64_t now = getMilisFromBoot();
         uint64_t delta = now - previousTime;
         previousTime = now;
-        accumulator += delta;
 
         // Cambio direcciones y activo boosts si es necesario
         handleCycleInput(&p1, &p2, mode, &exitRequested);
@@ -498,65 +498,71 @@ static int playRound(int mode, int *lives1, int *lives2) {
             tronAiManageBoost(&p2, &p1, now, roundStart, arenaGet);
         }
 
-        // Si se acumularon ticks actualiza las posiciones y dibuja los cambios
-        while (accumulator >= tickInterval && !p1Crashed && !p2Crashed) {
-            accumulator -= tickInterval;
+        bool frameUpdated = false;
 
-            bool p1Moved = false;
-            bool p2Moved = false;
+        bool p1Moved = false;
+        bool p2Moved = false;
 
-            int prevCol1 = p1.col;
-            int prevRow1 = p1.row;
-            int prevCol2 = p2.col;
-            int prevRow2 = p2.row;
+        int prevCol1 = p1.col;
+        int prevRow1 = p1.row;
+        int prevCol2 = p2.col;
+        int prevRow2 = p2.row;
 
-            // Guardo las actualizaciones para solo actualizar lo necesario
-            TrailUpdate updates[MAX_TRAIL_UPDATES];
-            CrashMarker crash1;
-            CrashMarker crash2;
-            // Avanza las posiciones
-            int updateCount = stepCycles(
-                &p1,
-                &p2,
-                now,
-                &p1Crashed,
-                &p2Crashed,
-                updates,
-                MAX_TRAIL_UPDATES,
-                &p1Moved,
-                &p2Moved,
-                &crash1,
-                &crash2
-            );
+        TrailUpdate updates[MAX_TRAIL_UPDATES];
+        CrashMarker crash1 = {0};
+        CrashMarker crash2 = {0};
+        int updateCount = 0;
 
-            // Dibuja si hubo cambios
-            if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
-                tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1, true);
-            }
-            if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
-                tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2, true);
-            }
+        if (!p1Crashed && !p2Crashed) {
+            updateCount = stepCycles(&p1,
+                                     &p2,
+                                     now,
+                                     &p1Crashed,
+                                     &p2Crashed,
+                                     updates,
+                                     MAX_TRAIL_UPDATES,
+                                     &p1Moved,
+                                     &p2Moved,
+                                     &crash1,
+                                     &crash2);
+        }
 
-            for (int i = 0; i < updateCount; i++) {
-                tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner, true);
-            }
+        if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
+            tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1, true);
+            frameUpdated = true;
+        }
+        if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
+            tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2, true);
+            frameUpdated = true;
+        }
 
-            if (p1Moved && p1.alive) {
-                tronUiDrawCycleHead(&p1, true);
-            }
-            if (p2Moved && p2.alive) {
-                tronUiDrawCycleHead(&p2, true);
-            }
+        for (int i = 0; i < updateCount; i++) {
+            tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner, true);
+        }
+        if (updateCount > 0) {
+            frameUpdated = true;
+        }
 
-            if (p1Crashed && crash1.active) {
-                tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL, true);
-            }
-            if (p2Crashed && crash2.active) {
-                tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL, true);
-            }
+        if (p1Moved && p1.alive) {
+            tronUiDrawCycleHead(&p1, true);
+            frameUpdated = true;
+        }
+        if (p2Moved && p2.alive) {
+            tronUiDrawCycleHead(&p2, true);
+            frameUpdated = true;
+        }
 
-            lastCrash1 = crash1;
-            lastCrash2 = crash2;
+        if (p1Crashed && crash1.active) {
+            tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL, true);
+            frameUpdated = true;
+        }
+        if (p2Crashed && crash2.active) {
+            tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL, true);
+            frameUpdated = true;
+        }
+
+        if (p1Crashed || p2Crashed) {
+            frameUpdated = true;
         }
 
         tronUiDrawBoostMeter(&p1, true, now, true);
@@ -723,4 +729,3 @@ int tronGame(char **argv, int argc) {
     disableGraphicsMode();
     return 0;
 }
-
