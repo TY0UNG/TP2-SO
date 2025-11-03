@@ -42,7 +42,6 @@ int commandDispatcher(char ** argsv, int argsc) {
     if (strcmp(cmd, "benchkbd") == 0) return benchkbd(argsv, argsc);
     
     if (strcmp(cmd, "tron") == 0) return tronGame(argsv, argsc);
-    if (strcmp(cmd, "tronbeta") == 0) return tronBeta(argsv, argsc);
     if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argsc);
     
 

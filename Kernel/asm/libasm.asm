@@ -65,7 +65,7 @@ fast_memcpy:
     ; RAX ya contiene el puntero de destino original (dest).
     ret
 
-    ; extern void *fast_memset(void *s, int c, size_t n);
+; extern void *fast_memset(void *s, int c, size_t n);
 ; Argumentos:
 ; RDI = dest (puntero de destino)
 ; RSI = c (valor, solo el byte menos significativo es relevante)

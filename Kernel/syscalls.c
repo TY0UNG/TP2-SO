@@ -300,8 +300,7 @@ int   syscall_shutdown(Registers * registers){
 }
 
 int syscall_time(Registers * registers){
-
-    uint8_t* datetime_buffer = (uint8_t*)registers->rbx;
+    DateTime * datetime_buffer = (DateTime *) registers->rbx;
     
     if (datetime_buffer == 0) {
         return -1;  // Error
@@ -310,7 +309,6 @@ int syscall_time(Registers * registers){
     getTime(datetime_buffer);
     
     return 0;
-
 }
 
 uint64_t syscall_ms(Registers * registers){
