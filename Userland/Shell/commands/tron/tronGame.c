@@ -387,7 +387,7 @@ static int waitForSpaceOrEsc(const Cycle *p1,
             tronUiUpdateStatus(message, color, flash);
             frameReady = true;
             swapBuffers();
-            continue;
+            //continue;
         }
 
         bool statusChanged = tronUiUpdateStatus(message, color, flash);
@@ -409,7 +409,7 @@ static int waitForSpaceOrEsc(const Cycle *p1,
                 return 1;
             }
         }
-        sleep(14);
+        //sleep(14);
     }
 }
 
@@ -472,6 +472,11 @@ static int playRound(int mode, int *lives1, int *lives2) {
 
     // En cada turno:
     while (!p1Crashed && !p2Crashed && !exitRequested) {
+        
+        if (is_audio_buffer_empty()) {
+            playRoundTheme();
+        }
+
         uint64_t now = getMilisFromBoot();
         uint64_t delta = now - previousTime;
         previousTime = now;
