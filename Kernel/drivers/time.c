@@ -5,7 +5,7 @@
 #define PIT_TICK_FREQUENCY_HZ  (PIT_INPUT_FREQUENCY_HZ / PIT_CHANNEL0_DIVISOR)
 #define CALIBRATION_WINDOW_MS  320.0
 
-extern uint64_t getMilis();
+extern uint64_t getRDTSC();
 extern uint8_t getSeconds();
 extern uint8_t getMinutes();
 extern uint8_t getHour();
@@ -22,7 +22,7 @@ void calibrateMilis(void) {
         (int)((CALIBRATION_WINDOW_MS / 1000.0) * PIT_TICK_FREQUENCY_HZ + 0.5);
 
     const int start_ticks = ticks_elapsed();
-    const uint64_t start_cycles = getMilis();
+    const uint64_t start_cycles = getRDTSC();
 
     int ticks_delta;
     do {
@@ -36,12 +36,12 @@ void calibrateMilis(void) {
     const double elapsed_ms =
         ticks_delta * (1000.0 / PIT_TICK_FREQUENCY_HZ);
 
-    const uint64_t cycles_delta = getMilis() - start_cycles;
+    const uint64_t cycles_delta = getRDTSC() - start_cycles;
     ticksPerMs = cycles_delta / elapsed_ms;
 }
 
 uint64_t getMilisFromBoot() {
-    return getMilis() / ticksPerMs;
+    return getRDTSC() / ticksPerMs;
 }
 
 void getTime(DateTime *output) {

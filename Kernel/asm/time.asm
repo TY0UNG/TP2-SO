@@ -1,5 +1,5 @@
 section .text
-GLOBAL getMilis
+GLOBAL getRDTSC
 GLOBAL getSeconds
 GLOBAL getMinutes
 GLOBAL getHour
@@ -8,7 +8,7 @@ GLOBAL getDayOfMonth
 GLOBAL getMonth
 GLOBAL getYear
 
-getMilis:
+getRDTSC:
 	rdtsc
     shl rdx, 32
     or rax, rdx
