@@ -100,17 +100,17 @@ uint64_t sysCallDispatcher(Registers * registers) {
     return 0;
 }   
 
-uint64_t sycall_getRegs(Registers * registers){                          /////ver esto 
+static uint64_t sycall_getRegs(Registers * registers){
      return (uint64_t)get_register_dump();
 }
 
-int syscall_write(Registers * registers) {
+static int syscall_write(Registers * registers) {
     selectStyle(registers->rbx == 2 ? 0x04 : 0x0F);
     print((char *) registers->rcx);
     return 1;
 }
 
-int syscall_read(Registers * registers) {
+static int syscall_read(Registers * registers) {
     char * input = (char *) registers->rbx;
     uint8_t size = 0;
 
@@ -139,35 +139,35 @@ int syscall_read(Registers * registers) {
 }
 
 
-int syscall_audio_handler(Registers *registers) {                           /// ver bien 
+static int syscall_audio_handler(Registers *registers) {                           /// ver bien 
     //audio_handler();
     return 0;
 }
 
-int syscall_play_sound(Registers *registers) {
+static int syscall_play_sound(Registers *registers) {
     uint16_t frequency = (uint16_t)registers->rbx;
     uint16_t duration = (uint16_t)registers->rcx;
     play_sound(frequency, duration);
     return 0;
 }
 
-int syscall_is_audio_buffer_empty(Registers *registers) {
+static int syscall_is_audio_buffer_empty(Registers *registers) {
     return isAudioBufferEmpty() ? 1 :0;
 }
 
-int syscall_clear_audio_buffer(Registers *registers) {
+static int syscall_clear_audio_buffer(Registers *registers) {
     clearAudioBuffer();
     return 0;
 }
 
 
 
-int syscall_clear(Registers * registers) {
+static int syscall_clear(Registers * registers) {
     clearTextBuffer();  
     return 0;
 }
 
-int syscall_graphics_mode(Registers * registers) {
+static int syscall_graphics_mode(Registers * registers) {
     if (registers->rbx) {
         canvasMode();
     } else {
@@ -218,49 +218,49 @@ typedef struct {
     uint32_t color;
 } TextParameters;
 
-int syscall_draw_line(Registers * registers) {
+static int syscall_draw_line(Registers * registers) {
     LineParameters * params = (LineParameters *) registers->rbx;
     drawLine(params->x1, params->y1, params->x2, params->y2, params->thickness, params->color);
     return 0;
 }
 
-int syscall_draw_rectangle(Registers * registers) {
+static int syscall_draw_rectangle(Registers * registers) {
     RectangleParameters * params = (RectangleParameters *) registers->rbx;
     drawRectangle(params->x1, params->y1, params->x2, params->y2, params->thickness, params->color);
     return 0;
 }
 
-int syscall_draw_filled_rectangle(Registers * registers) {
+static int syscall_draw_filled_rectangle(Registers * registers) {
     FilledRectangleParameters * params = (FilledRectangleParameters *) registers->rbx;
     drawFilledRectangle(params->x1, params->y1, params->x2, params->y2, params->color, params->directWrite);
     return 0;
 }
 
-int syscall_draw_fill_screen(Registers * registers) {
+static int syscall_draw_fill_screen(Registers * registers) {
     FillScreenParameters * params = (FillScreenParameters *) registers->rbx;
     fillScreen(params->color);
     return 0;
 }
 
-int syscall_draw_circle(Registers * registers) {
+static int syscall_draw_circle(Registers * registers) {
     CircleParameters * params = (CircleParameters *) registers->rbx;
     drawCircle(params->x, params->y, params->radius, params->thickness, params->color);
     return 0;
 }
 
-int syscall_draw_filled_circle(Registers * registers) {
+static int syscall_draw_filled_circle(Registers * registers) {
     FilledCircleParameters * params = (FilledCircleParameters *) registers->rbx;
     drawFilledCircle(params->x, params->y, params->radius, params->color);
     return 0;
 }
 
-int syscall_draw_text(Registers * registers) {
+static int syscall_draw_text(Registers * registers) {
     TextParameters * params = (TextParameters *) registers->rbx;
     drawText(params->x, params->y, params->text, params->height, params->color);
     return 0;
 }
 
-int syscall_clear_canvas(Registers * registers) {
+static int syscall_clear_canvas(Registers * registers) {
     clearCanvas();
     return 0;
 }
@@ -270,36 +270,14 @@ static int syscall_swap_buffers(Registers * registers) {
     return 0;
 }
 
-int   syscall_shutdown(Registers * registers){
+static int syscall_shutdown(Registers * registers){
     syscall_clear(registers);
-
     print("Apagando....");
-    //poner un tiempo  antes de apagar
-    /*
-    
-    */ 
-
-
-    __asm__ volatile ("outw %0, %1" : : "a"((uint16_t)0x2000), "Nd"((uint16_t)0x604));   // solo funciona en QEMU    //ver bien 
-    /*|--> mov ax, 0x2000    ; Poner valor en AX
-           mov dx, 0x604     ; Poner puerto en DX
-           out dx, ax        ; Enviar AX al puerto DX  
-    */
-
-   //aca seria maquina fisica 
-
-
-
-    //si no apago 
-    print("NO SE PUDO APAGAR");
-    while(1) {
-        _hlt();
-    }
-
+    // TODO
     return 0;
 }
 
-int syscall_time(Registers * registers){
+static int syscall_time(Registers * registers){
     DateTime * datetime_buffer = (DateTime *) registers->rbx;
     
     if (datetime_buffer == 0) {
@@ -311,13 +289,13 @@ int syscall_time(Registers * registers){
     return 0;
 }
 
-uint64_t syscall_ms(Registers * registers){
+static uint64_t syscall_ms(Registers * registers){
     return getMilisFromBoot();
 }
 
 static KeyEvent event;
 
-KeyEvent * syscall_get_key(Registers * registers) {
+static KeyEvent * syscall_get_key(Registers * registers) {
     if (isKeyBufferEmpty()) return 0;
     event = getNextKey();
     return &event;
