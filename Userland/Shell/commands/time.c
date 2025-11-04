@@ -15,10 +15,3 @@ int time(char ** argv, int argc) {
     
     return 0;
 }
-
-
-
-
-
-
-

@@ -1,7 +1,8 @@
 #ifndef time_h
 #define time_h
-    #include <stdint.h>
-    #include <tick.h>
+
+#include <stdint.h>
+#include <tick.h>
 
     typedef struct date_time {
         uint8_t year, month, daymonth, hour, minutes, seconds;

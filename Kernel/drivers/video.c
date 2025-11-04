@@ -116,19 +116,14 @@ void setFpsOverlayEnabled(bool enabled) {
     uintToBase(0, fps_text_buffer + 5, 10);
 }
 
-/*
-/   Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer 
-/
-*/
+// Actualiza pantalla mostrando lo que se dibujo previamente en el backbuffer
 void swapBuffers() {
     if (fps_overlay_enabled && !text_mode_enabled) {
         updateFpsOverlay();
         drawFpsOverlay();
     }
-    // vsync_wait();
     fast_memcpy((void*)(uintptr_t)VBE_mode_info->framebuffer, backbuffer, (uint64_t)VBE_mode_info->pitch * VBE_mode_info->height);
 }
-
 
 void canvasMode() {
 	text_mode_enabled = false;
@@ -641,11 +636,8 @@ void printChar(char c) {
 void deleteChar() {
     if (cursor <= 1) return;
     // Reemplazar con espacio en blanco (no borrar del buffer todavía)
-    text_buffer[cursor - 2] = ' ';  // espacio en blanco
-    printBuffer(cursor - 2, cursor, false); // Redibujar solo ese carácter
-    /* (si quería borrar el caracter así nomás, debía redibujar todo. Por eso se dibuja un espacio) */
-    
-    // AHORA se borrar del buffer el caracter
+    text_buffer[cursor - 2] = ' ';
+    printBuffer(cursor - 2, cursor, false);
     text_buffer[cursor--] = 0;
     text_buffer[cursor--] = 0;
 }
@@ -710,8 +702,6 @@ int checkAndAutoScroll(bool redraw_all) {
     return offset != previous_offset;
 }
 
-/////////////// ver si aca 
-
 void printHex64(uint64_t value) {
     char hex[17];  // 16 dg + null 
     const char* digits = "0123456789ABCDEF";
@@ -750,6 +740,3 @@ void printHex16(uint16_t value) {
     print("0x");
     print(hex);
 }
-
-
-////////////

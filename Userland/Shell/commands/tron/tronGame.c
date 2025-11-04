@@ -323,13 +323,10 @@ static int showMainMenu(void) {
     // Dibujo el MainMenu y actualizo sus animaciones
 
     while (!confirm && !exitRequest) {
-    
-        
         MenuEfect(selection);
         if (is_audio_buffer_empty()) {
             playMenuTheme();
         }
-
         handleMenuInput(&selection, &confirm, &exitRequest);
         sleep(10);
     }
@@ -352,24 +349,23 @@ static int waitForSpaceOrEsc(const Cycle *p1,
     inputQueueClear();
     tronUiResetCache();
     bool frameReady = false;
-
-    uint64_t lastFlash = getMilisFromBoot();
     bool flash = false;
-//
-         tronUiRedrawArena(arenaGet);
-            
-        if (p1->alive) {
-            tronUiDrawCycleHead(p1, false);
-        }
-        if (p2->alive) {
-            tronUiDrawCycleHead(p2, false);
-        }
-        if (lastCrash1 != NULL && lastCrash1->active) {
-            tronUiDrawCrashMarker(lastCrash1, COLOR_P1_TRAIL, false);
-        }
-        if (lastCrash2 != NULL && lastCrash2->active) {
-            tronUiDrawCrashMarker(lastCrash2, COLOR_P2_TRAIL, false);
-        }
+    uint64_t lastFlash = getMilisFromBoot();
+
+    tronUiRedrawArena(arenaGet);
+        
+    if (p1->alive) {
+        tronUiDrawCycleHead(p1, false);
+    }
+    if (p2->alive) {
+        tronUiDrawCycleHead(p2, false);
+    }
+    if (lastCrash1 != NULL && lastCrash1->active) {
+        tronUiDrawCrashMarker(lastCrash1, COLOR_P1_TRAIL, false);
+    }
+    if (lastCrash2 != NULL && lastCrash2->active) {
+        tronUiDrawCrashMarker(lastCrash2, COLOR_P2_TRAIL, false);
+    }
 
     while (true) {
         uint64_t now = getMilisFromBoot();
@@ -433,7 +429,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
     markInitialPositions(&p1, &p2);
 
     // Dibujo la UI inicial.
-
     tronUiResetCache();
     uint64_t frameTime = getMilisFromBoot();
     tronUiEnsureStatic(mode, *lives1, *lives2, &p1, &p2, frameTime);
@@ -450,7 +445,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
     uint64_t roundStart = frameTime;
     uint64_t aiAccumulator = 0;
     const uint64_t aiDecisionInterval = (tickInterval > 45u) ? tickInterval : 45u;
-
     uint64_t nextAiDecision = previousTime;
 
     clear_audio_buffer();
@@ -464,11 +458,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
 
     // En cada turno:
     while (!p1Crashed && !p2Crashed && !exitRequested) {
-        
-        if (is_audio_buffer_empty()) {
-            playRoundTheme();
-        }
-
         uint64_t now = getMilisFromBoot();
         uint64_t delta = now - previousTime;
         previousTime = now;
@@ -496,10 +485,8 @@ static int playRound(int mode, int *lives1, int *lives2) {
         }
 
         bool frameUpdated = false;
-
         bool p1Moved = false;
         bool p2Moved = false;
-
         int prevCol1 = p1.col;
         int prevRow1 = p1.row;
         int prevCol2 = p2.col;
@@ -569,11 +556,9 @@ static int playRound(int mode, int *lives1, int *lives2) {
     }
 
     // Actualizo vidas
-
     if (exitRequested) {
         return -1;
     }
-
     if (p1Crashed || p2Crashed) {
         playCrashSound();
     }
@@ -585,7 +570,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
     }
 
     // Pauso el juego hasta que se reanuda
-
     const char *message = "Press Space to continue";
     uint32_t waitColor = COLOR_STATUS_SUCCESS;
     if (*lives1 == 0 || *lives2 == 0) {
@@ -604,7 +588,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
     } else if (p2Crashed) {
         waitColor = COLOR_P1_UI;
     }
-
     return waitForSpaceOrEsc(&p1, &p2, &lastCrash1, &lastCrash2, mode, *lives1, *lives2, message, waitColor);
 }
 

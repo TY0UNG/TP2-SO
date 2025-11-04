@@ -1,4 +1,3 @@
-
 #include <commands.h>
 #include <draw.h>
 #include "../lib/str.h"

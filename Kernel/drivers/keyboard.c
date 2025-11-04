@@ -5,8 +5,6 @@ extern uint8_t get_keyboard_output(void);
 
 static bool isPrintable(unsigned char scancode);
 
-/* dump_registers expects a pointer parameter in its definition; pass NULL
-    here and declare it with the proper prototype to avoid ABI mismatch */
 void dump_registers();
 
 KeyEvent buffer[BUFFER_LENGHT];
@@ -102,7 +100,7 @@ void keyboard_handler() {
     queue(event);
 
     if (!is_release && scancode == 0x29 && isShiftPressed) {
-        dump_registers();                                           // aca tiene q guardar en un strut hora y vals 
+        dump_registers();
     }
 }
 

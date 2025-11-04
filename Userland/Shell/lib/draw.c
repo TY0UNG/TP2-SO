@@ -95,7 +95,6 @@ void drawText(uint64_t x, uint64_t y, const char* text, uint16_t height, uint32_
     sys_draw_text(&params);
 }
 
-
 void drawTextCentered(const char* text, uint64_t y, uint16_t height, uint32_t color,const int SCREEN_WIDTH) {                  
     if (!text) return;
 

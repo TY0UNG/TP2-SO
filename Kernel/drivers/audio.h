@@ -22,7 +22,5 @@ void stop_current_sound(void);
 void  audio_timer_handler();
 
 extern void start_T();
- 
-
 
 #endif

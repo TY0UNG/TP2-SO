@@ -9,9 +9,9 @@
 #include <video.h>
 #include <keyboard.h>
 #include "./drivers/time.h"
-
 #include <audio.h>
-extern void diagnostic_test(); 					////
+
+extern void diagnostic_test();
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -43,18 +43,12 @@ void * getShellAddress() {
     return (void*)shell;
 }
 
-void clearBSS(void * bssAddress, uint64_t bssSize)
-{
+void clearBSS(void * bssAddress, uint64_t bssSize) {
 	memset(bssAddress, 0, bssSize);
 }
 
-void * getStackBase()
-{
-	return (void*)(
-		(uint64_t)&endOfKernel
-		+ PageSize * 8				//The size of the stack itself, 32KiB
-		- sizeof(uint64_t)			//Begin at the top of the stack
-	);
+void * getStackBase() {
+	return (void*)((uint64_t)&endOfKernel + PageSize * 8 - sizeof(uint64_t));
 }
 
 void * initializeKernelBinary() {
@@ -105,13 +99,6 @@ void * initializeKernelBinary() {
 	return getStackBase();
 }
 
-
-
- 
-
-
-
-/////ESTO ES APARTE
 void MusicSO(){
 	clearAudioBuffer();
 	play_sound(784, 180);
@@ -126,11 +113,10 @@ void sleep(uint64_t ms) {
 
 static void bootAnimation(void) {
 	const uint32_t bg_color = 0x050518;
-	const uint32_t gear_outer = 0x103054;
-	const uint32_t gear_body = 0x1D58A1;
-	const uint32_t gear_core = 0x091E36;
-	const uint32_t gear_trim = 0x4DA4FF;
-	const uint32_t gear_glow = 0x2F84E0;
+	const uint32_t circle_outer = 0x103054;
+	const uint32_t circle_body = 0x1D58A1;
+	const uint32_t circle_core = 0x091E36;
+	const uint32_t circle_glow = 0x2F84E0;
 	const uint32_t text_color = 0xF4F8FF;
 
 	const uint16_t width = getScreenWidth();
@@ -144,21 +130,21 @@ static void bootAnimation(void) {
 		base_radius = 52;
 	}
 
-	const int gear_center_y = center_y - base_radius / 3;
+	const int circle_center_y = center_y - base_radius / 3;
 
 	fillScreen(bg_color);
 
-	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
-		(uint16_t)(base_radius + base_radius / 4), gear_outer);
-	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
-		(uint16_t)(base_radius + base_radius / 10), gear_body);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)circle_center_y,
+		(uint16_t)(base_radius + base_radius / 4), circle_outer);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)circle_center_y,
+		(uint16_t)(base_radius + base_radius / 10), circle_body);
 
-	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
-		(uint16_t)(base_radius * 3 / 4), gear_glow);
-	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
-		(uint16_t)(base_radius / 2), gear_body);
-	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
-		(uint16_t)(base_radius / 3), gear_core);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)circle_center_y,
+		(uint16_t)(base_radius * 3 / 4), circle_glow);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)circle_center_y,
+		(uint16_t)(base_radius / 2), circle_body);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)circle_center_y,
+		(uint16_t)(base_radius / 3), circle_core);
 
 	const char * label = "TobaOS";
 	uint16_t text_height = (uint16_t)((base_radius * 4) / 5);
@@ -168,7 +154,7 @@ static void bootAnimation(void) {
 	uint16_t char_width = (uint16_t)((8u * text_height) / 16u);
 	uint64_t text_width = strLength(label) * char_width;
 	int text_x = center_x - (int)(text_width / 2);
-	int text_y = gear_center_y - (int)(text_height / 2);
+	int text_y = circle_center_y - (int)(text_height / 2);
 	drawText((uint64_t)text_x, (uint64_t)text_y, label, text_height, text_color);
 
 	swapBuffers();

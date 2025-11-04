@@ -31,7 +31,6 @@ Commands command_list[] = {
 
     // JUEGOS Y DEMOS
     {"tron", "inicia el juego Tron Neon Grid", "  JUEGOS"},
-    {"tron_beta", "lanza la versión beta del juego Tron", "  JUEGOS"},
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
 
     // PRUEBAS Y EXCEPCIONES
@@ -54,8 +53,6 @@ void print_command(const char *name, const char *description) {
     print(" - ");  println(description);
 
 }
-
-
 
 int help(char ** argv, int argc) {
     println("  Lista de comandos disponibles\n");
