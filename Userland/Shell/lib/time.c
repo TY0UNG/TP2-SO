@@ -1,4 +1,5 @@
 #include "time.h"
+#include "inout.h"
 
 extern void sys_get_time(DateTime * buffer);
 extern uint64_t sys_get_ms();

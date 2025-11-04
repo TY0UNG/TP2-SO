@@ -33,6 +33,8 @@ void arenaSet(int col, int row, uint8_t owner) {
     arenaBits[byteIndex] = (uint8_t)((arenaBits[byteIndex] & ~mask) | ((owner & 0x3u) << shift));
 }
 
+extern void * memset(void * dest, uint64_t c, uint64_t length);
+
 // Clerea las posesiones
 void arenaClear(void) {
     memset(arenaBits, 0, sizeof(arenaBits));

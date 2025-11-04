@@ -4,7 +4,7 @@
 #include "../lib/time.h"
 
 int time(char ** argv, int argc) {
-    DateTime * datetime;
+    DateTime * datetime = {0};
     getDateTime(datetime);
 
     printTime(datetime);
