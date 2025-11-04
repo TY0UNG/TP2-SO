@@ -70,6 +70,10 @@ typedef enum {
     DIR_LEFT = 3
 } Direction;
 
+Direction rotateLeft(Direction dir);
+Direction rotateRight(Direction dir);
+Direction oppositeDir(Direction dir);
+
 static const int TRON_DELTA_COL[4] = {0, 1, 0, -1};
 static const int TRON_DELTA_ROW[4] = {-1, 0, 1, 0};
 

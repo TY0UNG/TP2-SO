@@ -13,6 +13,18 @@
 #include "tronArena.h"
 #include "tronAudio.h"
 
+Direction rotateLeft(Direction dir) {
+    return (Direction)((dir + 3) % 4);
+}
+
+Direction rotateRight(Direction dir) {
+    return (Direction)((dir + 1) % 4);
+}
+
+Direction oppositeDir(Direction dir) {
+    return (Direction)((dir + 2) % 4);
+}
+
 static void configureCycle(Cycle *cycle,
                            int col,
                            int row,
