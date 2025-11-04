@@ -17,5 +17,6 @@ void tronUiDrawCycleHead(const Cycle *cycle, bool directWrite);
 void tronUiDrawCrashMarker(const CrashMarker *marker, uint32_t fillColor, bool directWrite);
 void tronUiDrawBoostMeter(const Cycle *cycle, bool leftPanel, uint64_t now, bool directWrite);
 void tronUiDrawMenuFrame(int selection, int animPhase);
+void MenuEfect(int selection);
 
 #endif

@@ -319,17 +319,13 @@ static int showMainMenu(void) {
     bool exitRequest = false;
 
     playMenuTheme();
-
+    tronUiDrawMenuFrame(selection, animPhase);
     // Dibujo el MainMenu y actualizo sus animaciones
 
     while (!confirm && !exitRequest) {
-        uint64_t now = getMilisFromBoot();
-        if (now - lastAnim >= MENU_ANIM_INTERVAL) {
-            animPhase = (animPhase + (int)(now - lastAnim)) % SCREEN_HEIGHT;
-            lastAnim = now;
-        }
-        tronUiDrawMenuFrame(selection, animPhase);
-
+    
+        
+        MenuEfect(selection);
         if (is_audio_buffer_empty()) {
             playMenuTheme();
         }
@@ -359,6 +355,21 @@ static int waitForSpaceOrEsc(const Cycle *p1,
 
     uint64_t lastFlash = getMilisFromBoot();
     bool flash = false;
+//
+         tronUiRedrawArena(arenaGet);
+            
+        if (p1->alive) {
+            tronUiDrawCycleHead(p1, false);
+        }
+        if (p2->alive) {
+            tronUiDrawCycleHead(p2, false);
+        }
+        if (lastCrash1 != NULL && lastCrash1->active) {
+            tronUiDrawCrashMarker(lastCrash1, COLOR_P1_TRAIL, false);
+        }
+        if (lastCrash2 != NULL && lastCrash2->active) {
+            tronUiDrawCrashMarker(lastCrash2, COLOR_P2_TRAIL, false);
+        }
 
     while (true) {
         uint64_t now = getMilisFromBoot();
@@ -368,33 +379,15 @@ static int waitForSpaceOrEsc(const Cycle *p1,
         }
 
         if (!frameReady) {
-            tronUiEnsureStatic(mode, lives1, lives2, p1, p2, now);
-            tronUiRedrawArena(arenaGet);
             tronUiDrawBoostMeter(p1, true, now, false);
             tronUiDrawBoostMeter(p2, false, now, false);
-            if (p1->alive) {
-                tronUiDrawCycleHead(p1, false);
-            }
-            if (p2->alive) {
-                tronUiDrawCycleHead(p2, false);
-            }
-            if (lastCrash1 != NULL && lastCrash1->active) {
-                tronUiDrawCrashMarker(lastCrash1, COLOR_P1_TRAIL, false);
-            }
-            if (lastCrash2 != NULL && lastCrash2->active) {
-                tronUiDrawCrashMarker(lastCrash2, COLOR_P2_TRAIL, false);
-            }
-            tronUiUpdateStatus(message, color, flash);
             frameReady = true;
-            swapBuffers();
-            //continue;
         }
 
         bool statusChanged = tronUiUpdateStatus(message, color, flash);
-        if (statusChanged) {
-            swapBuffers();
-        }
-
+        
+        swapBuffers();
+    
         inputQueueFetch(INPUT_FETCH_LIMIT);
 
         KeyEvent event;
@@ -409,7 +402,6 @@ static int waitForSpaceOrEsc(const Cycle *p1,
                 return 1;
             }
         }
-        //sleep(14);
     }
 }
 

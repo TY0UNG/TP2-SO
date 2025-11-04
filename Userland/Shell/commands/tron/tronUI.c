@@ -363,8 +363,9 @@ void tronUiDrawBoostMeter(const Cycle *cycle, bool leftPanel, uint64_t now, bool
 void tronUiDrawMenuFrame(int selection, int animPhase) {
     drawFillScreen(COLOR_BACKGROUND);
 
-    for (int i = 0; i < 8; i++) {
-        int offset = (animPhase + i * 40) % SCREEN_HEIGHT;
+    
+    for (int i = 0; i < 8; i++) {                                       
+        int offset = (200 + i * 40) % SCREEN_HEIGHT;
         int bandTop = offset;
         int bandBottom = offset + 24;
         uint32_t tint = (i % 2 == 0) ? COLOR_GRID_GLOW : COLOR_PANEL_LIGHT;
@@ -377,19 +378,30 @@ void tronUiDrawMenuFrame(int selection, int animPhase) {
     drawTextCentered("TRON: NEON GRID", 180, 40, COLOR_TEXT_PRIMARY, SCREEN_WIDTH);
     drawTextCentered("select protocol", 232, 24, COLOR_TEXT_MUTED, SCREEN_WIDTH);
 
-    uint32_t optionColor[2] = {COLOR_TEXT_MUTED, COLOR_TEXT_MUTED};
-    if (selection >= 0 && selection < 2) {
-        optionColor[selection] = COLOR_TEXT_PRIMARY;
-    }
 
     drawPanelFrame(280, 280, 744, 360, COLOR_PANEL_DARK, COLOR_PANEL_LIGHT);
-    drawTextCentered("1. SOLO RUN", 302, 24, optionColor[0], SCREEN_WIDTH);
-    drawTextCentered("2. DUO RUN", 334, 24, optionColor[1], SCREEN_WIDTH);
+    
+
+    MenuEfect( selection);
 
     drawPanelFrame(280, 380, 744, 460, COLOR_PANEL_DARK, COLOR_PANEL_LIGHT);
     drawTextCentered("Enter to confirm", 406, 20, COLOR_TEXT_MUTED, SCREEN_WIDTH);
     drawTextCentered("ESC to exit", 438, 20, COLOR_TEXT_MUTED, SCREEN_WIDTH);
 
     drawStatusBar("-- stand by --", COLOR_TEXT_MUTED, (animPhase / 40) % 2 == 0);
+    swapBuffers();
+}
+
+
+void MenuEfect(int selection){               // aca hace ;a anima
+  uint32_t optionColor[2] = {COLOR_TEXT_MUTED, COLOR_TEXT_MUTED};
+    if (selection >= 0 && selection < 2) {
+        optionColor[selection] = COLOR_TEXT_PRIMARY;
+    }
+  
+    drawTextCentered("1. SOLO RUN", 302, 24, optionColor[0], SCREEN_WIDTH);
+    drawTextCentered("2. DUO RUN", 334, 24, optionColor[1], SCREEN_WIDTH);
+
+
     swapBuffers();
 }
