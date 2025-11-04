@@ -113,29 +113,10 @@ void * initializeKernelBinary() {
 
 /////ESTO ES APARTE
 void MusicSO(){
-	
-	play_sound(440, 500);
-    play_sound(440, 500);
-    play_sound(440, 500);
-    play_sound(349, 350);
-    play_sound(523, 150);
-    play_sound(440, 500);
-    play_sound(349, 350);
-    play_sound(523, 150);
-    play_sound(440, 1000);
-
-	
-
-	/*
-  play_sound(700, 200);
-    play_sound(900, 200);
-
-    // Cierre descendente rápido (hum futurista)
-    play_sound(600, 150);
-    play_sound(400, 150);
-    play_sound(300, 200);
-	*/
-	
+	clearAudioBuffer();
+	play_sound(784, 180);
+	play_sound(988, 150);
+	play_sound(1175, 240);
 }
 void sleep(uint64_t ms) {
     uint64_t start_time = getMilisFromBoot();
@@ -145,9 +126,12 @@ void sleep(uint64_t ms) {
 
 static void bootAnimation(void) {
 	const uint32_t bg_color = 0x050518;
-	const uint32_t ring_color = 0x00A8FF;
-	const uint32_t fill_outer_color = 0x35B4FF;
-	const uint32_t fill_inner_color = 0x0C2E68;
+	const uint32_t gear_outer = 0x103054;
+	const uint32_t gear_body = 0x1D58A1;
+	const uint32_t gear_core = 0x091E36;
+	const uint32_t gear_trim = 0x4DA4FF;
+	const uint32_t gear_glow = 0x2F84E0;
+	const uint32_t text_color = 0xF4F8FF;
 
 	const uint16_t width = getScreenWidth();
 	const uint16_t height = getScreenHeight();
@@ -156,58 +140,41 @@ static void bootAnimation(void) {
 	const int min_dimension = width < height ? width : height;
 
 	int base_radius = min_dimension / 6;
-	if (base_radius < 56) {
-		base_radius = 56;
+	if (base_radius < 52) {
+		base_radius = 52;
 	}
 
-	canvasMode();
+	const int gear_center_y = center_y - base_radius / 3;
+
 	fillScreen(bg_color);
-	swapBuffers();
 
-	const int fill_steps = 10;
-	for (int step = 0; step <= fill_steps; step++) {
-		uint16_t outer_radius = (uint16_t)((base_radius * step) / fill_steps);
-		uint16_t inner_radius = (uint16_t)((outer_radius * 2) / 3);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
+		(uint16_t)(base_radius + base_radius / 4), gear_outer);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
+		(uint16_t)(base_radius + base_radius / 10), gear_body);
 
-		fillScreen(bg_color);
-		if (outer_radius > 0) {
-			drawFilledCircle((uint64_t)center_x, (uint64_t)center_y, outer_radius, fill_outer_color);
-		}
-		if (inner_radius > 0) {
-			drawFilledCircle((uint64_t)center_x, (uint64_t)center_y, inner_radius, fill_inner_color);
-		}
-		drawCircle((uint64_t)center_x, (uint64_t)center_y, outer_radius, 3, ring_color);
-		drawCircle((uint64_t)center_x, (uint64_t)center_y, inner_radius / 2, 2, ring_color);
-		swapBuffers();
-		sleep(28);
-	}
+	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
+		(uint16_t)(base_radius * 3 / 4), gear_glow);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
+		(uint16_t)(base_radius / 2), gear_body);
+	drawFilledCircle((uint64_t)center_x, (uint64_t)gear_center_y,
+		(uint16_t)(base_radius / 3), gear_core);
 
 	const char * label = "TobaOS";
-	const int text_frames = 10;
-	uint16_t text_height = (uint16_t)base_radius;
-	if (text_height < 48) {
-		text_height = 48;
+	uint16_t text_height = (uint16_t)((base_radius * 4) / 5);
+	if (text_height < 36) {
+		text_height = 36;
 	}
-	uint16_t char_width = (uint16_t)((8 * text_height) / 16);
+	uint16_t char_width = (uint16_t)((8u * text_height) / 16u);
 	uint64_t text_width = strLength(label) * char_width;
-	uint64_t text_x = (uint64_t)center_x - text_width / 2;
-	uint64_t text_y = (uint64_t)center_y - text_height / 2;
+	int text_x = center_x - (int)(text_width / 2);
+	int text_y = gear_center_y - (int)(text_height / 2);
+	drawText((uint64_t)text_x, (uint64_t)text_y, label, text_height, text_color);
 
-	for (int step = 0; step < text_frames; step++) {
-		uint8_t intensity = (uint8_t)(96 + ((159 * step) / (text_frames - 1)));
-		uint32_t text_color = ((uint32_t)intensity << 16) | ((uint32_t)intensity << 8) | intensity;
-
-		fillScreen(bg_color);
-		drawFilledCircle((uint64_t)center_x, (uint64_t)center_y, (uint16_t)base_radius, fill_outer_color);
-		drawFilledCircle((uint64_t)center_x, (uint64_t)center_y, (uint16_t)(base_radius * 2 / 3), fill_inner_color);
-		drawCircle((uint64_t)center_x, (uint64_t)center_y, (uint16_t)base_radius, 3, ring_color);
-		drawCircle((uint64_t)center_x, (uint64_t)center_y, (uint16_t)(base_radius / 3), 2, ring_color);
-		drawText(text_x, text_y, label, text_height, text_color);
-		swapBuffers();
-		sleep(32);
-	}
-
-	sleep(220);
+	swapBuffers();
+	sleep(120);
+	MusicSO();
+	sleep(280);
 	textMode();
 }
 
@@ -215,12 +182,9 @@ int main() {
 	load_idt();
     ncSetStyle(0x0F);
 	start_T();
-	MusicSO();
 	keyboard_set_enabled(false);
 	
 	canvasMode();
-	fillScreen(0x050518);
-	swapBuffers();
 	calibrateMilis();
 	bootAnimation();
 
