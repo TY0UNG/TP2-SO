@@ -28,7 +28,7 @@ int commandDispatcher(char ** argsv, int argsc) {
         return 1;
     }
     if (strcmp(cmd, "echo") == 0) return echo(argsv, argsc);
-    if (strcmp(cmd, "registros") == 0) return regs(argsv, argsc);
+    if (strcmp(cmd, "registers") == 0) return regs(argsv, argsc);
     if (strcmp(cmd, "time") == 0) return time(argsv, argsc);
     if (strcmp(cmd, "fps") == 0) return fps(argsv, argsc);
     if (strcmp(cmd, "show") == 0) return show(argsv, argsc);
