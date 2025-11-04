@@ -82,11 +82,6 @@ static bool path_clear_to_target(const Cycle *from,
     return false;
 }
 
-static const int AI_DECISION_DEPTH = 8;
-static const int AI_CHASE_WEIGHT = 70;
-static const int AI_BOOST_DISTANCE_THRESHOLD = 20;
-static const int AI_BOOST_PATH_STEPS = 23;
-
 Direction tronAiChooseDirection(const Cycle *ai,
                                 const Cycle *target,
                                 TronCellFn cellAt) {
@@ -145,10 +140,8 @@ void tronAiManageBoost(Cycle *ai,
     if (ai->boostUsed || (ai->boostUntil > now)) {
         return;
     }
-    if (now - roundStart < 900) {
-        return;
-    }
-    if (target == NULL || !target->alive) {
+
+    if (now - roundStart < 900 || target == NULL || !target->alive) {
         return;
     }
 
@@ -164,6 +157,8 @@ void tronAiManageBoost(Cycle *ai,
 
     bool alignedHoriz = (ai->row == target->row);
     bool alignedVert = (ai->col == target->col);
+
+    // Activa el boost si esta tratando de perseguir al objetivo y el camino esta libre
 
     if ((alignedHoriz && ((target->col > ai->col && chaseDir == DIR_RIGHT) ||
                           (target->col < ai->col && chaseDir == DIR_LEFT))) ||

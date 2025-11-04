@@ -58,6 +58,11 @@
 
 #define MAX_TRAIL_UPDATES 32
 
+#define AI_DECISION_DEPTH 8
+#define AI_CHASE_WEIGHT 70
+#define AI_BOOST_DISTANCE_THRESHOLD 20
+#define AI_BOOST_PATH_STEPS 23
+
 typedef enum {
     DIR_UP = 0,
     DIR_RIGHT = 1,

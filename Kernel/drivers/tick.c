@@ -5,8 +5,7 @@ static unsigned long ticks = 0;
 
 void timer_handler() {
 	ticks++;
-	 audio_timer_handler();
-
+	audio_timer_handler();
 }
 
 int ticks_elapsed() {

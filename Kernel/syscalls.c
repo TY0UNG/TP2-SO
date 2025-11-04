@@ -78,16 +78,12 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return sycall_getRegs(registers);
     case 17:
         return syscall_set_text_size(registers);
-
     case 18:
         return syscall_audio_handler(registers);
-            
     case 19:
         return syscall_play_sound(registers);
-            
     case 20:
         return syscall_is_audio_buffer_empty(registers);
-            
     case 21:
         return syscall_clear_audio_buffer(registers);
     case 22:
