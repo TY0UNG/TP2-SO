@@ -14,7 +14,6 @@ typedef struct {
     uint64_t rdx;
 } Registers;
 
-static int syscall_shutdown(Registers * registers);
 static int syscall_write(Registers * registers);
 static int syscall_read(Registers * registers);
 static int syscall_clear(Registers * registers);
@@ -34,16 +33,12 @@ static KeyEvent * syscall_get_key(Registers *registers);
 static uint64_t sycall_getRegs(Registers * registers);
 static int syscall_set_text_size(Registers * registers);
 static int syscall_set_fps_overlay(Registers * registers);
-
-static int syscall_audio_handler(Registers *registers);
 static int syscall_play_sound(Registers *registers);
 static int syscall_is_audio_buffer_empty(Registers *registers);
 static int syscall_clear_audio_buffer(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
-    case 0:
-        return syscall_shutdown(registers);
     case 1:
         return syscall_write(registers);
     case 2:
@@ -79,16 +74,14 @@ uint64_t sysCallDispatcher(Registers * registers) {
     case 17:
         return syscall_set_text_size(registers);
     case 18:
-        return syscall_audio_handler(registers);
-    case 19:
         return syscall_play_sound(registers);
-    case 20:
+    case 19:
         return syscall_is_audio_buffer_empty(registers);
-    case 21:
+    case 20:
         return syscall_clear_audio_buffer(registers);
-    case 22:
+    case 21:
         return syscall_draw_fill_screen(registers);
-    case 23:
+    case 22:
         return syscall_set_fps_overlay(registers);
     default:
         break;
@@ -132,12 +125,6 @@ static int syscall_read(Registers * registers) {
             }
         }
     }
-}
-
-
-static int syscall_audio_handler(Registers *registers) {                           /// ver bien 
-    //audio_handler();
-    return 0;
 }
 
 static int syscall_play_sound(Registers *registers) {
@@ -263,13 +250,6 @@ static int syscall_clear_canvas(Registers * registers) {
 
 static int syscall_swap_buffers(Registers * registers) {
     swapBuffers();
-    return 0;
-}
-
-static int syscall_shutdown(Registers * registers){
-    syscall_clear(registers);
-    print("Apagando....");
-    // TODO
     return 0;
 }
 

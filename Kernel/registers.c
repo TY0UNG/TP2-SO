@@ -47,8 +47,6 @@ static int dump_index = 0;
 
 static void appendChar(char c);
 
-/////////
-
 void printHexToBuffer(uint8_t value) {
     const char *hex = "0123456789ABCDEF";
     appendChar(hex[(value >> 4) & 0xF]);
@@ -79,19 +77,8 @@ static void appendChar(char c) {
     dump_buffer[dump_index] = '\0';
 }
 
-/////////
 void printStruct() {
-    dump_index = 0; // reiniciamos el buffer
-
-    /* append(" TIME: "); append("Fecha: ");
-    printHexToBuffer(regs.time[2]);  appendChar('/');
-    printHexToBuffer(regs.time[1]);  appendChar('/');
-    printHexToBuffer(regs.time[0]);  appendChar('\n');
-    
-    append("Hora:  ");
-    printHexToBuffer(regs.time[3] - 3); appendChar(':');
-    printHexToBuffer(regs.time[4]);     appendChar(':');
-    printHexToBuffer(regs.time[5]);     appendChar('\n'); */
+    dump_index = 0;
 
     append("\n========== REGISTER DUMP ==========\n");
     
@@ -133,13 +120,10 @@ void printStruct() {
     append("===================================\n");
 }
 
-
 void dump_registers() {
-    // getTime(regs.time); 
     addregs(&regs);
     printStruct();
 }
-
 
 const char * get_register_dump() {
     return dump_buffer;

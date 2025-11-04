@@ -2,7 +2,6 @@ SECTION .text
 GLOBAL sys_write
 GLOBAL sys_read
 GLOBAL sys_clear
-GLOBAL sys_shutdown
 GLOBAL sys_graphics_mode
 GLOBAL sys_draw_line
 GLOBAL sys_draw_rectangle
@@ -18,15 +17,12 @@ GLOBAL sys_get_ms
 GLOBAL sys_get_key
 GLOBAL sys_get_reg
 GLOBAL sys_set_text_size
-
-GLOBAL sys_audio_handler
 GLOBAL sys_play_sound
 GLOBAL sys_is_audio_buffer_empty
 GLOBAL sys_clear_audio_buffer
 GLOBAL sys_set_fps_overlay
 
 EXTERN printHex
-
 
 %macro START_SYSCALL 0
     push rbp
@@ -45,7 +41,6 @@ EXTERN printHex
     ret
 %endmacro
 
-
 sys_write:
     START_SYSCALL
     mov rax, 1
@@ -54,7 +49,6 @@ sys_write:
     int 80h
     END_SYSCALL
 
-
 sys_read:
     START_SYSCALL
     mov rax, 2
@@ -62,17 +56,9 @@ sys_read:
     int 80h
     END_SYSCALL
 
-
 sys_clear:
     START_SYSCALL
     mov rax, 3
-    int 80h
-    END_SYSCALL
-
-
-sys_shutdown:
-    START_SYSCALL
-    mov rax, 0
     int 80h
     END_SYSCALL
 
@@ -90,14 +76,12 @@ sys_draw_line:
     int 80h
     END_SYSCALL
 
-
 sys_draw_rectangle:
     START_SYSCALL
     mov rax, 6
     mov rbx, rdi
     int 80h
     END_SYSCALL
-
 
 sys_draw_filled_rectangle:
     START_SYSCALL
@@ -106,7 +90,6 @@ sys_draw_filled_rectangle:
     int 80h
     END_SYSCALL
 
-
 sys_draw_circle:
     START_SYSCALL
     mov rax, 8
@@ -114,14 +97,12 @@ sys_draw_circle:
     int 80h
     END_SYSCALL
 
-
 sys_draw_filled_circle:
     START_SYSCALL
     mov rax, 9
     mov rbx, rdi
     int 80h
     END_SYSCALL
-
 
 sys_draw_text:
     START_SYSCALL
@@ -174,19 +155,9 @@ sys_set_text_size:
     int 80h
     END_SYSCALL
 
-
-
-;;;;;; 
-
-sys_audio_handler:
-    START_SYSCALL
-    mov rax, 18
-    int 80h
-    END_SYSCALL
-
 sys_play_sound:
     START_SYSCALL
-    mov rax, 19
+    mov rax, 18
     mov rbx, rdi    ; frec
     mov rcx, rsi    ; dur
     int 80h
@@ -194,27 +165,26 @@ sys_play_sound:
 
 sys_is_audio_buffer_empty:      
     START_SYSCALL
-    mov rax, 20
+    mov rax, 19
     int 80h
     END_SYSCALL
 
 sys_clear_audio_buffer:
     START_SYSCALL
-    mov rax, 21
+    mov rax, 20
     int 80h
     END_SYSCALL
 
 sys_draw_fill_screen:
     START_SYSCALL
-    mov rax, 22
+    mov rax, 21
     mov rbx, rdi
     int 80h
     END_SYSCALL
 
 sys_set_fps_overlay:
     START_SYSCALL
-    mov rax, 23
+    mov rax, 22
     mov rbx, rdi
     int 80h
     END_SYSCALL
-

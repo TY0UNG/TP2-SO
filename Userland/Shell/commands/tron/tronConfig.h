@@ -73,18 +73,6 @@ typedef enum {
 static const int TRON_DELTA_COL[4] = {0, 1, 0, -1};
 static const int TRON_DELTA_ROW[4] = {-1, 0, 1, 0};
 
-static Direction rotateLeft(Direction dir) {
-    return (Direction)((dir + 3) % 4);
-}
-
-static Direction rotateRight(Direction dir) {
-    return (Direction)((dir + 1) % 4);
-}
-
-static Direction oppositeDir(Direction dir) {
-    return (Direction)((dir + 2) % 4);
-}
-
 typedef struct {
     int col;
     int row;
@@ -121,16 +109,5 @@ typedef struct {
 } MatchResult;
 
 typedef uint8_t (*TronCellFn)(int col, int row);
-
-static void writeTwoDigitNumber(char *dest, int value) {
-    if (value < 0) {
-        value = 0;
-    }
-    if (value > 99) {
-        value = 99;
-    }
-    dest[0] = (char)('0' + (value / 10));
-    dest[1] = (char)('0' + (value % 10));
-}
 
 #endif

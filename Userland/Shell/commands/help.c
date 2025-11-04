@@ -10,7 +10,6 @@ Commands command_list[] = {
     // SISTEMA
     {"help", "muestra este listado de ayuda", "  SISTEMA"},
     {"clear", "limpia la pantalla", "  SISTEMA"},
-    {"exit", "apaga el sistema", "  SISTEMA"},
 
     // INFORMACION DEL SISTEMA
     {"time", "muestra fecha y hora actuales", "  INFORMACION"},

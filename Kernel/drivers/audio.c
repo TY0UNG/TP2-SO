@@ -5,9 +5,6 @@
 extern void output_audio_start(uint16_t freq);
 extern void stop_audio(void);
 
-#define MS_PER_TICK 55
-#define AUDIO_BUFFER_LENGTH 2000
-
 static AudioEvent buffer[AUDIO_BUFFER_LENGTH];
 static  uint16_t head = 0;  
 static  uint16_t tail = 0;

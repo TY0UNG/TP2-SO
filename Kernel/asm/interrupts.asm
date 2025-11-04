@@ -155,7 +155,6 @@ _irq04Handler:
 _irq05Handler:
 	irqHandlerMaster 5
 
-
 ;Zero Division Exception
 _exception0Handler:
 	exceptionHandler 0

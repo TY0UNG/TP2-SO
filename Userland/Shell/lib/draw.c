@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include <draw.h>
 
 extern int sys_graphics_mode(int enabled);

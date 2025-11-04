@@ -5,11 +5,13 @@
 #include <draw.h>
 #include <inout.h>
 #include "../../lib/time.h"
+#include "../../lib/sound.h"
 #include "tronConfig.h"
 #include "tronAI.h"
 #include "tronUI.h"
 #include "tronInputQueue.h"
 #include "tronArena.h"
+#include "tronAudio.h"
 
 static void configureCycle(Cycle *cycle,
                            int col,
@@ -311,8 +313,6 @@ static void handleMenuInput(int *selection, bool *confirm, bool *exitRequest) {
 
 static int showMainMenu(void) {
     inputQueueClear();
-
-    uint64_t lastAnim = getMilisFromBoot();
     int animPhase = 0;
     int selection = 0;
     bool confirm = false;
@@ -320,7 +320,6 @@ static int showMainMenu(void) {
 
     playMenuTheme();
     tronUiDrawMenuFrame(selection, animPhase);
-    // Dibujo el MainMenu y actualizo sus animaciones
 
     while (!confirm && !exitRequest) {
         MenuEfect(selection);
@@ -379,8 +378,6 @@ static int waitForSpaceOrEsc(const Cycle *p1,
             tronUiDrawBoostMeter(p2, false, now, false);
             frameReady = true;
         }
-
-        bool statusChanged = tronUiUpdateStatus(message, color, flash);
         
         swapBuffers();
     
@@ -443,8 +440,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
     uint64_t tickInterval = computeTickInterval();
     uint64_t previousTime = frameTime;
     uint64_t roundStart = frameTime;
-    uint64_t aiAccumulator = 0;
-    const uint64_t aiDecisionInterval = (tickInterval > 45u) ? tickInterval : 45u;
     uint64_t nextAiDecision = previousTime;
 
     clear_audio_buffer();
@@ -459,7 +454,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
     // En cada turno:
     while (!p1Crashed && !p2Crashed && !exitRequested) {
         uint64_t now = getMilisFromBoot();
-        uint64_t delta = now - previousTime;
         previousTime = now;
 
         // Cambio direcciones y activo boosts si es necesario
@@ -484,7 +478,6 @@ static int playRound(int mode, int *lives1, int *lives2) {
             tronAiManageBoost(&p2, &p1, now, roundStart, arenaGet);
         }
 
-        bool frameUpdated = false;
         bool p1Moved = false;
         bool p2Moved = false;
         int prevCol1 = p1.col;
@@ -513,40 +506,27 @@ static int playRound(int mode, int *lives1, int *lives2) {
 
         if ((p1Moved || p1Crashed) && arenaGet(prevCol1, prevRow1) == OCC_P1) {
             tronUiDrawTrailCell(prevCol1, prevRow1, OCC_P1, true);
-            frameUpdated = true;
         }
         if ((p2Moved || p2Crashed) && arenaGet(prevCol2, prevRow2) == OCC_P2) {
             tronUiDrawTrailCell(prevCol2, prevRow2, OCC_P2, true);
-            frameUpdated = true;
         }
 
         for (int i = 0; i < updateCount; i++) {
             tronUiDrawTrailCell(updates[i].col, updates[i].row, updates[i].owner, true);
         }
-        if (updateCount > 0) {
-            frameUpdated = true;
-        }
 
         if (p1Moved && p1.alive) {
             tronUiDrawCycleHead(&p1, true);
-            frameUpdated = true;
         }
         if (p2Moved && p2.alive) {
             tronUiDrawCycleHead(&p2, true);
-            frameUpdated = true;
         }
 
         if (p1Crashed && crash1.active) {
             tronUiDrawCrashMarker(&crash1, COLOR_P1_TRAIL, true);
-            frameUpdated = true;
         }
         if (p2Crashed && crash2.active) {
             tronUiDrawCrashMarker(&crash2, COLOR_P2_TRAIL, true);
-            frameUpdated = true;
-        }
-
-        if (p1Crashed || p2Crashed) {
-            frameUpdated = true;
         }
 
         tronUiDrawBoostMeter(&p1, true, now, true);

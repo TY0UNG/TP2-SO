@@ -28,8 +28,6 @@ int commandDispatcher(char ** argsv, int argsc) {
         return 1;
     }
     if (strcmp(cmd, "echo") == 0) return echo(argsv, argsc);
-    if (strcmp(cmd, "exit") == 0) shutdown(argsv, argsc);
-    
     if (strcmp(cmd, "registros") == 0) return regs(argsv, argsc);
     if (strcmp(cmd, "time") == 0) return time(argsv, argsc);
     if (strcmp(cmd, "fps") == 0) return fps(argsv, argsc);
@@ -40,11 +38,8 @@ int commandDispatcher(char ** argsv, int argsc) {
     if (strcmp(cmd, "benchhw") == 0) return benchhw(argsv, argsc);
     if (strcmp(cmd, "benchmem") == 0) return benchmem(argsv, argsc);
     if (strcmp(cmd, "benchkbd") == 0) return benchkbd(argsv, argsc);
-    
     if (strcmp(cmd, "tron") == 0) return tronGame(argsv, argsc);
     if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argsc);
-    
-
     if (strcmp(cmd, "dividezero") == 0) dividezero();
     if (strcmp(cmd, "invalidop") == 0) invalidop();
 

@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define AUDIO_BUFFER_LENGTH 64
+#define MS_PER_TICK 55
+#define AUDIO_BUFFER_LENGTH 256
 
 typedef struct {
     uint16_t frequency;
@@ -13,9 +14,7 @@ typedef struct {
 
 bool isAudioBufferEmpty(void);
 void clearAudioBuffer(void);
-//AudioEvent getNextAudioEvent(void);
 AudioEvent getNextAudioEvent();
-void audio_handler(void);
 void play_sound(uint16_t freq, uint16_t duration);
 void stop_current_sound(void);
 
