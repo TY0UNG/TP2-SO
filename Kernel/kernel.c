@@ -28,6 +28,9 @@ static void * const sampleDataModuleAddress = (void*)0x500000;
 static void * const shell = (void*)0x400000;
 typedef int (*EntryPoint)();
 
+static uint64_t shellRSP;
+extern uint64_t get_rsp();
+
 static uint64_t strLength(const char * str) {
 	if (str == 0) {
 		return 0;
@@ -41,6 +44,10 @@ static uint64_t strLength(const char * str) {
 
 void * getShellAddress() {
     return (void*)shell;
+}
+
+uint64_t getShellRSP() {
+	return shellRSP;
 }
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
@@ -177,6 +184,8 @@ int main() {
 	keyboard_set_enabled(true);
 	clearTextBuffer();
 
+
+	shellRSP = get_rsp();
     ((EntryPoint)shell)();
 
     print("Returned from shell (unexpected)\n");

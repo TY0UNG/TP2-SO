@@ -5,6 +5,7 @@
 #define INVALID_OPCODE_ID 6
 
 extern void * getShellAddress();
+extern uint64_t getShellRSP();
 
 typedef struct {
     uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
@@ -26,6 +27,8 @@ void exceptionDispatcher(ExceptionStackFrame *frame, int exception) {
     } else if (exception == INVALID_OPCODE_ID) {
         invalid_opcode(frame);
     }
+    frame->rip = (uint64_t)getShellAddress();
+    frame->rsp = getShellRSP();
 }
 
 static void print_exception_info(const char *exception_name, ExceptionStackFrame *frame) {
@@ -108,10 +111,8 @@ static void print_exception_info(const char *exception_name, ExceptionStackFrame
 
 static void zero_division(ExceptionStackFrame *frame) {
     print_exception_info("Division by Zero", frame);
-    frame->rip = (uint64_t)getShellAddress();
 }
 
 static void invalid_opcode(ExceptionStackFrame *frame) {
     print_exception_info("Invalid Opcode", frame);
-    frame->rip = (uint64_t)getShellAddress();
 }
