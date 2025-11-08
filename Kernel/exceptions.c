@@ -48,7 +48,7 @@ static void print_exception_info(const char *exception_name, ExceptionStackFrame
     
     // La CPU hace push de 5 valores (SS, RSP, RFLAGS, CS, RIP) = 40 bytes
     print("  RSP: ");
-    printHex64(frame->rsp + 40);
+    printHex64(frame->rsp);
     print("\n");
     
     print("  RAX: ");
