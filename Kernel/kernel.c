@@ -8,6 +8,7 @@
 #include <interrupts.h>
 #include <video.h>
 #include <keyboard.h>
+#include "./drivers/memory.h"
 #include "./drivers/time.h"
 #include <audio.h>
 
@@ -19,11 +20,11 @@ extern uint8_t data;
 extern uint8_t bss;
 extern uint8_t endOfKernelBinary;
 extern uint8_t endOfKernel;
+static void * endOfModules = 0;
+
+uint32_t * ramAmount = (uint32_t *) 0x5020;
 
 static const uint64_t PageSize = 0x1000;
-
-static void * const sampleCodeModuleAddress = (void*)0x600000;
-static void * const sampleDataModuleAddress = (void*)0x500000;
 
 static void * const shell = (void*)0x400000;
 typedef int (*EntryPoint)();
@@ -71,12 +72,12 @@ void * initializeKernelBinary() {
 	ncPrint("[Loading modules]");
 	ncNewline();
 	void * moduleAddresses[] = {
-		sampleCodeModuleAddress,
-		sampleDataModuleAddress,
 		shell
 	};
 
-	loadModules(&endOfKernelBinary, moduleAddresses);
+	void * loadedEnd = 0;
+	loadModules(&endOfKernelBinary, moduleAddresses, &loadedEnd);
+
 	ncPrint("[Done]");
 	ncNewline();
 	ncNewline();
@@ -85,6 +86,8 @@ void * initializeKernelBinary() {
 	ncNewline();
 
 	clearBSS(&bss, &endOfKernel - &bss);
+
+	endOfModules = (loadedEnd != 0) ? loadedEnd : &endOfKernel;
 
 	ncPrint("  text: 0x");
 	ncPrintHex((uint64_t)&text);
@@ -106,16 +109,17 @@ void * initializeKernelBinary() {
 	return getStackBase();
 }
 
+void sleep(uint64_t ms) {
+    uint64_t start_time = getMilisFromBoot();
+    uint64_t end_time = start_time + ms;
+    while (getMilisFromBoot() < end_time);
+}
+
 void MusicSO(){
 	clearAudioBuffer();
 	play_sound(784, 180);
 	play_sound(988, 150);
 	play_sound(1175, 240);
-}
-void sleep(uint64_t ms) {
-    uint64_t start_time = getMilisFromBoot();
-    uint64_t end_time = start_time + ms;
-    while (getMilisFromBoot() < end_time);
 }
 
 static void bootAnimation(void) {
@@ -184,6 +188,17 @@ int main() {
 	keyboard_set_enabled(true);
 	clearTextBuffer();
 
+	if (endOfKernel >= shell) {
+		print("Kernel demasiado grande");
+		return 1;
+	}
+
+	if (endOfModules != 0) {
+		initializeMemoryManager(endOfModules, (*ramAmount) * 1024 * 1024 - (int32_t) endOfModules);
+	} else {
+		print("Error al inicializar memory manager");
+		return 1;
+	}
 
 	shellRSP = get_rsp();
     ((EntryPoint)shell)();

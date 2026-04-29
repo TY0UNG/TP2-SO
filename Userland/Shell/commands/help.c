@@ -23,6 +23,8 @@ Commands command_list[] = {
     {"benchhw [s]", "mide lecturas del RTC por segundo (1-60s)", "  BENCHMARKS"},
     {"benchmem [s]", "mide copias de memoria por segundo (1-60s)", "  BENCHMARKS"},
     {"benchkbd [s]", "mide lecturas del teclado por segundo (1-60s)", "  BENCHMARKS"},
+    {"testmm <bytes>", "stress test de malloc/free en el memory manager del kernel", "  BENCHMARKS"},
+    {"meminfo", "muestra memoria total y memoria usada", "  BENCHMARKS"},
 
     // UTILIDADES
     {"echo", "imprime los argumentos en pantalla", "  UTILIDADES"},

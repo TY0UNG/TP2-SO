@@ -3,6 +3,7 @@
 #include <video.h>
 #include <interrupts.h>
 #include <audio.h>
+#include "./drivers/memory.h"
 #include "./drivers/time.h"
 
 extern const char * get_register_dump();
@@ -36,6 +37,10 @@ static int syscall_set_fps_overlay(Registers * registers);
 static int syscall_play_sound(Registers *registers);
 static int syscall_is_audio_buffer_empty(Registers *registers);
 static int syscall_clear_audio_buffer(Registers *registers);
+static void * syscall_malloc(Registers *registers);
+static int syscall_free(Registers *registers);
+static uint64_t syscall_get_total_memory(Registers *registers);
+static uint64_t syscall_get_used_memory(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -83,6 +88,14 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_draw_fill_screen(registers);
     case 22:
         return syscall_set_fps_overlay(registers);
+    case 23:
+        return (uint64_t) syscall_malloc(registers);
+    case 24:
+        return syscall_free(registers);
+    case 25:
+        return syscall_get_total_memory(registers);
+    case 26:
+        return syscall_get_used_memory(registers);
     default:
         break;
     }
@@ -286,4 +299,22 @@ static int syscall_set_text_size(Registers * registers) {
 static int syscall_set_fps_overlay(Registers * registers) {
     setFpsOverlayEnabled(registers->rbx != 0);
     return 0;
+}
+
+static void * syscall_malloc(Registers * registers) {
+    return malloc((size_t) registers->rbx);
+}
+
+
+static int syscall_free(Registers * registers) {
+    free((void *) registers->rbx);
+    return 0;
+}
+
+static uint64_t syscall_get_total_memory(Registers *registers) {
+    return (uint64_t) getTotalMemory();
+}
+
+static uint64_t syscall_get_used_memory(Registers *registers) {
+    return (uint64_t) getUsedMemory();
 }

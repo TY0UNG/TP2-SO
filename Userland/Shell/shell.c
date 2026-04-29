@@ -38,6 +38,8 @@ int commandDispatcher(char ** argsv, int argsc) {
     if (strcmp(cmd, "benchhw") == 0) return benchhw(argsv, argsc);
     if (strcmp(cmd, "benchmem") == 0) return benchmem(argsv, argsc);
     if (strcmp(cmd, "benchkbd") == 0) return benchkbd(argsv, argsc);
+    if (strcmp(cmd, "testmm") == 0) return testmm(argsv, argsc);
+    if (strcmp(cmd, "meminfo") == 0) return meminfo(argsv, argsc);
     if (strcmp(cmd, "tron") == 0) return tronGame(argsv, argsc);
     if (strcmp(cmd, "bounce") == 0) return bounce(argsv, argsc);
     if (strcmp(cmd, "dividezero") == 0) dividezero();

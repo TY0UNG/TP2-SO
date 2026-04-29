@@ -21,6 +21,10 @@ GLOBAL sys_play_sound
 GLOBAL sys_is_audio_buffer_empty
 GLOBAL sys_clear_audio_buffer
 GLOBAL sys_set_fps_overlay
+GLOBAL sys_malloc
+GLOBAL sys_free
+GLOBAL sys_get_total_memory
+GLOBAL sys_get_used_memory
 
 EXTERN printHex
 
@@ -186,5 +190,31 @@ sys_set_fps_overlay:
     START_SYSCALL
     mov rax, 22
     mov rbx, rdi
+    int 80h
+    END_SYSCALL
+
+sys_malloc:
+    START_SYSCALL
+    mov rax, 23
+    mov rbx, rdi
+    int 80h
+    END_SYSCALL
+
+sys_free:
+    START_SYSCALL
+    mov rax, 24
+    mov rbx, rdi
+    int 80h
+    END_SYSCALL
+
+sys_get_total_memory:
+    START_SYSCALL
+    mov rax, 25
+    int 80h
+    END_SYSCALL
+
+sys_get_used_memory:
+    START_SYSCALL
+    mov rax, 26
     int 80h
     END_SYSCALL

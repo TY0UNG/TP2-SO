@@ -740,3 +740,19 @@ void printHex16(uint16_t value) {
     print("0x");
     print(hex);
 }
+
+void printDec(uint64_t number) {
+    char buffer[21];
+    int i = 0;
+    if (number == 0) {
+        printChar('0');
+        return;
+    }
+    while (number > 0) {
+        buffer[i++] = '0' + (number % 10);
+        number /= 10;
+    }
+    while (i--) {
+        printChar(buffer[i]);
+    }
+}
