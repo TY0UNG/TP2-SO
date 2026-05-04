@@ -1,6 +1,8 @@
 #include <memory.h>
 #include <stdbool.h>
 
+#ifdef MM_NAIVE
+
 bool initialized = false;
 char *baseAddress;
 char *nextAddress;
@@ -35,3 +37,5 @@ size_t getTotalMemory() {
 size_t getUsedMemory() {
     return nextAddress - baseAddress;
 }
+
+#endif
