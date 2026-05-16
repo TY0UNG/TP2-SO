@@ -67,20 +67,18 @@ SECTION .text
 	mov [initial_saved_stack_ptr], rsp
 	pushState
 
-	; Guardar el puntero al stack en variable global
+	; saved_stack_ptr lo usa regs.asm para hacer el dump de registros.
 	mov [saved_stack_ptr], rsp
 
-	mov rdi, %1 ; pasaje de parametro
-	call irqDispatcher
-
-	; Signal PIC EOI (End of Interrupt).
-	; If the interrupt originated on the slave PIC we must acknowledge the slave
-	; first (port 0xA0) and then the master (port 0x20). Sending to the slave
-	; for master-only IRQs is harmless on most PIC implementations and keeps
-	; the logic simple.
+	; EOI ANTES de llamar al dispatcher porque el scheduler puede
+	; switchear con switch_rsp y nunca volver a esta cadena C.
+	; Mandar EOI dos veces (si se ejecuta también el final) es no-op en 8259.
 	mov al, 20h
-	out 0A0h, al    ; send EOI to slave PIC
-	out 20h, al    ; send EOI to master PIC
+	out 0A0h, al
+	out 20h, al
+
+	mov rdi, %1
+	call irqDispatcher
 
 	popState
 	iretq
@@ -180,6 +178,7 @@ _sysCallHandler:
 	mov [registers+8], rbx
 	mov [registers+16], rcx
 	mov [registers+24], rdx
+	mov [registers+32], rdi
 
 	mov rdi, registers
 	call sysCallDispatcher
@@ -214,3 +213,4 @@ SECTION .data
         dq 0  	; rbx
         dq 0  	; rcx
         dq 0	; rdx
+        dq 0	; rdi

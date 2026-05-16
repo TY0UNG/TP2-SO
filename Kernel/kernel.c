@@ -11,6 +11,7 @@
 #include "./drivers/memory.h"
 #include "./drivers/time.h"
 #include <audio.h>
+#include <processes.h>
 
 extern void diagnostic_test();
 
@@ -27,10 +28,7 @@ uint32_t * ramAmount = (uint32_t *) 0x5020;
 static const uint64_t PageSize = 0x1000;
 
 static void * const shell = (void*)0x400000;
-typedef int (*EntryPoint)();
-
-static uint64_t shellRSP;
-extern uint64_t get_rsp();
+typedef void (*EntryPoint)();
 
 static uint64_t strLength(const char * str) {
 	if (str == 0) {
@@ -41,14 +39,6 @@ static uint64_t strLength(const char * str) {
 		len++;
 	}
 	return len;
-}
-
-void * getShellAddress() {
-    return (void*)shell;
-}
-
-uint64_t getShellRSP() {
-	return shellRSP;
 }
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
@@ -175,6 +165,32 @@ static void bootAnimation(void) {
 	textMode();
 }
 
+void yield_prueba() {
+	__asm__ __volatile__ (
+    ".intel_syntax noprefix\n\t"
+    "mov rax, 30\n\t"
+    "int 0x80\n\t"         // Usar 0x80 en vez de 80h es más seguro en GCC
+    ".att_syntax\n\t"      // Siempre devuelve a GCC a su estado nativo
+    : 
+    : 
+    : "rax"                // Avisamos que rax se modificó
+);
+}
+
+void A() {
+	while (true) {
+		print("A");
+		yield_prueba();
+	}
+}
+
+void B() {
+	while (true) {
+		print("B");
+		yield_prueba();
+	}
+}
+
 int main() {	
 	load_idt();
     ncSetStyle(0x0F);
@@ -188,7 +204,7 @@ int main() {
 	keyboard_set_enabled(true);
 	clearTextBuffer();
 
-	if (endOfKernel >= shell) {
+	if ((void *) endOfKernel >= (void *) shell) {
 		print("Kernel demasiado grande");
 		return 1;
 	}
@@ -200,10 +216,16 @@ int main() {
 		return 1;
 	}
 
-	shellRSP = get_rsp();
-    ((EntryPoint)shell)();
+	/* const char ** args = { NULL };
+	create_process("Shell", ((EntryPoint)shell), args); */
 
-    print("Returned from shell (unexpected)\n");
+	const char ** args = { NULL };
+	create_process("A", ((EntryPoint)A), args);
+	create_process("B", ((EntryPoint)B), args);
+
+	_sti();
+
+	while(1) {}
     
     return 0;
 }

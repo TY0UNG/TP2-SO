@@ -138,7 +138,7 @@ void drawPixel(uint64_t x, uint64_t y, uint32_t color) {
 	putPixel(color, x, y, false);
 }
 
-static int abs(int number) {
+int abs(int number) {
 	return number < 0 ? -number : number;
 }
 

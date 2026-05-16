@@ -1,37 +1,25 @@
 #include <video.h>
 #include <interrupts.h>
+#include <processes.h>
 
 #define ZERO_EXCEPTION_ID 0
 #define INVALID_OPCODE_ID 6
 
-extern void * getShellAddress();
-extern uint64_t getShellRSP();
+static void zero_division(StackFrame *frame);
+static void invalid_opcode(StackFrame *frame);
+static void print_exception_info(const char *exception_name, StackFrame *frame);
 
-typedef struct {
-    uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
-    uint64_t rsi, rdi, rbp, rdx, rcx, rbx, rax;
-    uint64_t rip;
-    uint64_t cs;
-    uint64_t rflags;
-    uint64_t rsp;
-    uint64_t ss;
-} ExceptionStackFrame;
-
-static void zero_division(ExceptionStackFrame *frame);
-static void invalid_opcode(ExceptionStackFrame *frame);
-static void print_exception_info(const char *exception_name, ExceptionStackFrame *frame);
-
-void exceptionDispatcher(ExceptionStackFrame *frame, int exception) {
+void exceptionDispatcher(StackFrame *frame, int exception) {
     if (exception == ZERO_EXCEPTION_ID) {
         zero_division(frame);
     } else if (exception == INVALID_OPCODE_ID) {
         invalid_opcode(frame);
     }
-    frame->rip = (uint64_t)getShellAddress();
-    frame->rsp = getShellRSP();
+    kill_process(get_actual_pid());
+    scheduler();
 }
 
-static void print_exception_info(const char *exception_name, ExceptionStackFrame *frame) {
+static void print_exception_info(const char *exception_name, StackFrame *frame) {
     selectStyle(0x04); // Rojo para error
     print("\n");
     print("================== EXCEPTION OCCURRED ==================\n");
@@ -104,15 +92,15 @@ static void print_exception_info(const char *exception_name, ExceptionStackFrame
     
     selectStyle(0x0E); // Amarillo -> para advertencia
     print("========================================================\n");
-    print("Returning to shell...\n");
+    print("Killing actual process...\n");
     print("========================================================\n");
     selectStyle(0x0F);
 }
 
-static void zero_division(ExceptionStackFrame *frame) {
+static void zero_division(StackFrame *frame) {
     print_exception_info("Division by Zero", frame);
 }
 
-static void invalid_opcode(ExceptionStackFrame *frame) {
+static void invalid_opcode(StackFrame *frame) {
     print_exception_info("Invalid Opcode", frame);
 }

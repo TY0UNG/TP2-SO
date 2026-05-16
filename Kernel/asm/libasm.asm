@@ -3,6 +3,8 @@ GLOBAL cpuVendor
 GLOBAL fast_memcpy
 GLOBAL fast_memset
 GLOBAL get_rsp
+GLOBAL set_rsp
+GLOBAL halt
 	
 cpuVendor:
 	push rbp
@@ -133,6 +135,14 @@ fast_memset:
     ; RAX ya contiene el puntero de destino original (dest).
     ret
 
-    get_rsp:
-        mov rax, rsp
-        ret
+get_rsp:
+    mov rax, rsp
+    ret
+
+set_rsp:
+    mov rsp, rdi
+    ret
+
+halt:
+    hlt
+    ret

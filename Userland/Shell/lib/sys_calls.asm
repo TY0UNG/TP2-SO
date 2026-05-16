@@ -25,6 +25,10 @@ GLOBAL sys_malloc
 GLOBAL sys_free
 GLOBAL sys_get_total_memory
 GLOBAL sys_get_used_memory
+GLOBAL sys_create_process
+GLOBAL sys_exit
+GLOBAL sys_wait
+GLOBAL sys_yield
 
 EXTERN printHex
 
@@ -216,5 +220,42 @@ sys_get_total_memory:
 sys_get_used_memory:
     START_SYSCALL
     mov rax, 26
+    int 80h
+    END_SYSCALL
+
+; sys_create_process(name, entry, argc, argv)
+; Caller SysV: rdi=name, rsi=entry, rdx=argc, rcx=argv
+; Kernel:      rbx=name, rcx=entry, rdx=argc, rdi=argv
+sys_create_process:
+    START_SYSCALL
+    mov rax, 27
+    mov rbx, rdi        ; name
+    push rcx            ; preservar argv antes de pisar rcx
+    mov rcx, rsi        ; entry
+    pop rdi             ; argv -> rdi (4to arg al kernel)
+    ; rdx ya tiene argc
+    int 80h
+    END_SYSCALL
+
+; sys_exit(status)
+sys_exit:
+    START_SYSCALL
+    mov rax, 28
+    mov rbx, rdi        ; status
+    int 80h
+    END_SYSCALL
+
+; sys_wait(pid) -> exit_status
+sys_wait:
+    START_SYSCALL
+    mov rax, 29
+    mov rbx, rdi        ; pid
+    int 80h
+    END_SYSCALL
+
+; sys_yield()
+sys_yield:
+    START_SYSCALL
+    mov rax, 30
     int 80h
     END_SYSCALL

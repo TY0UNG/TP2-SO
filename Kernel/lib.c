@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <lib.h>
 extern uint8_t endOfKernel[];
 static uintptr_t next_free_address = 0;
 
@@ -121,4 +121,16 @@ uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base) {
 	buffer[digits] = '\0';
 
 	return digits;
+}
+
+char * strcpy(char* dest, const char* src) {
+    char* original = dest;
+    while ((*dest++ = *src++));
+    return original;
+}
+
+size_t strlen(const char* str) {
+    const char* inicio = str;
+    while (*str) str++;
+    return str - inicio;
 }

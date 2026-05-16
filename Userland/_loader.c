@@ -4,14 +4,17 @@
 extern char bss;
 extern char endOfShell;
 
-int main();
+int main(int argc, char **argv);
+extern void sys_exit(int status);
 
 void * memset(void * destiny, int32_t c, uint64_t length);
 
-int _start() {
+void _start(int argc, char **argv) {
 	//Clean BSS
 	memset(&bss, 0, &endOfShell - &bss);
-	return main();
+	int ret = main(argc, argv);
+	sys_exit(ret);
+	while(1);   // por las dudas; sys_exit no deberia retornar
 }
 
 void * memset(void * destiation, int32_t c, uint64_t length) {

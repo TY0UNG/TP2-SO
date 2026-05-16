@@ -3,6 +3,7 @@
 #include <video.h>
 #include <interrupts.h>
 #include <audio.h>
+#include <processes.h>
 #include "./drivers/memory.h"
 #include "./drivers/time.h"
 
@@ -13,6 +14,7 @@ typedef struct {
     uint64_t rbx;
     uint64_t rcx;
     uint64_t rdx;
+    uint64_t rdi;
 } Registers;
 
 static int syscall_write(Registers * registers);
@@ -41,6 +43,10 @@ static void * syscall_malloc(Registers *registers);
 static int syscall_free(Registers *registers);
 static uint64_t syscall_get_total_memory(Registers *registers);
 static uint64_t syscall_get_used_memory(Registers *registers);
+static uint64_t syscall_create_process(Registers *registers);
+static int syscall_exit(Registers *registers);
+static int syscall_wait(Registers *registers);
+static int syscall_yield(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -96,11 +102,45 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_get_total_memory(registers);
     case 26:
         return syscall_get_used_memory(registers);
+    case 27:
+        return syscall_create_process(registers);
+    case 28:
+        return syscall_exit(registers);
+    case 29:
+        return syscall_wait(registers);
+    case 30:
+        return syscall_yield(registers);
     default:
         break;
     }
     return 0;
-}   
+}
+
+static uint64_t syscall_create_process(Registers *registers) {
+    const char *name = (const char *) registers->rbx;
+    void (*entry)() = (void (*)()) registers->rcx;
+    // argc en rdx (no se usa directamente; create_process lo recalcula desde argv)
+    (void) registers->rdx;
+    const char **argv = (const char **) registers->rdi;
+    return (uint64_t) create_process(name, entry, argv);
+}
+
+static int syscall_exit(Registers *registers) {
+    int status = (int) registers->rbx;
+    exit_current_process(status);
+    return 0;   // no llega
+}
+
+static int syscall_wait(Registers *registers) {
+    pid_t pid = (pid_t) registers->rbx;
+    return wait_pid(pid);
+}
+
+static int syscall_yield(Registers *registers) {
+    (void) registers;
+    yield();
+    return 0;
+}
 
 static uint64_t sycall_getRegs(Registers * registers){
      return (uint64_t)get_register_dump();
