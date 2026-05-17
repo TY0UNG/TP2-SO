@@ -7,6 +7,7 @@
 #include <idtLoader.h>
 #include <interrupts.h>
 #include <video.h>
+#include <terminal.h>
 #include <keyboard.h>
 #include <memory.h>
 #include <time.h>
@@ -190,8 +191,11 @@ int main() {
 		return 1;
 	}
 
+	initialize_terminal();
+
 	const char ** args = { NULL };
-	create_process("Shell", ((EntryPoint) shell), args);
+	pid_t shell_pid = create_process("Shell", ((EntryPoint) shell), args);
+	set_foreground_pid(shell_pid);
 
 	_sti();
 

@@ -4,9 +4,12 @@
 #include <time.h>
 #include <memory.h>
 #include <lib.h>
+#include <files.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#define MAX_FDS 16
 
 typedef struct Process {
     bool active;
@@ -14,6 +17,7 @@ typedef struct Process {
     bool zombie;        // termino pero todavia no fue reapeado por wait
     int exit_status;
     size_t pid;
+    size_t parent_pid;
     size_t index;
     size_t waiting_for_pid;  // pid que este proceso esta esperando, 0 si ninguno
     int priority;
@@ -22,6 +26,7 @@ typedef struct Process {
     char * stack_memory;
     char name[32];
     void (*entry_point)();
+    file_t * fds[MAX_FDS];
 } Process;
 
 typedef size_t pid_t;

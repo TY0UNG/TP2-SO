@@ -6,6 +6,10 @@ extern size_t sys_read(const char* buffer);
 extern void sys_clear();
 extern KeyEvent * sys_get_key();
 extern void sys_set_text_size(uint16_t height);
+extern int sys_set_foreground(int pid);
+extern int sys_write_fd(int fd, const char* buf, int count);
+extern int sys_read_fd(int fd, char* buf, int count);
+extern int sys_close_fd(int fd);
 
 int print(const char* str) {
     return sys_write(STDOUT, str);
@@ -84,4 +88,20 @@ KeyEvent * getKey() {
 
 void setTextSize(uint16_t height) {
     sys_set_text_size(height);
+}
+
+int write_fd(int fd, const char *buf, int count) {
+    return sys_write_fd(fd, buf, count);
+}
+
+int read_fd(int fd, char *buf, int count) {
+    return sys_read_fd(fd, buf, count);
+}
+
+int close_fd(int fd) {
+    return sys_close_fd(fd);
+}
+
+int set_foreground(int pid) {
+    return sys_set_foreground(pid);
 }

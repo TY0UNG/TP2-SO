@@ -29,6 +29,10 @@ GLOBAL sys_create_process
 GLOBAL sys_exit
 GLOBAL sys_wait
 GLOBAL sys_yield
+GLOBAL sys_set_foreground
+GLOBAL sys_write_fd
+GLOBAL sys_read_fd
+GLOBAL sys_close_fd
 
 EXTERN printHex
 
@@ -257,5 +261,41 @@ sys_wait:
 sys_yield:
     START_SYSCALL
     mov rax, 30
+    int 80h
+    END_SYSCALL
+
+; sys_set_foreground(pid)
+sys_set_foreground:
+    START_SYSCALL
+    mov rax, 31
+    mov rbx, rdi        ; pid
+    int 80h
+    END_SYSCALL
+
+; sys_write_fd(fd, buf, count)
+sys_write_fd:
+    START_SYSCALL
+    mov rax, 32
+    mov rbx, rdi        ; fd
+    mov rcx, rsi        ; buf
+    ; rdx ya tiene count
+    int 80h
+    END_SYSCALL
+
+; sys_read_fd(fd, buf, count)
+sys_read_fd:
+    START_SYSCALL
+    mov rax, 33
+    mov rbx, rdi        ; fd
+    mov rcx, rsi        ; buf
+    ; rdx ya tiene count
+    int 80h
+    END_SYSCALL
+
+; sys_close_fd(fd)
+sys_close_fd:
+    START_SYSCALL
+    mov rax, 34
+    mov rbx, rdi        ; fd
     int 80h
     END_SYSCALL

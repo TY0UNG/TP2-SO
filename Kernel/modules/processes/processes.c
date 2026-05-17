@@ -1,4 +1,5 @@
 #include <processes.h>
+#include <terminal.h>
 #define PROCESSES_LIMIT 128
 #define PRIORITY_COUNT 5
 #define STACK_SIZE 1024 * 16 // 16 KB
@@ -202,6 +203,7 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
 
     processes[index].index = index;
     processes[index].pid = pid_count++;
+    processes[index].parent_pid = actual_pid;
     processes[index].entry_point = entry_point;
     processes[index].active = true;
     processes[index].blocked = false;
@@ -209,6 +211,16 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
     processes[index].exit_status = 0;
     processes[index].waiting_for_pid = 0;
     processes[index].rsp = (uint64_t) frame;
+
+    // fds heredados: 0=stdin, 1=stdout, 2=stderr -> todos a la terminal global.
+    file_t * term = get_terminal_fd();
+    for (int i = 0; i < MAX_FDS; i++) processes[index].fds[i] = NULL;
+    if (term != NULL) {
+        processes[index].fds[0] = term;
+        processes[index].fds[1] = term;
+        processes[index].fds[2] = term;
+        term->ref_count += 3;
+    }
 
     int priority_slot = getNextPriorityFreeSlot(0);
     priority_lists[0][priority_slot].process = &processes[index];
@@ -232,6 +244,16 @@ static void remove_from_priority_lists(Process * process) {
     }
 }
 
+static void close_all_fds(Process * p) {
+    for (int i = 0; i < MAX_FDS; i++) {
+        file_t * f = p->fds[i];
+        if (f != NULL && f->ops != NULL && f->ops->close != NULL) {
+            f->ops->close(f);
+        }
+        p->fds[i] = NULL;
+    }
+}
+
 // Libera completamente el slot. Asume que la memoria de stack ya no se usa.
 // active=false marca el slot como reutilizable.
 static void reap(int index) {
@@ -247,6 +269,15 @@ static void reap(int index) {
 void kill_process(pid_t pid) {
     int index = getIndex(pid);
     if (index < 0) return;
+    if (pid == get_foreground_pid()) {
+        size_t parent = processes[index].parent_pid;
+        if (parent != 0 && getIndex(parent) >= 0 && processes[getIndex(parent)].active) {
+            set_foreground_pid(parent);
+        } else {
+            set_foreground_pid(0);
+        }
+    }
+    close_all_fds(&processes[index]);
     remove_from_priority_lists(&processes[index]);
     reap(index);
     proccess_count--;
@@ -262,6 +293,20 @@ void exit_current_process(int status) {
     processes[idx].zombie = true;
     remove_from_priority_lists(&processes[idx]);
     proccess_count--;
+
+    // Si era el foreground, el padre lo toma. Si el padre no existe o no esta
+    // activo, fg queda en 0 (cualquiera lo puede tomar despues).
+    if (my_pid == get_foreground_pid()) {
+        size_t parent = processes[idx].parent_pid;
+        int parent_idx = (parent != 0) ? getIndex(parent) : -1;
+        if (parent_idx >= 0 && processes[parent_idx].active && !processes[parent_idx].zombie) {
+            set_foreground_pid(parent);
+        } else {
+            set_foreground_pid(0);
+        }
+    }
+
+    close_all_fds(&processes[idx]);
 
     // Despertar a cualquier proceso esperando por este pid.
     for (int i = 0; i < PROCESSES_LIMIT; i++) {

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define STDIN  0
 #define STDOUT 1
 #define STDERR 2
 
@@ -13,6 +14,12 @@ int println(const char* str);
 int printerr(const char* str);
 size_t read(char* buffer);
 void clear();
+
+int write_fd(int fd, const char *buf, int count);
+int read_fd(int fd, char *buf, int count);
+int close_fd(int fd);
+
+int set_foreground(int pid);
 
 void printChar(char c);
 void printHex(uint64_t value);

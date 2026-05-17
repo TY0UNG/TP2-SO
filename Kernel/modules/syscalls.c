@@ -1,13 +1,25 @@
 #include <stdint.h>
 #include <keyboard.h>
 #include <video.h>
+#include <terminal.h>
 #include <interrupts.h>
 #include <audio.h>
 #include <processes.h>
 #include <memory.h>
+#include <lib.h>
 #include <time.h>
 
+#define READ_BUFFER_MAX 256
+
 extern const char * get_register_dump();
+extern Process processes[];
+extern size_t actual_index;
+
+static file_t * lookup_fd(int fd) {
+    if (fd < 0 || fd >= MAX_FDS) return NULL;
+    if (actual_index == (size_t)-1) return NULL;
+    return processes[actual_index].fds[fd];
+}
 
 typedef struct {
     uint64_t rax;
@@ -47,6 +59,10 @@ static uint64_t syscall_create_process(Registers *registers);
 static int syscall_exit(Registers *registers);
 static int syscall_wait(Registers *registers);
 static int syscall_yield(Registers *registers);
+static int syscall_set_foreground(Registers *registers);
+static int syscall_write_fd(Registers *registers);
+static int syscall_read_fd(Registers *registers);
+static int syscall_close_fd(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -110,6 +126,14 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_wait(registers);
     case 30:
         return syscall_yield(registers);
+    case 31:
+        return syscall_set_foreground(registers);
+    case 32:
+        return syscall_write_fd(registers);
+    case 33:
+        return syscall_read_fd(registers);
+    case 34:
+        return syscall_close_fd(registers);
     default:
         break;
     }
@@ -147,37 +171,60 @@ static uint64_t sycall_getRegs(Registers * registers){
 }
 
 static int syscall_write(Registers * registers) {
-    selectStyle(registers->rbx == 2 ? 0x04 : 0x0F);
-    print((char *) registers->rcx);
-    return 1;
+    int fd_num = (int) registers->rbx;
+    const char * s = (const char *) registers->rcx;
+    selectStyle(fd_num == 2 ? 0x04 : 0x0F);
+    file_t * f = lookup_fd(fd_num);
+    if (f == NULL || f->ops == NULL || f->ops->write == NULL) return -1;
+    return f->ops->write(f, s, (int) strlen(s));
 }
 
 static int syscall_read(Registers * registers) {
     char * input = (char *) registers->rbx;
-    uint8_t size = 0;
+    file_t * f = lookup_fd(0);  // stdin
+    if (f == NULL || f->ops == NULL || f->ops->read == NULL) return -1;
+    return f->ops->read(f, input, READ_BUFFER_MAX);
+}
 
-    _sti();
+static int syscall_set_foreground(Registers * registers) {
+    pid_t target = (pid_t) registers->rbx;
+    pid_t fg = get_foreground_pid();
+    pid_t me = get_actual_pid();
+    // Si hay un fg actual, solo el puede ceder. Si es 0, cualquiera.
+    if (fg != 0 && me != fg) return -1;
+    set_foreground_pid(target);
+    return 0;
+}
 
-    while(1) {
-        if (!isKeyBufferEmpty()) {
-            KeyEvent event = getNextKey();
-                if (!event.is_release) {
-                    if(event.ascii == '\n') {
-                        input[size] = 0;
-                        print("\n");
-                        return size;
-                    } else if(event.ascii == '\b'){
-                        if(size > 0){
-                            size--;
-                            deleteChar();
-                        }
-                    } else if (event.printable) {
-                        input[size++] = event.ascii;
-                        printChar(event.ascii);
-                    }
-            }
-        }
+static int syscall_write_fd(Registers * registers) {
+    int fd_num = (int) registers->rbx;
+    const char * buf = (const char *) registers->rcx;
+    int count = (int) registers->rdx;
+    file_t * f = lookup_fd(fd_num);
+    if (f == NULL || f->ops == NULL || f->ops->write == NULL) return -1;
+    return f->ops->write(f, buf, count);
+}
+
+static int syscall_read_fd(Registers * registers) {
+    int fd_num = (int) registers->rbx;
+    char * buf = (char *) registers->rcx;
+    int count = (int) registers->rdx;
+    file_t * f = lookup_fd(fd_num);
+    if (f == NULL || f->ops == NULL || f->ops->read == NULL) return -1;
+    return f->ops->read(f, buf, count);
+}
+
+static int syscall_close_fd(Registers * registers) {
+    int fd_num = (int) registers->rbx;
+    if (fd_num < 0 || fd_num >= MAX_FDS) return -1;
+    if (actual_index == (size_t)-1) return -1;
+    file_t * f = processes[actual_index].fds[fd_num];
+    if (f == NULL) return -1;
+    processes[actual_index].fds[fd_num] = NULL;
+    if (f->ops != NULL && f->ops->close != NULL) {
+        return f->ops->close(f);
     }
+    return 0;
 }
 
 static int syscall_play_sound(Registers *registers) {

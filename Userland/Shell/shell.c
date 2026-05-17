@@ -5,6 +5,7 @@
 extern int  sys_create_process(const char *name, void *entry, int argc, char **argv);
 extern int  sys_wait(int pid);
 extern void sys_exit(int status);
+extern int  sys_set_foreground(int pid);
 
 typedef int (*command_entry_t)(int argc, char **argv);
 
@@ -114,6 +115,10 @@ int commandDispatcher(char ** argsv, int argsc) {
                 println("Error al crear proceso");
                 return 1;
             }
+            // Le cedemos el foreground al hijo para que pueda leer/escribir
+            // en la terminal. Cuando termine, el kernel devuelve fg al padre
+            // (shell) automaticamente.
+            sys_set_foreground(pid);
             sys_wait(pid);
             return 1;
         }

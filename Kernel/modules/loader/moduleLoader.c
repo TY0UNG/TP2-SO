@@ -2,6 +2,7 @@
 #include <lib.h>
 #include <moduleLoader.h>
 #include <video.h>
+#include <terminal.h>
 #include <stdlib.h>
 
 static void * loadModule(uint8_t ** module, void * targetModuleAddress, int idx);

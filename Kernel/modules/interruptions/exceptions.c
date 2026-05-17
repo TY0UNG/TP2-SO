@@ -1,4 +1,5 @@
 #include <video.h>
+#include <terminal.h>
 #include <interrupts.h>
 #include <processes.h>
 
