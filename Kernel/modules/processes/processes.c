@@ -106,13 +106,21 @@ void scheduler() {
     }
 
     size_t old_idx = actual_index;
+
+    // Si el scheduler eligió el mismo proceso que estaba corriendo, no hay
+    // que switchear. Refrescamos el quantum y volvemos por la cadena C natural
+    // (el IRQ handler hará popState/iretq y el proceso continúa).
+    if (nextProcess->index == old_idx) {
+        actual_process_start_time = getMilisFromBoot();
+        return;
+    }
+
     actual_pid = nextProcess->pid;
     actual_index = nextProcess->index;
     actual_process_start_time = getMilisFromBoot();
 
     if (old_idx == (size_t)-1) {
-        // No hay current al que guardarle el rsp (primer boot o veniamos
-        // de un exit). Usar un dummy local — se descarta.
+        // No hay current al que guardarle el rsp (primer boot o veniamos de un exit). Se descarta.
         uint64_t dummy;
         switch_rsp(&dummy, nextProcess->rsp);
     } else {
@@ -130,7 +138,7 @@ typedef struct NewProcessStackFrame {
     uint64_t rbp;
     // Return address que el ret de switch_rsp consume -> trampoline
     uint64_t return_address;
-    // Lo que el trampoline pop'ea (orden: pop rsi, pop rdi)
+    // Lo que el trampoline popea (orden: pop rsi, pop rdi)
     uint64_t rsi;
     uint64_t rdi;
     // iretq frame

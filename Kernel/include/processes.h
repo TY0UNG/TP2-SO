@@ -1,7 +1,7 @@
 #ifndef PROCESSES_H
 #define PROCESSES_H
 
-#include "../drivers/time.h"
+#include <time.h>
 #include <memory.h>
 #include <lib.h>
 #include <stdlib.h>

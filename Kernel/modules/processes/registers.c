@@ -1,6 +1,6 @@
 #include <video.h>
 #include <stdint.h>
-#include "./drivers/time.h"
+#include <time.h>
 
 typedef struct RegisterDump {
     uint64_t rax;      // Offset 0

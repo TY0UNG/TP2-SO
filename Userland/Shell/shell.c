@@ -4,6 +4,7 @@
 
 extern int  sys_create_process(const char *name, void *entry, int argc, char **argv);
 extern int  sys_wait(int pid);
+extern void sys_exit(int status);
 
 typedef int (*command_entry_t)(int argc, char **argv);
 
@@ -12,9 +13,16 @@ typedef struct {
     command_entry_t entry;
 } Command;
 
-// Convierte un comando con firma (char**, int) a (int, char**)
+// Convierte un comando con firma (char**, int) a (int, char**). El wrapper
+// también llama sys_exit al final porque el kernel salta directo a este
+// entry point: no hay _start envolviéndolo. Si retornáramos por C, el ret
+// del wrapper saltaría a basura del stack del child.
 #define WRAP_CMD(cmd) \
-    static int cmd##_wrap(int argc, char **argv) { return cmd(argv, argc); }
+    static int cmd##_wrap(int argc, char **argv) { \
+        int ret = cmd(argv, argc); \
+        sys_exit(ret); \
+        return 0; /* inalcanzable */ \
+    }
 
 WRAP_CMD(help)
 WRAP_CMD(echo)
@@ -36,18 +44,21 @@ WRAP_CMD(bounce)
 static int clear_wrap(int argc, char **argv) {
     (void) argc; (void) argv;
     clear();
+    sys_exit(0);
     return 0;
 }
 
 static int dividezero_wrap(int argc, char **argv) {
     (void) argc; (void) argv;
     dividezero();
+    sys_exit(0);
     return 0;
 }
 
 static int invalidop_wrap(int argc, char **argv) {
     (void) argc; (void) argv;
     invalidop();
+    sys_exit(0);
     return 0;
 }
 

@@ -1,4 +1,4 @@
-#include "time.h"
+#include <time.h>
 
 #define PIT_INPUT_FREQUENCY_HZ 1193182.0
 #define PIT_CHANNEL0_DIVISOR   65536.0

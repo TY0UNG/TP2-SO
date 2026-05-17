@@ -3,43 +3,44 @@ include Makefile.inc
 MM ?= NAIVE
 
 ifeq ($(MM), NAIVE)
-    # Define MM_NAIVE para el preprocesador
     DEFINES = -DMM_NAIVE
 else ifeq ($(MM), OWN)
-    # Define MM_OWN para el preprocesador
     DEFINES = -DMM_OWN
 else ifeq ($(MM), BUDDY)
-    # Define MM_BUDDY para el preprocesador
     DEFINES = -DMM_BUDDY
 else
     $(error Opción de MM no válida. Usa MM=NAIVE o MM=OWN o MM=BUDDY)
 endif
 
-KERNEL=kernel.bin
-SOURCES := $(wildcard *.c) $(wildcard **/*.c)
-SOURCES_ASM=$(wildcard asm/*.asm)
-OBJECTS=$(SOURCES:.c=.o)
-OBJECTS_ASM=$(SOURCES_ASM:.asm=.o)
-LOADERSRC=loader.asm
+DIST_DIR := dist
+KERNEL   := kernel.bin
 
-LOADEROBJECT=$(LOADERSRC:.asm=.o)
-STATICLIBS=
+INCLUDES := -I./include -I./resources/fonts
+
+LOADER_SRC := loader.asm
+LOADER_OBJ := $(DIST_DIR)/loader.o
+
+# Descubre fuentes recursivamente, ignora dist/, el loader y archivos vacíos.
+SOURCES_C   := $(shell find . -path ./$(DIST_DIR) -prune -o -type f -name '*.c' -not -empty -print)
+SOURCES_ASM := $(shell find asm -type f -name '*.asm')
+
+OBJECTS_C   := $(patsubst ./%.c,$(DIST_DIR)/%.o,$(SOURCES_C))
+OBJECTS_ASM := $(patsubst %.asm,$(DIST_DIR)/%.o,$(SOURCES_ASM))
 
 all: $(KERNEL)
 
-$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM)
-	$(LD) $(LDFLAGS) -T kernel.ld -Map=kernel.map -o $(KERNEL) $(LOADEROBJECT) $(OBJECTS) $(OBJECTS_ASM) $(STATICLIBS)
+$(KERNEL): $(LOADER_OBJ) $(OBJECTS_C) $(OBJECTS_ASM)
+	$(LD) $(LDFLAGS) -T kernel.ld -Map=kernel.map -o $(KERNEL) $(LOADER_OBJ) $(OBJECTS_C) $(OBJECTS_ASM)
 
-%.o: %.c
-	$(GCC) $(GCCFLAGS) $(DEFINES) -I./include -I./drivers -I./resources/fonts -c $< -o $@
-	
-%.o : %.asm
+$(DIST_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(GCC) $(GCCFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+
+$(DIST_DIR)/%.o: %.asm
+	@mkdir -p $(dir $@)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(LOADEROBJECT):
-	$(ASM) $(ASMFLAGS) $(LOADERSRC) -o $(LOADEROBJECT)
-
 clean:
-	rm -rf asm/*.o **/*.o *.bin
+	rm -rf $(DIST_DIR) *.bin *.map
 
 .PHONY: all clean

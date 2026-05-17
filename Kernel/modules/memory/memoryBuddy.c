@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef MM_BUDDY
+
 #define MIN_BLOCK_SHIFT 12 // 4 KB (2^12)
 #define MAX_BLOCK_SHIFT 22 // 4 MB (2^22)
 #define NUM_ORDERS (MAX_BLOCK_SHIFT - MIN_BLOCK_SHIFT + 1) // 11 niveles (0 al 10)
@@ -259,3 +261,4 @@ size_t getUsedMemory() {
     // La memoria en uso es simplemente la memoria total menos la que está libre
     return managed_memory_size - free_memory;
 }
+#endif

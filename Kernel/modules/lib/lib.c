@@ -66,37 +66,13 @@ void * memcpy(void * destination, const void * source, uint64_t length)
 	return destination;
 }
 
-void* alloc(uint64_t size) {
-    // Si es la primera vez que se llama, inicializa el puntero
-    // con la dirección real del final del kernel.
-    if (next_free_address == 0) {
-        next_free_address = (uintptr_t)endOfKernel;
-    }
-
-    // Opcional pero recomendado: alinear la dirección a 8 o 16 bytes.
-    if (next_free_address % 16 != 0) {
-        next_free_address += 16 - (next_free_address % 16);
-    }
-
-    // Guarda la dirección actual para devolverla
-    uintptr_t allocated_block_ptr = next_free_address;
-
-    // "Empuja" el puntero para la siguiente asignación
-    next_free_address += size;
-
-    // Devuelve el puntero al bloque que acabas de reservar
-    return (void*)allocated_block_ptr;
-}
-
-
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base) {
 	char *p = buffer;
 	char *p1, *p2;
 	uint32_t digits = 0;
 
 	//Calculate characters for each digit
-	do
-	{
+	do {
 		uint32_t remainder = value % base;
 		*p++ = (remainder < 10) ? remainder + '0' : remainder + 'A' - 10;
 		digits++;
@@ -119,7 +95,6 @@ uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base) {
 	}
 
 	buffer[digits] = '\0';
-
 	return digits;
 }
 

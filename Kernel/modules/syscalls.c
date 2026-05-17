@@ -4,8 +4,8 @@
 #include <interrupts.h>
 #include <audio.h>
 #include <processes.h>
-#include "./drivers/memory.h"
-#include "./drivers/time.h"
+#include <memory.h>
+#include <time.h>
 
 extern const char * get_register_dump();
 

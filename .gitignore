@@ -11,3 +11,6 @@
 
 #Object files
 *.o
+
+#Kernel build output
+Kernel/dist/

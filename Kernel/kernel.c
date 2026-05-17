@@ -8,8 +8,8 @@
 #include <interrupts.h>
 #include <video.h>
 #include <keyboard.h>
-#include "./drivers/memory.h"
-#include "./drivers/time.h"
+#include <memory.h>
+#include <time.h>
 #include <audio.h>
 #include <processes.h>
 
@@ -165,32 +165,6 @@ static void bootAnimation(void) {
 	textMode();
 }
 
-void yield_prueba() {
-	__asm__ __volatile__ (
-    ".intel_syntax noprefix\n\t"
-    "mov rax, 30\n\t"
-    "int 0x80\n\t"         // Usar 0x80 en vez de 80h es más seguro en GCC
-    ".att_syntax\n\t"      // Siempre devuelve a GCC a su estado nativo
-    : 
-    : 
-    : "rax"                // Avisamos que rax se modificó
-);
-}
-
-void A() {
-	while (true) {
-		print("A");
-		yield_prueba();
-	}
-}
-
-void B() {
-	while (true) {
-		print("B");
-		yield_prueba();
-	}
-}
-
 int main() {	
 	load_idt();
     ncSetStyle(0x0F);
@@ -216,12 +190,8 @@ int main() {
 		return 1;
 	}
 
-	/* const char ** args = { NULL };
-	create_process("Shell", ((EntryPoint)shell), args); */
-
 	const char ** args = { NULL };
-	create_process("A", ((EntryPoint)A), args);
-	create_process("B", ((EntryPoint)B), args);
+	create_process("Shell", ((EntryPoint) shell), args);
 
 	_sti();
 
