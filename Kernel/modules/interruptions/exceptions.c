@@ -16,8 +16,11 @@ void exceptionDispatcher(StackFrame *frame, int exception) {
     } else if (exception == INVALID_OPCODE_ID) {
         invalid_opcode(frame);
     }
+    // El proceso que falló es el actual. kill_process detecta que se está
+    // matando al proceso en ejecución (suicidio): marca zombie, despierta a
+    // quien hace wait_pid, cede el foreground al padre y cede al scheduler sin
+    // volver nunca. Por eso no hace falta llamar a scheduler() acá.
     kill_process(get_actual_pid());
-    scheduler();
 }
 
 static void print_exception_info(const char *exception_name, StackFrame *frame) {

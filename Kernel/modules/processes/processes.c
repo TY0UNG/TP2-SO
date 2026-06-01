@@ -266,27 +266,14 @@ static void reap(int index) {
     processes[index].pid = 0;
 }
 
-void kill_process(pid_t pid) {
-    int index = getIndex(pid);
-    if (index < 0) return;
-    if (pid == get_foreground_pid()) {
-        size_t parent = processes[index].parent_pid;
-        if (parent != 0 && getIndex(parent) >= 0 && processes[getIndex(parent)].active) {
-            set_foreground_pid(parent);
-        } else {
-            set_foreground_pid(0);
-        }
-    }
-    close_all_fds(&processes[index]);
-    remove_from_priority_lists(&processes[index]);
-    reap(index);
-    proccess_count--;
-}
+// Lógica común de terminación. Deja al proceso en idx como zombie (el slot
+// sigue activo hasta que wait lo reapee), lo saca de la run queue, cede el
+// foreground al padre si correspondía y despierta a quien lo esté esperando.
+// No toca actual_index ni llama al scheduler: eso lo hace cada caller según
+// si el proceso terminado era o no el que está corriendo.
+static void terminate_process(int idx, int status) {
+    size_t the_pid = processes[idx].pid;
 
-void exit_current_process(int status) {
-    if (actual_index == (size_t)-1) return;
-    size_t my_pid = actual_pid;
-    int idx = actual_index;
     processes[idx].exit_status = status;
     // Zombie: el slot sigue ocupado (active=true) hasta que wait lo reapee,
     // pero ya no es schedulable -> lo sacamos de las priority_lists.
@@ -296,7 +283,7 @@ void exit_current_process(int status) {
 
     // Si era el foreground, el padre lo toma. Si el padre no existe o no esta
     // activo, fg queda en 0 (cualquiera lo puede tomar despues).
-    if (my_pid == get_foreground_pid()) {
+    if (the_pid == get_foreground_pid()) {
         size_t parent = processes[idx].parent_pid;
         int parent_idx = (parent != 0) ? getIndex(parent) : -1;
         if (parent_idx >= 0 && processes[parent_idx].active && !processes[parent_idx].zombie) {
@@ -311,11 +298,37 @@ void exit_current_process(int status) {
     // Despertar a cualquier proceso esperando por este pid.
     for (int i = 0; i < PROCESSES_LIMIT; i++) {
         if (processes[i].active && processes[i].blocked &&
-            processes[i].waiting_for_pid == my_pid) {
+            processes[i].waiting_for_pid == the_pid) {
             processes[i].blocked = false;
             processes[i].waiting_for_pid = 0;
         }
     }
+}
+
+void kill_process(pid_t pid) {
+    int index = getIndex(pid);
+    if (index < 0 || !processes[index].active || processes[index].zombie) return;
+
+    terminate_process(index, -1);
+
+    // Si nos estamos matando a nosotros mismos (p. ej. una excepción mata al
+    // proceso en ejecución), no hay que volver al proceso muerto: marcamos que
+    // no hay proceso actual para que el scheduler no guarde nuestro RSP, cedemos
+    // y nunca volvemos.
+    if ((size_t)index == actual_index) {
+        actual_pid = 0;
+        actual_index = (size_t)-1;
+        scheduler();
+        // Salvavidas: el scheduler no debería retornar acá (ya no estamos en la
+        // run queue).
+        while (1);
+    }
+}
+
+void exit_current_process(int status) {
+    if (actual_index == (size_t)-1) return;
+
+    terminate_process(actual_index, status);
 
     // Marcamos que no hay proceso actual para que el scheduler no guarde
     // nuestro RSP. Cedemos y nunca volvemos.
