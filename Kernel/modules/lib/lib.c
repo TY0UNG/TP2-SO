@@ -1,6 +1,5 @@
 #include <lib.h>
 extern uint8_t endOfKernel[];
-static uintptr_t next_free_address = 0;
 
 void * memset(void * destination, int32_t c, uint64_t length)
 {

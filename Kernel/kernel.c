@@ -28,6 +28,11 @@ uint32_t * ramAmount = (uint32_t *) 0x5020;
 
 static const uint64_t PageSize = 0x1000;
 
+// El heap arranca por encima de la memoria de video (backbuffer en 0x500000,
+// hasta ~0x800000 para 1024x768x32) y del modulo shell + su .bss (0x400000+).
+// Fijo para que el memory manager nunca se solape con esas regiones.
+static const uint64_t HeapStart = 0x800000;
+
 static void * const shell = (void*)0x400000;
 typedef void (*EntryPoint)();
 
@@ -179,13 +184,17 @@ int main() {
 	keyboard_set_enabled(true);
 	clearTextBuffer();
 
-	if ((void *) endOfKernel >= (void *) shell) {
+	if ((uint64_t) endOfKernel >= (uint64_t) shell) {
 		print("Kernel demasiado grande");
 		return 1;
 	}
 
 	if (endOfModules != 0) {
-		initializeMemoryManager(endOfModules, (*ramAmount) * 1024 * 1024 - (int32_t) endOfModules);
+		if ((uint64_t) endOfModules > HeapStart) {
+			print("Modulos demasiado grandes: se solapan con el heap");
+			return 1;
+		}
+		initializeMemoryManager((void *) HeapStart, (*ramAmount) * 1024 * 1024 - HeapStart);
 	} else {
 		print("Error al inicializar memory manager");
 		return 1;
