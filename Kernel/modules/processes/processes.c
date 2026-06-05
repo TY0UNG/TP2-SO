@@ -185,7 +185,6 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
         argv_array[i] = string_dest;
         strcpy(string_dest, args[i]);
         string_dest += strlen(args[i]) + 1;
-        string_dest++;
     }
     argv_array[argc] = NULL; // Ultimo argumento es NULL
 

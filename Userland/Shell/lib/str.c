@@ -57,6 +57,7 @@ int strparse(char * input, char ** output, char * splitter) {
         }
     }
 
+    output[count] = NULL; // terminar el array: el kernel recorre argv hasta NULL
     return count;
 }
 
