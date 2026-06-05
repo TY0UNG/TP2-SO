@@ -1,6 +1,6 @@
 include Makefile.inc
 
-MM ?= NAIVE
+MM ?= OWN
 
 ifeq ($(MM), NAIVE)
     DEFINES = -DMM_NAIVE
