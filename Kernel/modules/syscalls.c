@@ -8,6 +8,7 @@
 #include <memory.h>
 #include <lib.h>
 #include <time.h>
+#include <semaphores.h>
 
 #define READ_BUFFER_MAX 256
 
@@ -63,6 +64,11 @@ static int syscall_set_foreground(Registers *registers);
 static int syscall_write_fd(Registers *registers);
 static int syscall_read_fd(Registers *registers);
 static int syscall_close_fd(Registers *registers);
+static int syscall_sem_open(Registers *registers);
+static int syscall_sem_init(Registers *registers);
+static int syscall_sem_post(Registers *registers);
+static int syscall_sem_wait(Registers *registers);
+static int syscall_sem_close(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -134,10 +140,44 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_read_fd(registers);
     case 34:
         return syscall_close_fd(registers);
+    case 35:
+        return syscall_sem_open(registers);
+    case 36:
+        return syscall_sem_init(registers);
+    case 37:
+        return syscall_sem_post(registers);
+    case 38:
+        return syscall_sem_wait(registers);
+    case 39:
+        return syscall_sem_close(registers);
     default:
         break;
     }
     return 0;
+}
+
+static int syscall_sem_open(Registers * registers) {
+    const char * name = (const char *) registers->rbx;
+    int initialValue = (int) registers->rcx;
+    return sem_open(name, initialValue);
+}
+
+static int syscall_sem_init(Registers * registers) {
+    const char * name = (const char *) registers->rbx;
+    int initialValue = (int) registers->rcx;
+    return sem_init(name, initialValue);
+}
+
+static int syscall_sem_post(Registers * registers) {
+    return sem_post((const char *) registers->rbx);
+}
+
+static int syscall_sem_wait(Registers * registers) {
+    return sem_wait((const char *) registers->rbx);
+}
+
+static int syscall_sem_close(Registers * registers) {
+    return sem_close((const char *) registers->rbx);
 }
 
 static uint64_t syscall_create_process(Registers *registers) {
