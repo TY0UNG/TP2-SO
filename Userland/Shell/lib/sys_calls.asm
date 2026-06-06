@@ -44,6 +44,7 @@ GLOBAL sys_kill
 GLOBAL sys_block
 GLOBAL sys_unblock
 GLOBAL sys_nice
+GLOBAL sys_get_process_list
 
 EXTERN printHex
 
@@ -398,5 +399,14 @@ sys_nice:
     mov rax, 45
     mov rbx, rdi        ; pid
     mov rcx, rsi        ; priority
+    int 80h
+    END_SYSCALL
+
+; sys_get_process_list(buffer, maxCount);
+sys_get_process_list:
+    START_SYSCALL
+    mov rax, 46
+    mov rbx, rdi
+    mov rcx, rsi
     int 80h
     END_SYSCALL

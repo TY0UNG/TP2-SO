@@ -29,10 +29,12 @@ int testsync(char ** argv, int argc);
 int testprocesses(char ** argv, int argc);
 int testprio(char ** argv, int argc);
 int meminfo(char ** argv, int argc);
+int processList(char ** argv, int argc);
+
+
 
 /* Para probar excepciones, borrarse (junto con test.c) cuando se terminen de validar */
 int dividezero();
 int invalidop();
-
 
 #endif

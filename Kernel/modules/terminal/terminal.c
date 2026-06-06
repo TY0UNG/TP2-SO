@@ -364,6 +364,9 @@ pid_t get_foreground_pid() {
 }
 
 void set_foreground_pid(pid_t pid) {
+    print("foreground set: ");
+    printDec(pid);
+    print("\n");
     foreground_pid = pid;
     // Al cambiar de foreground reseteamos a modo cooked y limpiamos la linea a medio tipear
     terminal_mode = TERM_COOKED;
