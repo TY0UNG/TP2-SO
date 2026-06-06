@@ -104,15 +104,12 @@ int main(int argc, char **argv) {
         int argsc = strparse(input, argsv, " ");
         if (argsc == 0) continue;
         commandDispatcher(argsv, argsc);
-        println("Saliendo Dispatcher: ");
     }
     
     return 0;
 }
 
 int commandDispatcher(char ** argsv, int argsc) {
-
-    println("Entrando Dispatcher: ");
     const char * cmd = argsv[0];
     const char * lastArgCmd = argsv[argsc - 1];
 
@@ -126,9 +123,7 @@ int commandDispatcher(char ** argsv, int argsc) {
                 println("Error al crear proceso");
                 return 1;
             }
-            print("PID: ");
-            printDec(pid);
-            println(" ");
+
             if(strcmp(lastArgCmd, "&") != 0){
                 // Le cedemos el foreground al hijo para que pueda leer/escribir
                 // en la terminal. Cuando termine, el kernel devuelve fg al padre
@@ -136,7 +131,7 @@ int commandDispatcher(char ** argsv, int argsc) {
                 sys_set_foreground(pid);
                 sys_wait(pid);
             }
-            println("Flag Dispatcher");
+            
             return 1;
         }
         
