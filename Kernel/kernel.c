@@ -16,6 +16,7 @@
 
 extern void diagnostic_test();
 extern uint64_t get_rsp();
+extern uint64_t kernel_rsp;
 
 extern uint8_t text;
 extern uint8_t rodata;
