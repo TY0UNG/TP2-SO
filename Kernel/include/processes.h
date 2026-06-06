@@ -29,6 +29,16 @@ typedef struct Process {
     file_t * fds[MAX_FDS];
 } Process;
 
+typedef struct {
+    size_t pid;
+    size_t parent_pid;
+    bool active;
+    bool blocked;
+    bool zombie;
+    int priority;
+    char name[32];
+} ProcessInfo;
+
 typedef size_t pid_t;
 
 void initializeScheduler();
@@ -53,5 +63,7 @@ void yield();
 Process * get_processes();
 size_t get_actual_pid();
 Process get_actual_process();
+
+int get_processesInfo(ProcessInfo *buffer, int max_count);
 
 #endif

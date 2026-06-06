@@ -63,6 +63,8 @@ static int syscall_set_foreground(Registers *registers);
 static int syscall_write_fd(Registers *registers);
 static int syscall_read_fd(Registers *registers);
 static int syscall_close_fd(Registers *registers);
+static int syscall_get_process_list(Registers *registers);
+
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -134,6 +136,8 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_read_fd(registers);
     case 34:
         return syscall_close_fd(registers);
+    case 35:
+        return syscall_get_process_list(registers);
     default:
         break;
     }
@@ -404,4 +408,10 @@ static uint64_t syscall_get_total_memory(Registers *registers) {
 
 static uint64_t syscall_get_used_memory(Registers *registers) {
     return (uint64_t) getUsedMemory();
+}
+
+static int syscall_get_process_list(Registers *regs) {
+    ProcessInfo *buffer = (ProcessInfo *)regs->rbx;
+    int maxCount = (int)regs->rcx;
+    return get_processesInfo(buffer, maxCount);
 }
