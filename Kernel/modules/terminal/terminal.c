@@ -363,6 +363,9 @@ pid_t get_foreground_pid() {
 }
 
 void set_foreground_pid(pid_t pid) {
+    print("foreground set: ");
+    printDec(pid);
+    print("\n");
     foreground_pid = pid;
     // El nuevo foreground puede estar bloqueado esperando: lo despertamos.
     if (pid != 0) {

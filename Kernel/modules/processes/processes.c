@@ -286,8 +286,13 @@ static void terminate_process(int idx, int status) {
         size_t parent = processes[idx].parent_pid;
         int parent_idx = (parent != 0) ? getIndex(parent) : -1;
         if (parent_idx >= 0 && processes[parent_idx].active && !processes[parent_idx].zombie) {
-            set_foreground_pid(parent);
+            
+            print("IM RETUNING IN THE FATHER! | ");
+            printDec(parent_idx);
+            print("\n");
+            set_foreground_pid(parent_idx);
         } else {
+             print("IM RETUNING IN 0! \n");
             set_foreground_pid(0);
         }
     }
@@ -299,7 +304,7 @@ static void terminate_process(int idx, int status) {
         if (processes[i].active && processes[i].blocked &&
             processes[i].waiting_for_pid == the_pid) {
             processes[i].blocked = false;
-            processes[i].waiting_for_pid = 0;
+            processes[i].waiting_for_pid = -1;
         }
     }
 }
@@ -341,8 +346,10 @@ void exit_current_process(int status) {
 }
 
 int wait_pid(pid_t pid) {
+    
     int idx = getIndex(pid);
-    if (idx < 0 || !processes[idx].active) return -1;
+    
+    if (idx < 0 || !processes[idx].active) return 0;
 
     while (!processes[idx].zombie) {
         processes[actual_index].waiting_for_pid = pid;
@@ -351,6 +358,7 @@ int wait_pid(pid_t pid) {
     }
 
     int status = processes[idx].exit_status;
+
     reap(idx);
     return status;
 }
@@ -396,4 +404,30 @@ size_t get_actual_pid() {
 
 Process get_actual_process() {
     return processes[actual_index];
+}
+
+int get_processesInfo(ProcessInfo *buffer, int max_count) {
+
+    if (buffer == NULL || max_count <= 0)
+        return -1;
+
+    int count = 0;
+
+    for (int i = 0; i < PROCESSES_LIMIT && count < max_count; i++) {
+        if (!processes[i].active)
+            continue;
+
+        buffer[count].pid = processes[i].pid;
+        buffer[count].parent_pid = processes[i].parent_pid;
+        buffer[count].active = processes[i].active;
+        buffer[count].blocked = processes[i].blocked;
+        buffer[count].zombie = processes[i].zombie;
+        buffer[count].priority = processes[i].priority;
+
+        strcpy(buffer[count].name, processes[i].name);
+
+        count++;
+    }
+
+    return count;
 }

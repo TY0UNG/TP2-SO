@@ -205,9 +205,12 @@ int main() {
 	const char ** args = { NULL };
 	pid_t shell_pid = create_process("Shell", ((EntryPoint) shell), args);
 	set_foreground_pid(shell_pid);
-
 	_sti();
 
+	print("\n-Kernel data-\n");
+	print("shell pid:");
+	printDec(shell_pid);
+	print("\n");
 	while(1) {}
     
     return 0;
