@@ -104,12 +104,15 @@ int main(int argc, char **argv) {
         int argsc = strparse(input, argsv, " ");
         if (argsc == 0) continue;
         commandDispatcher(argsv, argsc);
+        println("Saliendo Dispatcher: ");
     }
     
     return 0;
 }
 
 int commandDispatcher(char ** argsv, int argsc) {
+
+    println("Entrando Dispatcher: ");
     const char * cmd = argsv[0];
     const char * lastArgCmd = argsv[argsc - 1];
 

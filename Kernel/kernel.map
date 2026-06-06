@@ -372,7 +372,7 @@ OUTPUT(kernel.bin binary)
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/memory/memoryBuddy.o
  .note.GNU-stack
-                0x0000000000000000        0x0 dist/modules/memory/memoryNaive.o
+                0x0000000000000000        0x0 dist/modules/comunication/pipes.o
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/lib/lib.o
  .note.GNU-stack
@@ -380,13 +380,13 @@ OUTPUT(kernel.bin binary)
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/processes/registers.o
  .note.GNU-stack
-                0x0000000000000000        0x0 dist/modules/interruptions/idtLoader.o
+                0x0000000000000000        0x0 dist/modules/lib/lib.o
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/interruptions/exceptions.o
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/interruptions/irqDispatcher.o
  .note.GNU-stack
-                0x0000000000000000        0x0 dist/modules/terminal/terminal.o
+                0x0000000000000000        0x0 dist/modules/memory/memoryOwn.o
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/loader/moduleLoader.o
  .note.GNU-stack
