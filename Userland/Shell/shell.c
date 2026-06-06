@@ -41,6 +41,7 @@ WRAP_CMD(testmm)
 WRAP_CMD(meminfo)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
+WRAP_CMD(processList);
 
 static int clear_wrap(int argc, char **argv) {
     (void) argc; (void) argv;
@@ -83,6 +84,7 @@ static const Command commands[] = {
     { "bounce",     bounce_wrap     },
     { "dividezero", dividezero_wrap },
     { "invalidop",  invalidop_wrap  },
+    { "ps",         processList_wrap}
 };
 static const int commands_count = sizeof(commands) / sizeof(commands[0]);
 
@@ -102,26 +104,42 @@ int main(int argc, char **argv) {
         int argsc = strparse(input, argsv, " ");
         if (argsc == 0) continue;
         commandDispatcher(argsv, argsc);
+        println("Saliendo Dispatcher: ");
     }
+    
     return 0;
 }
 
 int commandDispatcher(char ** argsv, int argsc) {
+
+    println("Entrando Dispatcher: ");
     const char * cmd = argsv[0];
+    const char * lastArgCmd = argsv[argsc - 1];
+
     for (int i = 0; i < commands_count; i++) {
+
         if (strcmp(cmd, commands[i].name) == 0) {
-            int pid = sys_create_process(commands[i].name, (void *) commands[i].entry, argsc, argsv);
+
+
+            int pid = createProcess(commands[i].name, (void *) commands[i].entry, argsc, argsv);
             if (pid <= 0) {
                 println("Error al crear proceso");
                 return 1;
             }
-            // Le cedemos el foreground al hijo para que pueda leer/escribir
-            // en la terminal. Cuando termine, el kernel devuelve fg al padre
-            // (shell) automaticamente.
-            sys_set_foreground(pid);
-            sys_wait(pid);
+            print("PID: ");
+            printDec(pid);
+            println(" ");
+            if(strcmp(lastArgCmd, "&") != 0){
+                // Le cedemos el foreground al hijo para que pueda leer/escribir
+                // en la terminal. Cuando termine, el kernel devuelve fg al padre
+                // (shell) automaticamente.
+                sys_set_foreground(pid);
+                sys_wait(pid);
+            }
+            println("Flag Dispatcher");
             return 1;
         }
+        
     }
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
