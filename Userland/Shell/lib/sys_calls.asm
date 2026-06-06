@@ -33,6 +33,7 @@ GLOBAL sys_set_foreground
 GLOBAL sys_write_fd
 GLOBAL sys_read_fd
 GLOBAL sys_close_fd
+GLOBAL sys_get_process_list
 
 EXTERN printHex
 
@@ -297,5 +298,14 @@ sys_close_fd:
     START_SYSCALL
     mov rax, 34
     mov rbx, rdi        ; fd
+    int 80h
+    END_SYSCALL
+
+; sys_get_process_list(buffer, maxCount);
+sys_get_process_list:
+    START_SYSCALL
+    mov rax, 35
+    mov rbx, rdi
+    mov rcx, rsi
     int 80h
     END_SYSCALL
