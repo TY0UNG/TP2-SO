@@ -34,6 +34,16 @@ typedef size_t pid_t;
 void initializeScheduler();
 void scheduler();
 
+// Tope del kernel stack sobre el que corre idle cuando no hay proceso listo.
+// Hay que capturarlo (con get_rsp) ANTES de habilitar interrupciones en el
+// boot: apenas se hace sti, el primer timer tick switchea al primer proceso y
+// abandona el stack de main, asi que cualquier captura posterior no corre.
+extern uint64_t kernel_rsp;
+
+// Corre idle sobre el kernel stack hasta que el scheduler tenga un proceso
+// listo (hace hlt). No retorna.
+void idle();
+
 // Devuelve el pid del nuevo proceso, o 0 si falla.
 pid_t create_process(const char* name, void (*entry_point)(), const char** args);
 void kill_process(size_t pid);

@@ -22,6 +22,10 @@ size_t actual_index = -1;
 
 size_t actual_process_start_time = 0;
 
+// Tope del kernel stack sobre el que corre idle cuando no hay proceso listo.
+// Se captura una vez en start_idle(), antes del primer context switch.
+uint64_t kernel_rsp = 0;
+
 extern uint64_t get_rsp();
 extern void set_rsp(uint64_t);
 extern void halt();
@@ -85,7 +89,15 @@ static Process * selectNextProcess() {
 }
 
 extern void switch_rsp(uint64_t *save, uint64_t load);
+extern void switch_to_idle(uint64_t *save, uint64_t idle_rsp);
 extern void trampoline();
+
+// Idle: corre sobre el kernel stack cuando no hay ningun proceso listo.
+// Hace hlt hasta que el proximo timer tick interrumpa y el scheduler switchee
+// a un proceso real. No retorna.
+void idle() {
+    while (1) _hlt();
+}
 
 void scheduler() {
     // Si había un proceso corriendo, guardar su RSP (lo dejó el asm en saved_stack_ptr)
@@ -101,16 +113,31 @@ void scheduler() {
 
     Process * nextProcess = selectNextProcess();
     if (nextProcess == NULL) {
+        // Durante el boot temprano el timer ya puede estar tickeando (el audio
+        // del bootAnimation habilita interrupciones) y todavia no hay ningun
+        // proceso ni kernel_rsp capturado. Ahi no hay idle al que saltar:
+        // simplemente volvemos y dejamos seguir el boot, como antes.
+        if (kernel_rsp == 0) {
+            actual_pid = 0;
+            actual_index = (size_t)-1;
+            return;
+        }
+        size_t old_idx = actual_index;
         actual_pid = 0;
         actual_index = (size_t)-1;
+        if (old_idx != (size_t)-1 && processes[old_idx].active) {
+            switch_to_idle(&processes[old_idx].rsp, kernel_rsp);
+        } else {
+            uint64_t dummy;
+            switch_to_idle(&dummy, kernel_rsp);
+        }
         return;
     }
 
     size_t old_idx = actual_index;
 
     // Si el scheduler eligió el mismo proceso que estaba corriendo, no hay
-    // que switchear. Refrescamos el quantum y volvemos por la cadena C natural
-    // (el IRQ handler hará popState/iretq y el proceso continúa).
+    // que switchear (el IRQ handler hará popState/iretq y el proceso continúa).
     if (nextProcess->index == old_idx) {
         actual_process_start_time = getMilisFromBoot();
         return;

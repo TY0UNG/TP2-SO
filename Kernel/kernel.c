@@ -15,6 +15,7 @@
 #include <processes.h>
 
 extern void diagnostic_test();
+extern uint64_t get_rsp();
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -206,9 +207,17 @@ int main() {
 	pid_t shell_pid = create_process("Shell", ((EntryPoint) shell), args);
 	set_foreground_pid(shell_pid);
 
+	// Capturamos el tope del kernel stack para idle ANTES de habilitar
+	// interrupciones: apenas hacemos _sti() el primer timer tick (ya pendiente)
+	// switchea a la shell y abandona este stack sin volver aca, asi que la
+	// captura tiene que pasar si o si con las interrupciones deshabilitadas.
+	kernel_rsp = get_rsp();
+
 	_sti();
 
-	while(1) {}
-    
+	// Cede al idle sobre el kernel stack. El primer timer tick switchea a la
+	// shell; el scheduler vuelve aca (idle) cada vez que no haya proceso listo.
+	idle();
+
     return 0;
 }
