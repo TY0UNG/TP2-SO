@@ -1,5 +1,6 @@
 #include <processes.h>
 #include <terminal.h>
+#include <pipes.h>
 #define PROCESSES_LIMIT 128
 #define PRIORITY_COUNT 5
 #define STACK_SIZE 1024 * 16 // 16 KB
@@ -233,19 +234,30 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
     processes[index].entry_point = entry_point;
     processes[index].active = true;
     processes[index].blocked = false;
+    processes[index].wait_reason = WAIT_NONE;
     processes[index].zombie = false;
     processes[index].exit_status = 0;
     processes[index].waiting_for_pid = 0;
     processes[index].rsp = (uint64_t) frame;
 
-    // fds heredados: 0=stdin, 1=stdout, 2=stderr -> todos a la terminal global.
-    file_t * term = get_terminal_fd();
+    // fds: 0=stdin es un pipe propio (el hilo de terminal escribe la entrada
+    // cocida en su write end cuando este proceso es foreground); 1=stdout y
+    // 2=stderr siguen siendo la terminal global (pantalla compartida).
     for (int i = 0; i < MAX_FDS; i++) processes[index].fds[i] = NULL;
+    processes[index].stdin_writer = NULL;
+
+    file_t * stdin_rd = NULL;
+    file_t * stdin_wr = NULL;
+    if (create_pipe(&stdin_rd, &stdin_wr) == 0) {
+        processes[index].fds[0] = stdin_rd;
+        processes[index].stdin_writer = stdin_wr;
+    }
+
+    file_t * term = get_terminal_fd();
     if (term != NULL) {
-        processes[index].fds[0] = term;
         processes[index].fds[1] = term;
         processes[index].fds[2] = term;
-        term->ref_count += 3;
+        term->ref_count += 2;
     }
 
     int priority_slot = getNextPriorityFreeSlot(0);
@@ -278,6 +290,19 @@ static void close_all_fds(Process * p) {
         }
         p->fds[i] = NULL;
     }
+    // Cerrar tambien el write end de stdin (no es un fd visible al proceso).
+    if (p->stdin_writer != NULL && p->stdin_writer->ops != NULL &&
+        p->stdin_writer->ops->close != NULL) {
+        p->stdin_writer->ops->close(p->stdin_writer);
+    }
+    p->stdin_writer = NULL;
+}
+
+file_t * process_stdin_writer(pid_t pid) {
+    int idx = getIndex(pid);
+    if (idx < 0) return NULL;
+    if (!processes[idx].active || processes[idx].zombie) return NULL;
+    return processes[idx].stdin_writer;
 }
 
 // Libera completamente el slot. Asume que la memoria de stack ya no se usa.
@@ -292,11 +317,20 @@ static void reap(int index) {
     processes[index].pid = 0;
 }
 
-// Lógica común de terminación. Deja al proceso en idx como zombie (el slot
-// sigue activo hasta que wait lo reapee), lo saca de la run queue, cede el
-// foreground al padre si correspondía y despierta a quien lo esté esperando.
-// No toca actual_index ni llama al scheduler: eso lo hace cada caller según
-// si el proceso terminado era o no el que está corriendo.
+// Cosecha los zombies huerfanos (cuyo padre ya no esta vivo): nadie va a
+// llamar wait_pid por ellos, asi que los liberamos para no fugar slots
+static void harvest_orphans(void) {
+    for (int i = 0; i < PROCESSES_LIMIT; i++) {
+        if ((size_t)i == actual_index) continue;
+        if (!processes[i].active || !processes[i].zombie) continue;
+        size_t parent = processes[i].parent_pid;
+        int pidx = (parent != 0) ? getIndex(parent) : -1;
+        bool parent_alive = (pidx >= 0 && processes[pidx].active && !processes[pidx].zombie);
+        if (!parent_alive) reap(i);
+    }
+}
+
+// Lógica común de terminación
 static void terminate_process(int idx, int status) {
     size_t the_pid = processes[idx].pid;
 
@@ -321,14 +355,25 @@ static void terminate_process(int idx, int status) {
 
     close_all_fds(&processes[idx]);
 
+    // Reparent
+    for (int i = 0; i < PROCESSES_LIMIT; i++) {
+        if (processes[i].active && processes[i].parent_pid == the_pid) {
+            processes[i].parent_pid = 0;
+        }
+    }
+
     // Despertar a cualquier proceso esperando por este pid.
     for (int i = 0; i < PROCESSES_LIMIT; i++) {
         if (processes[i].active && processes[i].blocked &&
             processes[i].waiting_for_pid == the_pid) {
             processes[i].blocked = false;
+            processes[i].wait_reason = WAIT_NONE;
             processes[i].waiting_for_pid = 0;
         }
     }
+
+    // Cosechar zombies huerfanos. Incluye a los hijos recien reparentados
+    harvest_orphans();
 }
 
 void kill_process(pid_t pid) {
@@ -337,10 +382,7 @@ void kill_process(pid_t pid) {
 
     terminate_process(index, -1);
 
-    // Si nos estamos matando a nosotros mismos (p. ej. una excepción mata al
-    // proceso en ejecución), no hay que volver al proceso muerto: marcamos que
-    // no hay proceso actual para que el scheduler no guarde nuestro RSP, cedemos
-    // y nunca volvemos.
+    // Si nos estamos matando a nosotros mismos no hay que volver al proceso muerto: marcamos que no hay proceso actual para que el scheduler no guarde nuestro RSP
     if ((size_t)index == actual_index) {
         actual_pid = 0;
         actual_index = (size_t)-1;
@@ -370,11 +412,19 @@ void exit_current_process(int status) {
 int wait_pid(pid_t pid) {
     int idx = getIndex(pid);
     if (idx < 0 || !processes[idx].active) return -1;
+    // Solo el padre puede esperar/cosechar a un proceso. Esperar algo que no es
+    // hijo propio devuelve -1 (equivalente a ECHILD en POSIX). Asi, ademas, un
+    // unico proceso llega al reap: no hay doble reap con varios waiters.
+    if (processes[idx].parent_pid != get_actual_pid()) return -1;
 
     while (!processes[idx].zombie) {
         processes[actual_index].waiting_for_pid = pid;
         processes[actual_index].blocked = true;
+        processes[actual_index].wait_reason = WAIT_PID;
         scheduler();
+        // Al despertar revalidamos: el slot pudo cambiar mientras dormiamos.
+        idx = getIndex(pid);
+        if (idx < 0 || !processes[idx].active) return -1;
     }
 
     int status = processes[idx].exit_status;
@@ -401,7 +451,26 @@ void block_process(size_t pid) {
 
 void unblock_process(size_t pid) {
     int idx = getIndex(pid);
-    if (idx >= 0) processes[idx].blocked = false;
+    if (idx >= 0) {
+        processes[idx].blocked = false;
+        processes[idx].wait_reason = WAIT_NONE;
+    }
+}
+
+void block_current(wait_reason_t reason) {
+    if (actual_index == (size_t)-1) return;
+    processes[actual_index].blocked = true;
+    processes[actual_index].wait_reason = reason;
+    scheduler();
+}
+
+bool unblock_if_reason(size_t pid, wait_reason_t reason) {
+    int idx = getIndex(pid);
+    if (idx < 0) return false;
+    if (!processes[idx].blocked || processes[idx].wait_reason != reason) return false;
+    processes[idx].blocked = false;
+    processes[idx].wait_reason = WAIT_NONE;
+    return true;
 }
 
 void sleep_process(size_t pid, size_t milliseconds) {

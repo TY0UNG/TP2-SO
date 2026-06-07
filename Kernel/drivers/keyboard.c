@@ -1,5 +1,8 @@
 #include <keyboard.h>
-#define BUFFER_LENGHT 255
+#include <semaphores.h>
+
+#define BUFFER_LENGHT 256   // potencia de 2: indices uint8_t envuelven solos
+#define RAW_RING      256
 
 extern uint8_t get_keyboard_output(void);
 
@@ -7,12 +10,41 @@ static bool isPrintable(unsigned char scancode);
 
 void dump_registers();
 
-KeyEvent buffer[BUFFER_LENGHT];
-uint8_t size = 0;
-uint8_t head = 0;
-uint8_t tail = 0;
+// ============================================================================
+//   Anillo CRUDO (scancodes): productor = ISR, consumidor = hilo de terminal.
+//   SPSC lock-free: el productor toca solo raw_head, el consumidor solo raw_tail.
+//   No hay contador compartido -> sin data race (vacio: head==tail).
+// ============================================================================
+static volatile uint8_t raw_buf[RAW_RING];
+static volatile uint8_t raw_head = 0;
+static volatile uint8_t raw_tail = 0;
 
-bool isShiftPressed = false;
+// Devuelve false si el anillo esta lleno (se dropea el byte).
+static bool raw_push(uint8_t b) {
+    uint8_t next = (uint8_t)(raw_head + 1);
+    if (next == raw_tail) return false;   // lleno
+    raw_buf[raw_head] = b;
+    raw_head = next;
+    return true;
+}
+
+bool raw_pop(uint8_t * out) {
+    if (raw_head == raw_tail) return false;  // vacio
+    *out = raw_buf[raw_tail];
+    raw_tail = (uint8_t)(raw_tail + 1);
+    return true;
+}
+
+// ============================================================================
+//   Anillo DECODIFICADO (KeyEvent): productor = hilo de terminal, consumidor =
+//   foreground via getNextKey/sys_get_key. Tambien SPSC: head del productor,
+//   tail del consumidor. En lleno se dropea el evento nuevo (no se toca tail).
+// ============================================================================
+static KeyEvent buffer[BUFFER_LENGHT];
+static uint8_t head = 0;
+static uint8_t tail = 0;
+
+static bool isShiftPressed = false;
 static bool keyboard_enabled = true;
 
 static const char scancode_to_ascii[] = {
@@ -31,19 +63,20 @@ static const char scancode_to_ascii_shift[] = {
     '*', 0,  ' '
 };
 
-bool isFull() {
-    return size == BUFFER_LENGHT;
+static bool isFull(void) {
+    return (uint8_t)(head + 1) == tail;
 }
 
 // isEmpty
 bool isKeyBufferEmpty() {
-    return size <= 0;
+    return head == tail;
 }
 
 void clearKeyBuffer() {
-    size = 0;
     head = 0;
     tail = 0;
+    raw_head = 0;
+    raw_tail = 0;
     isShiftPressed = false;
 }
 
@@ -58,31 +91,50 @@ bool keyboard_is_enabled() {
     return keyboard_enabled;
 }
 
+// Encola un KeyEvent decodificado. Lo llama SOLO el hilo de terminal (productor
+// unico). En lleno dropea el evento nuevo (no toca tail, que es del consumidor).
 void queue(KeyEvent event) {
-    if (isFull()) getNextKey(); 
+    if (isFull()) return;
     buffer[head] = event;
-    head = (head+1)%BUFFER_LENGHT;
-    size++;
+    head = (uint8_t)(head + 1);
 }
 
 KeyEvent null = {
-    0, 0, 0, 0 
+    0, 0, 0, 0
 };
 
 // dequeue
 KeyEvent getNextKey() {
     if (isKeyBufferEmpty()) return null;
     KeyEvent event = buffer[tail];
-    tail = (tail+1)%BUFFER_LENGHT;
-    size--;
+    tail = (uint8_t)(tail + 1);
     return event;
 }
 
+// ============================================================================
+//   Top-half: la ISR hace lo minimo posible.
+//   Lee el scancode (hay que vaciar el puerto si o si), lo deja en el anillo
+//   crudo y senaliza al hilo de terminal via el semaforo "kbd". Todo el trabajo
+//   pesado (decodificar, echo, line discipline) lo hace el bottom-half.
+// ============================================================================
 void keyboard_handler() {
-    uint8_t raw_scancode = get_keyboard_output();
+    uint8_t raw = get_keyboard_output();
+    if (!keyboard_enabled) {
+        return;
+    }
+    if (raw_push(raw)) {
+        sem_post("kbd");
+    }
+}
+
+// ============================================================================
+//   Bottom-half: decodificacion de un scancode crudo a KeyEvent. La llama el
+//   hilo de terminal (unico caller), asi que isShiftPressed no tiene race.
+// ============================================================================
+KeyEvent decode_scancode(uint8_t raw_scancode) {
     int is_release = raw_scancode & 0x80;
     uint8_t scancode = raw_scancode & 0x7F;
-    if (scancode == SCANCODE_LSHIFT || scancode == SCANCODE_RSHIFT) 
+    if (scancode == SCANCODE_LSHIFT || scancode == SCANCODE_RSHIFT)
         isShiftPressed = !is_release;
     char ascii = 0;
     if (scancode < sizeof(scancode_to_ascii)) {
@@ -94,14 +146,12 @@ void keyboard_handler() {
         is_release,
         isPrintable(scancode)
     };
-    if (!keyboard_enabled) {
-        return;
-    }
-    queue(event);
 
+    // Hotkey de debug: shift + tecla 0x29 (`) dumpea registros.
     if (!is_release && scancode == 0x29 && isShiftPressed) {
         dump_registers();
     }
+    return event;
 }
 
 bool isPrintable(unsigned char scancode) {

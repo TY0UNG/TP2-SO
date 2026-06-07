@@ -2,6 +2,7 @@
 
 int bounce(char ** argv, int argc) {
     enableGraphicsMode();
+    set_terminal_mode(TERM_RAW);   // teclas crudas via getKey(), sin echo
     // --- Configuración de la pantalla y el objeto ---
     const uint32_t SCREEN_WIDTH = 1024;
     const uint32_t SCREEN_HEIGHT = 768;
@@ -82,6 +83,7 @@ int bounce(char ** argv, int argc) {
         drawFilledCircle((uint64_t)x, (uint64_t)y, (uint16_t)radius, 0);
     }
 
+    set_terminal_mode(TERM_COOKED);
     disableGraphicsMode();
     return 0;
 }

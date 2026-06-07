@@ -5,6 +5,7 @@
 #include <memory.h>
 #include <lib.h>
 #include <processes.h>
+#include <semaphores.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,6 +20,7 @@
 extern Process processes[];
 extern size_t actual_index;
 extern void _sti();
+extern void _cli();
 
 static unsigned char text_buffer[TEXT_BUFFER_SIZE];
 static int cursor = 0;
@@ -28,9 +30,15 @@ static uint16_t text_size = 16;
 
 static pid_t foreground_pid = 0;
 
-// Singleton terminal: cualquier file_t devuelve aca via data.
+static int terminal_mode = TERM_COOKED;
+
+// Buffer de linea para el modo cooked (line discipline en el hilo de terminal).
+#define LINE_MAX 256
+static char line_buf[LINE_MAX];
+static int line_len = 0;
+
 typedef struct terminal_t {
-    int dummy;  // backing object; el estado real esta en los estaticos de arriba.
+    int dummy;
 } terminal_t;
 
 static terminal_t g_terminal;
@@ -45,12 +53,9 @@ static void checkBufferOverflow(void);
 static int calculateTailOffset(void);
 
 int write_terminal_fd(file_t *f, const char *buf, int count);
-int read_terminal_fd(file_t *f, char *buf, int count);
 int close_terminal_fd(file_t *f);
 
-// ============================================================================
-//   API de texto (la que antes estaba en video.c)
-// ============================================================================
+// API de texto (la que antes estaba en video.c)
 
 void selectStyle(char style) {
     selected_style = style;
@@ -181,9 +186,7 @@ void printDec(uint64_t number) {
     }
 }
 
-// ============================================================================
-//   Helpers privados de buffer/render
-// ============================================================================
+// Helpers privados de buffer/render
 
 static void addToBuffer(char c) {
     text_buffer[cursor++] = c;
@@ -354,9 +357,7 @@ static void checkBufferOverflow(void) {
     }
 }
 
-// ============================================================================
-//   Foreground process
-// ============================================================================
+// Foreground process
 
 pid_t get_foreground_pid() {
     return foreground_pid;
@@ -364,74 +365,84 @@ pid_t get_foreground_pid() {
 
 void set_foreground_pid(pid_t pid) {
     foreground_pid = pid;
-    // El nuevo foreground puede estar bloqueado esperando: lo despertamos.
-    if (pid != 0) {
-        unblock_process(pid);
+    // Al cambiar de foreground reseteamos a modo cooked y limpiamos la linea a medio tipear
+    terminal_mode = TERM_COOKED;
+    line_len = 0;
+}
+
+void terminal_set_mode(int mode) {
+    terminal_mode = (mode == TERM_RAW) ? TERM_RAW : TERM_COOKED;
+}
+
+int terminal_get_mode(void) {
+    return terminal_mode;
+}
+
+static void terminal_deliver_to_fg(const char * buf, int len) {
+    if (len <= 0) return;
+    file_t * w = process_stdin_writer(foreground_pid);
+    if (w == NULL || w->ops == NULL || w->ops->write == NULL) return;
+    w->ops->write(w, buf, len);
+}
+
+// Dos modos:
+//   - RAW: lo deja como KeyEvent para sys_get_key (juegos), sin echo.
+//   - COOKED: hace echo + arma la linea; en '\n' la entrega al pipe del fg.
+void terminal_task() {
+    while (1) {
+        sem_wait("kbd");
+        uint8_t raw;
+        if (!raw_pop(&raw)) continue;
+        KeyEvent ev = decode_scancode(raw);
+
+        if (terminal_mode == TERM_RAW) {
+            queue(ev);              // camino crudo (sys_get_key)
+            continue;
+        }
+
+        if (ev.is_release) continue;
+
+        if (ev.ascii == '\n') {
+            sem_wait("tty_out");
+            print("\n");
+            sem_post("tty_out");
+            // Incluimos el '\n' en la linea entregada: asi una linea vacia es 1
+            // byte ('\n') y el read la puede devolver (devolvera 0 al cortarlo).
+            if (line_len < LINE_MAX) line_buf[line_len++] = '\n';
+            terminal_deliver_to_fg(line_buf, line_len);
+            line_len = 0;
+        } else if (ev.ascii == '\b') {
+            if (line_len > 0) {
+                line_len--;
+                sem_wait("tty_out");
+                deleteChar();
+                sem_post("tty_out");
+            }
+        } else if (ev.printable && line_len < LINE_MAX - 1) {
+            line_buf[line_len++] = ev.ascii;
+            sem_wait("tty_out");
+            printChar(ev.ascii);
+            sem_post("tty_out");
+        }
     }
 }
 
-// ============================================================================
-//   File ops (read / write / close / create)
-// ============================================================================
+//   File ops (write / close / create) La terminal queda como stdout/stderr (write a pantalla).
 
 int write_terminal_fd(file_t *f, const char *buf, int count) {
     if (f == NULL || buf == NULL || count <= 0) return 0;
 
-    pid_t me = get_actual_pid();
-    while (me != foreground_pid && foreground_pid != 0) {
-        processes[actual_index].blocked = true;
-        scheduler();
-        me = get_actual_pid();
-    }
-
-    for (int i = 0; i < count; i++) {
-        if (buf[i] == 0) return i;  // null-terminator corta como print() clasico
+    // Un proceso en background SI puede escribir (no se bloquea): su salida se
+    // intercala con la del foreground. El mutex serializa contra el echo del
+    // hilo de terminal sobre el text_buffer compartido.
+    sem_wait("tty_out");
+    int i;
+    for (i = 0; i < count; i++) {
+        if (buf[i] == 0) break;  // null-terminator corta como print() clasico
         printChar(buf[i]);
     }
-    return count;
-}
-
-int read_terminal_fd(file_t *f, char *buf, int count) {
-    if (f == NULL || buf == NULL || count <= 0) return 0;
-
-    _sti();
-
-    pid_t me = get_actual_pid();
-    int size = 0;
-
-    while (1) {
-        // Solo el foreground puede consumir teclas. Si no soy fg, me duermo.
-        if (me != foreground_pid && foreground_pid != 0) {
-            processes[actual_index].blocked = true;
-            scheduler();
-            continue;
-        }
-
-        if (isKeyBufferEmpty()) {
-            yield();
-            continue;
-        }
-
-        KeyEvent event = getNextKey();
-        if (event.is_release) continue;
-
-        if (event.ascii == '\n') {
-            buf[size] = 0;
-            print("\n");
-            return size;
-        }
-        if (event.ascii == '\b') {
-            if (size > 0) {
-                size--;
-                deleteChar();
-            }
-            continue;
-        }
-        if (event.printable && size < count - 1) {
-            buf[size++] = event.ascii;
-            printChar(event.ascii);
-        }
-    }
+    sem_post("tty_out");
+    return i;
 }
 
 int close_terminal_fd(file_t *f) {
@@ -445,7 +456,7 @@ int close_terminal_fd(file_t *f) {
 }
 
 static file_ops_t terminal_ops = {
-    .read  = read_terminal_fd,
+    .read  = NULL,   // stdin es un pipe por proceso; la terminal solo escribe
     .write = write_terminal_fd,
     .close = close_terminal_fd,
 };

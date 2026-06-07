@@ -33,6 +33,7 @@ GLOBAL sys_set_foreground
 GLOBAL sys_write_fd
 GLOBAL sys_read_fd
 GLOBAL sys_close_fd
+GLOBAL sys_set_terminal_mode
 
 EXTERN printHex
 
@@ -297,5 +298,13 @@ sys_close_fd:
     START_SYSCALL
     mov rax, 34
     mov rbx, rdi        ; fd
+    int 80h
+    END_SYSCALL
+
+; sys_set_terminal_mode(mode)  ; 0=cooked, 1=raw
+sys_set_terminal_mode:
+    START_SYSCALL
+    mov rax, 40
+    mov rbx, rdi        ; mode
     int 80h
     END_SYSCALL

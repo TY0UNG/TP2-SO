@@ -13,6 +13,7 @@
 #include <time.h>
 #include <audio.h>
 #include <processes.h>
+#include <semaphores.h>
 
 extern void diagnostic_test();
 extern uint64_t get_rsp();
@@ -205,6 +206,17 @@ int main() {
 	initialize_terminal();
 
 	const char ** args = { NULL };
+
+	// Semaforo que cuenta scancodes crudos pendientes: la ISR hace post, el
+	// hilo de terminal hace wait. Y el hilo de terminal (bottom-half) que
+	// decodifica el teclado. Ambos antes de la shell, asi ya esta listo cuando
+	// la shell empieza a leer.
+	sem_init("kbd", 0);
+	// Mutex de salida: serializa el echo del hilo de terminal contra los write
+	// de los procesos sobre el text_buffer/cursor compartido.
+	sem_init("tty_out", 1);
+	create_process("Terminal", (EntryPoint) terminal_task, args);
+
 	pid_t shell_pid = create_process("Shell", ((EntryPoint) shell), args);
 	set_foreground_pid(shell_pid);
 

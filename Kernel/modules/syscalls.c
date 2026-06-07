@@ -69,6 +69,7 @@ static int syscall_sem_init(Registers *registers);
 static int syscall_sem_post(Registers *registers);
 static int syscall_sem_wait(Registers *registers);
 static int syscall_sem_close(Registers *registers);
+static int syscall_set_terminal_mode(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -150,9 +151,16 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_sem_wait(registers);
     case 39:
         return syscall_sem_close(registers);
+    case 40:
+        return syscall_set_terminal_mode(registers);
     default:
         break;
     }
+    return 0;
+}
+
+static int syscall_set_terminal_mode(Registers * registers) {
+    terminal_set_mode((int) registers->rbx);
     return 0;
 }
 
@@ -221,9 +229,23 @@ static int syscall_write(Registers * registers) {
 
 static int syscall_read(Registers * registers) {
     char * input = (char *) registers->rbx;
-    file_t * f = lookup_fd(0);  // stdin
+    file_t * f = lookup_fd(0);  // stdin (pipe por proceso)
     if (f == NULL || f->ops == NULL || f->ops->read == NULL) return -1;
-    return f->ops->read(f, input, READ_BUFFER_MAX);
+
+    // Lectura de linea (modo canonico): leemos del pipe byte a byte hasta el
+    // '\n' (que el hilo de terminal incluye al final de cada linea cocida) o
+    // hasta llenar el buffer. El '\n' se descarta y dejamos el resto en el pipe
+    // (type-ahead). Devolvemos la linea null-terminated, sin el '\n'.
+    int n = 0;
+    while (n < READ_BUFFER_MAX - 1) {
+        char c;
+        int r = f->ops->read(f, &c, 1);
+        if (r <= 0) break;          // EOF (sin writers)
+        if (c == '\n') break;       // fin de linea
+        input[n++] = c;
+    }
+    input[n] = 0;
+    return n;
 }
 
 static int syscall_set_foreground(Registers * registers) {

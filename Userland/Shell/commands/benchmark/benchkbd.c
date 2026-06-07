@@ -10,6 +10,8 @@ int benchkbd(char **argv, int argc) {
 
     uint64_t lecturas = 0;
 
+    set_terminal_mode(TERM_RAW);   // teclas crudas via getKey(), sin echo
+
     uint64_t inicio = bench_wait_for_next_second();
     uint64_t objetivo = inicio + duracion_s;
     uint64_t actual = inicio;
@@ -19,6 +21,8 @@ int benchkbd(char **argv, int argc) {
         lecturas++;
         actual = bench_now_seconds();
     } while (actual < objetivo);
+
+    set_terminal_mode(TERM_COOKED);
 
     uint64_t fin = (actual < objetivo) ? objetivo : actual;
     uint64_t transcurrido = (fin > inicio) ? (fin - inicio) : duracion_s;

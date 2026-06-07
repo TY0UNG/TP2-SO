@@ -10,9 +10,14 @@ extern int sys_set_foreground(int pid);
 extern int sys_write_fd(int fd, const char* buf, int count);
 extern int sys_read_fd(int fd, char* buf, int count);
 extern int sys_close_fd(int fd);
+extern int sys_set_terminal_mode(int mode);
 
 int print(const char* str) {
     return sys_write(STDOUT, str);
+}
+
+void set_terminal_mode(int mode) {
+    sys_set_terminal_mode(mode);
 }
 
 int println(const char* str) {

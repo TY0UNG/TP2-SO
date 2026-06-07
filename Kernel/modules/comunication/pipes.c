@@ -62,8 +62,7 @@ static void wake_all(pid_t *queue, size_t *count) {
 
 static void block_self_on(pid_t *queue, size_t *count) {
     enqueue_waiter(queue, count, get_actual_pid());
-    processes[actual_index].blocked = true;
-    scheduler();
+    block_current(WAIT_PIPE);
 }
 
 static void try_free_pipe(pipe_t *p) {

@@ -12,5 +12,6 @@
 #Object files
 *.o
 
-#Kernel build output
-Kernel/dist/
+#Build output
+Kernel/build/
+Userland/build/

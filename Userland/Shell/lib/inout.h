@@ -9,6 +9,10 @@
 #define STDOUT 1
 #define STDERR 2
 
+// Modo de la terminal (estilo termios).
+#define TERM_COOKED 0   // linea con echo (read devuelve lineas) — default
+#define TERM_RAW    1   // teclas crudas via getKey(), sin echo (juegos)
+
 int print(const char* str);
 int println(const char* str);
 int printerr(const char* str);
@@ -20,6 +24,7 @@ int read_fd(int fd, char *buf, int count);
 int close_fd(int fd);
 
 int set_foreground(int pid);
+void set_terminal_mode(int mode);
 
 void printChar(char c);
 void printHex(uint64_t value);

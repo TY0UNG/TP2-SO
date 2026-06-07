@@ -25,10 +25,11 @@ typedef struct semaphore_t {
 extern Process processes[];
 extern size_t actual_index;
 
-// Primitivas de exclusion mutua implementadas con TSL (instruccion XCHG) en
-// assembler. Ver Kernel/asm/spinlock.asm.
-extern void enter_region(volatile uint8_t * lock);
-extern void leave_region(volatile uint8_t * lock);
+// Primitivas de exclusion mutua implementadas con TSL (XCHG) + irqsave en
+// assembler. enter_region devuelve los RFLAGS previos; leave_region los
+// restaura.
+extern uint64_t enter_region(volatile uint8_t * lock);
+extern void leave_region(volatile uint8_t * lock, uint64_t flags);
 
 static semaphore_t sem_table[MAX_SEMAPHORES];
 
@@ -115,56 +116,56 @@ static void init_slot(int id, const char * name, int initialValue) {
 int sem_init(const char * name, int initialValue) {
     if (name == NULL || name[0] == 0) return -1;
 
-    enter_region(&sem_lock);
+    uint64_t flags = enter_region(&sem_lock);
 
     if (find_by_name(name) >= 0) {
         // Ya existe: sem_init no debe re-crearlo.
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return -1;
     }
 
     int id = find_free_slot();
     if (id < 0) {
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return -1;
     }
 
     init_slot(id, name, initialValue);
-    leave_region(&sem_lock);
+    leave_region(&sem_lock, flags);
     return 0;
 }
 
 int sem_open(const char * name, int initialValue) {
     if (name == NULL || name[0] == 0) return -1;
 
-    enter_region(&sem_lock);
+    uint64_t flags = enter_region(&sem_lock);
 
     int id = find_by_name(name);
     if (id >= 0) {
         // Ya existe: solo lo abrimos otra vez.
         sem_table[id].openers++;
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return 0;
     }
 
     id = find_free_slot();
     if (id < 0) {
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return -1;
     }
 
     init_slot(id, name, initialValue);
-    leave_region(&sem_lock);
+    leave_region(&sem_lock, flags);
     return 0;
 }
 
 int sem_wait(const char * name) {
     if (name == NULL) return -1;
 
-    enter_region(&sem_lock);
+    uint64_t flags = enter_region(&sem_lock);
     int id = find_by_name(name);
     if (id < 0) {
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return -1;
     }
     semaphore_t * s = &sem_table[id];
@@ -173,28 +174,29 @@ int sem_wait(const char * name) {
     while (s->value <= 0) {
         enqueue_waiter(s, get_actual_pid());
         processes[actual_index].blocked = true;
-        leave_region(&sem_lock);
+        processes[actual_index].wait_reason = WAIT_SEM;
+        leave_region(&sem_lock, flags);
         scheduler();            // cede la CPU hasta que un sem_post lo despierte
-        enter_region(&sem_lock);
+        flags = enter_region(&sem_lock);
         // El semaforo podria haberse cerrado mientras estabamos bloqueados.
         if (!s->in_use) {
-            leave_region(&sem_lock);
+            leave_region(&sem_lock, flags);
             return -1;
         }
     }
 
     s->value--;
-    leave_region(&sem_lock);
+    leave_region(&sem_lock, flags);
     return 0;
 }
 
 int sem_post(const char * name) {
     if (name == NULL) return -1;
 
-    enter_region(&sem_lock);
+    uint64_t flags = enter_region(&sem_lock);
     int id = find_by_name(name);
     if (id < 0) {
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return -1;
     }
     semaphore_t * s = &sem_table[id];
@@ -206,17 +208,17 @@ int sem_post(const char * name) {
         unblock_process(pid);
     }
 
-    leave_region(&sem_lock);
+    leave_region(&sem_lock, flags);
     return 0;
 }
 
 int sem_close(const char * name) {
     if (name == NULL) return -1;
 
-    enter_region(&sem_lock);
+    uint64_t flags = enter_region(&sem_lock);
     int id = find_by_name(name);
     if (id < 0) {
-        leave_region(&sem_lock);
+        leave_region(&sem_lock, flags);
         return -1;
     }
     semaphore_t * s = &sem_table[id];
@@ -227,6 +229,6 @@ int sem_close(const char * name) {
         reset_waiters(s);
     }
 
-    leave_region(&sem_lock);
+    leave_region(&sem_lock, flags);
     return 0;
 }

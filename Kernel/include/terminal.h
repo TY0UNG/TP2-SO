@@ -17,10 +17,21 @@ file_t * get_terminal_fd();
 // Cada llamada incrementa el ref_count del backing terminal_t.
 file_t * create_terminal_fd();
 
-// Foreground process: el unico pid al que read_terminal_fd le devuelve datos.
-// Otros se bloquean hasta ser foreground.
+// Foreground process: el hilo de terminal le entrega la entrada cocida al pipe
+// de stdin de este pid. Los demas se bloquean en su propio pipe (vacio) hasta
+// pasar a foreground.
 pid_t get_foreground_pid();
 void set_foreground_pid(pid_t pid);
+
+// Modo de la terminal (estilo termios).
+#define TERM_COOKED 0   // echo + arma lineas -> pipe de stdin del foreground
+#define TERM_RAW    1   // sin echo, KeyEvents crudos para sys_get_key (juegos)
+void terminal_set_mode(int mode);
+int  terminal_get_mode(void);
+
+// Bottom-half: hilo de kernel que decodifica los scancodes que deja la ISR y
+// aplica line discipline. Se crea una vez en el boot. No retorna.
+void terminal_task();
 
 // API de texto/render que antes vivia en video.h
 void print(const char *text);

@@ -12,35 +12,38 @@ else
     $(error Opción de MM no válida. Usa MM=NAIVE o MM=OWN o MM=BUDDY)
 endif
 
-DIST_DIR := dist
-KERNEL   := kernel.bin
+BUILD_DIR := build
+KERNEL    := kernel.bin
 
 INCLUDES := -I./include -I./resources/fonts
 
 LOADER_SRC := loader.asm
-LOADER_OBJ := $(DIST_DIR)/loader.o
+LOADER_OBJ := $(BUILD_DIR)/loader.o
 
-# Descubre fuentes recursivamente, ignora dist/, el loader y archivos vacíos.
-SOURCES_C   := $(shell find . -path ./$(DIST_DIR) -prune -o -type f -name '*.c' -not -empty -print)
+# Descubre fuentes recursivamente, ignora build/, el loader y archivos vacíos.
+SOURCES_C   := $(shell find . -path ./$(BUILD_DIR) -prune -o -type f -name '*.c' -not -empty -print)
 SOURCES_ASM := $(shell find asm -type f -name '*.asm')
 
-OBJECTS_C   := $(patsubst ./%.c,$(DIST_DIR)/%.o,$(SOURCES_C))
-OBJECTS_ASM := $(patsubst %.asm,$(DIST_DIR)/%.o,$(SOURCES_ASM))
+OBJECTS_C   := $(patsubst ./%.c,$(BUILD_DIR)/%.o,$(SOURCES_C))
+OBJECTS_ASM := $(patsubst %.asm,$(BUILD_DIR)/%.o,$(SOURCES_ASM))
 
 all: $(KERNEL)
 
-$(KERNEL): $(LOADER_OBJ) $(OBJECTS_C) $(OBJECTS_ASM)
-	$(LD) $(LDFLAGS) -T kernel.ld -Map=kernel.map -o $(KERNEL) $(LOADER_OBJ) $(OBJECTS_C) $(OBJECTS_ASM)
+MAP := $(BUILD_DIR)/kernel.map
 
-$(DIST_DIR)/%.o: %.c
+$(KERNEL): $(LOADER_OBJ) $(OBJECTS_C) $(OBJECTS_ASM)
+	@mkdir -p $(BUILD_DIR)
+	$(LD) $(LDFLAGS) -T kernel.ld -Map=$(MAP) -o $(KERNEL) $(LOADER_OBJ) $(OBJECTS_C) $(OBJECTS_ASM)
+
+$(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(GCC) $(GCCFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
 
-$(DIST_DIR)/%.o: %.asm
+$(BUILD_DIR)/%.o: %.asm
 	@mkdir -p $(dir $@)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 clean:
-	rm -rf $(DIST_DIR) *.bin *.map
+	rm -rf $(BUILD_DIR) *.bin *.map
 
 .PHONY: all clean

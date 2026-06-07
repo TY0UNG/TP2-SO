@@ -683,6 +683,7 @@ static MatchResult runMatch(int mode) {
 int tronGame(char **argv, int argc) {
     inputQueueClear();
     enableGraphicsMode();
+    set_terminal_mode(TERM_RAW);   // teclas crudas via getKey(), sin echo
 
     int running = 1;
     while (running) {
@@ -698,6 +699,7 @@ int tronGame(char **argv, int argc) {
     }
 
     clear_audio_buffer();
+    set_terminal_mode(TERM_COOKED);
     disableGraphicsMode();
     return 0;
 }

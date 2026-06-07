@@ -5,6 +5,7 @@
 
 int fps(char ** argv, int argc) {
     enableGraphicsMode();
+    set_terminal_mode(TERM_RAW);   // teclas crudas via getKey(), sin echo
 
     uint32_t color = 0x00000000;
     uint64_t actual_fps = 0;
@@ -57,6 +58,7 @@ int fps(char ** argv, int argc) {
         }
     }
 
+    set_terminal_mode(TERM_COOKED);
     disableGraphicsMode();
     return 0;
 }
