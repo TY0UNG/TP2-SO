@@ -35,6 +35,9 @@ Commands command_list[] = {
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
 
     // PRUEBAS Y EXCEPCIONES
+    {"testsync", "prueba sincronizacion con y sin semaforos (race conditions)", "  PRUEBAS"},
+    {"testprocesses", "prueba creacion, kill, block y unblock de procesos", "  PRUEBAS"},
+    {"testprio", "prueba el scheduler con distintas prioridades", "  PRUEBAS"},
     {"dividezero", "genera la excepcion de division por cero", "  PRUEBAS"},
     {"invalidop", "genera la excepcion de instruccion inválida", "  PRUEBAS"},
 
