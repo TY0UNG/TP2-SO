@@ -94,24 +94,14 @@ extern void switch_to_idle(uint64_t *save, uint64_t idle_rsp);
 extern void trampoline();
 
 // Idle: corre sobre el kernel stack cuando no hay ningun proceso listo.
-// Hace hlt hasta que el proximo timer tick interrumpa y el scheduler switchee
-// a un proceso real. No retorna.
 void idle() {
     while (1) _hlt();
 }
 
 void scheduler() {
-    // Si había un proceso corriendo, guardar su RSP (lo dejó el asm en saved_stack_ptr)
-    // y ajustar prioridad segun cuanto corrió.
-    if (actual_index != (size_t)-1 && processes[actual_index].active) {
-        size_t millis = getMilisFromBoot() - actual_process_start_time;
-        if (millis > 40 && processes[actual_index].priority < PRIORITY_COUNT - 1) {
-            modify_process_priority(&processes[actual_index], processes[actual_index].priority + 1);
-        } else if (processes[actual_index].priority > 0 && millis < 10) {
-            modify_process_priority(&processes[actual_index], processes[actual_index].priority - 1);
-        }
-    }
-
+    // Las prioridades se fijan explicitamente con my_nice/modify_process_priority
+    // (prioridad estricta: nivel 0 = mayor). No hay aging automatico para que el
+    // test_prio pueda demostrar el ordenamiento por prioridad de forma deterministica.
     Process * nextProcess = selectNextProcess();
     if (nextProcess == NULL) {
         // Durante el boot temprano el timer ya puede estar tickeando (el audio
@@ -387,8 +377,7 @@ void kill_process(pid_t pid) {
         actual_pid = 0;
         actual_index = (size_t)-1;
         scheduler();
-        // Salvavidas: el scheduler no debería retornar acá (ya no estamos en la
-        // run queue).
+        // Salvavidas. El scheduler no debería retornar
         while (1);
     }
 }
@@ -404,17 +393,14 @@ void exit_current_process(int status) {
     actual_index = (size_t)-1;
 
     scheduler();
-    // Salvavidas: si por algun motivo el scheduler retorna acá (no debería,
-    // ya no estamos en la run queue), nos colgamos.
+    // Salvavidas. Scheduler no deberia retornar
     while (1);
 }
 
 int wait_pid(pid_t pid) {
     int idx = getIndex(pid);
     if (idx < 0 || !processes[idx].active) return -1;
-    // Solo el padre puede esperar/cosechar a un proceso. Esperar algo que no es
-    // hijo propio devuelve -1 (equivalente a ECHILD en POSIX). Asi, ademas, un
-    // unico proceso llega al reap: no hay doble reap con varios waiters.
+    // Solo el padre puede esperar/cosechar a un proceso.
     if (processes[idx].parent_pid != get_actual_pid()) return -1;
 
     while (!processes[idx].zombie) {
@@ -436,12 +422,29 @@ void yield() {
     scheduler();
 }
 
+// Reubica al proceso al nivel de prioridad pedido (clamp a 0..PRIORITY_COUNT-1).
+// Nivel 0 = mayor prioridad de scheduling. Lo saca de su lista actual y lo
+// inserta en un slot libre del nuevo nivel.
 static void modify_process_priority(Process * process, int new_priority) {
+    if (process == NULL) return;
+    if (new_priority < 0) new_priority = 0;
+    if (new_priority >= PRIORITY_COUNT) new_priority = PRIORITY_COUNT - 1;
+    if (process->priority == new_priority) return;
 
+    remove_from_priority_lists(process);
+
+    int slot = getNextPriorityFreeSlot(new_priority);
+    if (slot == -1) return;   // no deberia pasar: la lista tiene PROCESSES_LIMIT slots
+    priority_lists[new_priority][slot].process = process;
+    priority_lists[new_priority][slot].deleted = false;
+    process->priority = new_priority;
 }
 
 void modify_process_priority_by_pid(size_t pid, int new_priority) {
-
+    int idx = getIndex(pid);
+    if (idx >= 0 && processes[idx].active) {
+        modify_process_priority(&processes[idx], new_priority);
+    }
 }
 
 void block_process(size_t pid) {

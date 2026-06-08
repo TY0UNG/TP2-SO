@@ -34,6 +34,16 @@ GLOBAL sys_write_fd
 GLOBAL sys_read_fd
 GLOBAL sys_close_fd
 GLOBAL sys_set_terminal_mode
+GLOBAL sys_sem_open
+GLOBAL sys_sem_init
+GLOBAL sys_sem_post
+GLOBAL sys_sem_wait
+GLOBAL sys_sem_close
+GLOBAL sys_getpid
+GLOBAL sys_kill
+GLOBAL sys_block
+GLOBAL sys_unblock
+GLOBAL sys_nice
 
 EXTERN printHex
 
@@ -306,5 +316,87 @@ sys_set_terminal_mode:
     START_SYSCALL
     mov rax, 40
     mov rbx, rdi        ; mode
+    int 80h
+    END_SYSCALL
+
+; sys_sem_open(name, initialValue) -> 0 ok, -1 error
+sys_sem_open:
+    START_SYSCALL
+    mov rax, 35
+    mov rbx, rdi        ; name
+    mov rcx, rsi        ; initialValue
+    int 80h
+    END_SYSCALL
+
+; sys_sem_init(name, initialValue) -> 0 ok, -1 error
+sys_sem_init:
+    START_SYSCALL
+    mov rax, 36
+    mov rbx, rdi        ; name
+    mov rcx, rsi        ; initialValue
+    int 80h
+    END_SYSCALL
+
+; sys_sem_post(name) -> 0 ok, -1 error
+sys_sem_post:
+    START_SYSCALL
+    mov rax, 37
+    mov rbx, rdi        ; name
+    int 80h
+    END_SYSCALL
+
+; sys_sem_wait(name) -> 0 ok, -1 error
+sys_sem_wait:
+    START_SYSCALL
+    mov rax, 38
+    mov rbx, rdi        ; name
+    int 80h
+    END_SYSCALL
+
+; sys_sem_close(name) -> 0 ok, -1 error
+sys_sem_close:
+    START_SYSCALL
+    mov rax, 39
+    mov rbx, rdi        ; name
+    int 80h
+    END_SYSCALL
+
+; sys_getpid() -> pid del proceso actual
+sys_getpid:
+    START_SYSCALL
+    mov rax, 41
+    int 80h
+    END_SYSCALL
+
+; sys_kill(pid)
+sys_kill:
+    START_SYSCALL
+    mov rax, 42
+    mov rbx, rdi        ; pid
+    int 80h
+    END_SYSCALL
+
+; sys_block(pid)
+sys_block:
+    START_SYSCALL
+    mov rax, 43
+    mov rbx, rdi        ; pid
+    int 80h
+    END_SYSCALL
+
+; sys_unblock(pid)
+sys_unblock:
+    START_SYSCALL
+    mov rax, 44
+    mov rbx, rdi        ; pid
+    int 80h
+    END_SYSCALL
+
+; sys_nice(pid, priority)
+sys_nice:
+    START_SYSCALL
+    mov rax, 45
+    mov rbx, rdi        ; pid
+    mov rcx, rsi        ; priority
     int 80h
     END_SYSCALL

@@ -38,6 +38,9 @@ WRAP_CMD(benchhw)
 WRAP_CMD(benchmem)
 WRAP_CMD(benchkbd)
 WRAP_CMD(testmm)
+WRAP_CMD(testsync)
+WRAP_CMD(testprocesses)
+WRAP_CMD(testprio)
 WRAP_CMD(meminfo)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
@@ -78,6 +81,9 @@ static const Command commands[] = {
     { "benchmem",   benchmem_wrap   },
     { "benchkbd",   benchkbd_wrap   },
     { "testmm",     testmm_wrap     },
+    { "testsync",   testsync_wrap   },
+    { "testprocesses", testprocesses_wrap },
+    { "testprio",   testprio_wrap   },
     { "meminfo",    meminfo_wrap    },
     { "tron",       tronGame_wrap   },
     { "bounce",     bounce_wrap     },

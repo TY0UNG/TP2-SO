@@ -70,6 +70,11 @@ static int syscall_sem_post(Registers *registers);
 static int syscall_sem_wait(Registers *registers);
 static int syscall_sem_close(Registers *registers);
 static int syscall_set_terminal_mode(Registers *registers);
+static uint64_t syscall_getpid(Registers *registers);
+static int syscall_kill(Registers *registers);
+static int syscall_block(Registers *registers);
+static int syscall_unblock(Registers *registers);
+static int syscall_nice(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -153,6 +158,16 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_sem_close(registers);
     case 40:
         return syscall_set_terminal_mode(registers);
+    case 41:
+        return syscall_getpid(registers);
+    case 42:
+        return syscall_kill(registers);
+    case 43:
+        return syscall_block(registers);
+    case 44:
+        return syscall_unblock(registers);
+    case 45:
+        return syscall_nice(registers);
     default:
         break;
     }
@@ -161,6 +176,31 @@ uint64_t sysCallDispatcher(Registers * registers) {
 
 static int syscall_set_terminal_mode(Registers * registers) {
     terminal_set_mode((int) registers->rbx);
+    return 0;
+}
+
+static uint64_t syscall_getpid(Registers * registers) {
+    (void) registers;
+    return (uint64_t) get_actual_pid();
+}
+
+static int syscall_kill(Registers * registers) {
+    kill_process((pid_t) registers->rbx);
+    return 0;
+}
+
+static int syscall_block(Registers * registers) {
+    block_process((size_t) registers->rbx);
+    return 0;
+}
+
+static int syscall_unblock(Registers * registers) {
+    unblock_process((size_t) registers->rbx);
+    return 0;
+}
+
+static int syscall_nice(Registers * registers) {
+    modify_process_priority_by_pid((size_t) registers->rbx, (int) registers->rcx);
     return 0;
 }
 
