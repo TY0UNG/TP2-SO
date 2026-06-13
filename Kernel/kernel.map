@@ -13,7 +13,11 @@ Linker script and memory map
 .text           0x0000000000100000     0x7670
 =======
 .text           0x0000000000100000     0x86cf
+<<<<<<< HEAD
 >>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
                 0x0000000000100000                text = .
  *(.text*)
  .text          0x0000000000100000       0x11 dist/loader.o
@@ -643,7 +647,11 @@ Linker script and memory map
  .bss           0x000000000011d208       0x30 dist/asm/regs.o
                 0x000000000011d228                saved_stack_ptr
                 0x000000000011d230                initial_saved_stack_ptr
+<<<<<<< HEAD
 >>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
  *(EXCLUDE_FILE(*.o) COMMON)
                 0x000000000011d000                . = ALIGN (0x1000)
                 0x000000000011d000                endOfKernel = .
@@ -751,7 +759,11 @@ OUTPUT(kernel.bin binary)
  .comment       0x000000000000030e       0x2e dist/modules/processes/registers.o
  .comment       0x000000000000033c       0x2e dist/modules/syscalls.o
  .comment       0x000000000000036a       0x2e dist/modules/terminal/terminal.o
+<<<<<<< HEAD
 >>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
 
 .note.GNU-stack
                 0x0000000000000000        0x0
@@ -768,10 +780,14 @@ OUTPUT(kernel.bin binary)
                 0x0000000000000000        0x0 dist/modules/memory/memoryBuddy.o
  .note.GNU-stack
 <<<<<<< HEAD
+<<<<<<< HEAD
                 0x0000000000000000        0x0 dist/modules/comunication/pipes.o
 =======
                 0x0000000000000000        0x0 dist/modules/memory/memoryNaive.o
 >>>>>>> 1f1a581 (ps)
+=======
+                0x0000000000000000        0x0 dist/modules/memory/memoryNaive.o
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/lib/lib.o
  .note.GNU-stack
@@ -798,7 +814,11 @@ OUTPUT(kernel.bin binary)
                 0x0000000000000000        0x0 dist/drivers/screen.o
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/drivers/tick.o
+<<<<<<< HEAD
 >>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/drivers/time.o
  .note.GNU-stack
@@ -836,4 +856,8 @@ OUTPUT(kernel.bin binary)
                 0x0000000000000000        0x0 dist/modules/syscalls.o
  .note.GNU-stack
                 0x0000000000000000        0x0 dist/modules/terminal/terminal.o
+<<<<<<< HEAD
 >>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7

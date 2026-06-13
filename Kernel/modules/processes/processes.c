@@ -342,7 +342,13 @@ static void terminate_process(int idx, int status) {
             printDec(parent_idx);
             print("\n");
             set_foreground_pid(parent_idx);
+            
+            print("IM RETUNING IN THE FATHER! | ");
+            printDec(parent_idx);
+            print("\n");
+            set_foreground_pid(parent_idx);
         } else {
+             print("IM RETUNING IN 0! \n");
              print("IM RETUNING IN 0! \n");
             set_foreground_pid(0);
         }
@@ -507,6 +513,31 @@ Process get_actual_process() {
     return processes[actual_index];
 }
 
+int get_processesInfo(ProcessInfo *buffer, int max_count) {
+
+    if (buffer == NULL || max_count <= 0)
+        return -1;
+
+    int count = 0;
+
+    for (int i = 0; i < PROCESSES_LIMIT && count < max_count; i++) {
+        if (!processes[i].active)
+            continue;
+
+        buffer[count].pid = processes[i].pid;
+        buffer[count].parent_pid = processes[i].parent_pid;
+        buffer[count].active = processes[i].active;
+        buffer[count].blocked = processes[i].blocked;
+        buffer[count].zombie = processes[i].zombie;
+        buffer[count].priority = processes[i].priority;
+
+        strcpy(buffer[count].name, processes[i].name);
+
+        count++;
+    }
+
+    return count;
+}
 int get_processesInfo(ProcessInfo *buffer, int max_count) {
 
     if (buffer == NULL || max_count <= 0)
