@@ -402,6 +402,12 @@ void terminal_task() {
 
         if (ev.is_release) continue;
 
+        if (ev.ascii == 0x03) {          // Ctrl+C: matar al foreground
+            line_len = 0;
+            if (foreground_pid != 0) kill_process(foreground_pid);
+            continue;
+        }
+
         if (ev.ascii == '\n') {
             sem_wait("tty_out");
             print("\n");

@@ -5,6 +5,7 @@
 
 #define SCANCODE_LSHIFT 0x2A
 #define SCANCODE_RSHIFT 0x36
+#define SCANCODE_LCTRL  0x1D
 
 typedef struct key_event {
     uint8_t scancode;

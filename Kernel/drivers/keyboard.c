@@ -45,6 +45,7 @@ static uint8_t head = 0;
 static uint8_t tail = 0;
 
 static bool isShiftPressed = false;
+static bool isCtrlPressed = false;
 static bool keyboard_enabled = true;
 
 static const char scancode_to_ascii[] = {
@@ -136,10 +137,14 @@ KeyEvent decode_scancode(uint8_t raw_scancode) {
     uint8_t scancode = raw_scancode & 0x7F;
     if (scancode == SCANCODE_LSHIFT || scancode == SCANCODE_RSHIFT)
         isShiftPressed = !is_release;
+    if (scancode == SCANCODE_LCTRL)
+        isCtrlPressed = !is_release;
     char ascii = 0;
     if (scancode < sizeof(scancode_to_ascii)) {
         ascii = isShiftPressed ? scancode_to_ascii_shift[scancode] : scancode_to_ascii[scancode];
     }
+    if (isCtrlPressed && ascii >= 'a' && ascii <= 'z')  // ctrl+(letra)
+        ascii = ascii - 'a' + 1;
     KeyEvent event = {
         raw_scancode,
         ascii,
