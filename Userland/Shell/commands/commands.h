@@ -34,6 +34,9 @@ int loop(char ** argv, int argc);
 int kill(char ** argv, int argc);
 int nice(char ** argv, int argc);
 int block(char ** argv, int argc);
+int cat(char ** argv, int argc);
+int wc(char ** argv, int argc);
+int filter(char ** argv, int argc);
 
 /* Para probar excepciones, borrarse (junto con test.c) cuando se terminen de validar */
 int dividezero();

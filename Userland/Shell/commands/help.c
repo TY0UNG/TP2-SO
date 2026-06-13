@@ -35,6 +35,11 @@ Commands command_list[] = {
     {"nice <pid> <prio>", "cambia la prioridad de un proceso (0=alta..4=baja)", "  PROCESOS"},
     {"block <pid>", "alterna un proceso entre bloqueado y listo", "  PROCESOS"},
 
+    // FILTROS (stdin -> stdout)
+    {"cat", "imprime stdin tal como lo recibe", "  FILTROS"},
+    {"wc", "cuenta la cantidad de lineas del input", "  FILTROS"},
+    {"filter", "filtra (quita) las vocales del input", "  FILTROS"},
+
     // JUEGOS Y DEMOS
     {"tron", "inicia el juego Tron Neon Grid", "  JUEGOS"},
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},

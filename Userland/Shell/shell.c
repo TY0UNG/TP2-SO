@@ -47,6 +47,9 @@ WRAP_CMD(loop)
 WRAP_CMD(kill)
 WRAP_CMD(nice)
 WRAP_CMD(block)
+WRAP_CMD(cat)
+WRAP_CMD(wc)
+WRAP_CMD(filter)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
 
@@ -95,6 +98,9 @@ static const Command commands[] = {
     { "kill",       kill_wrap       },
     { "nice",       nice_wrap       },
     { "block",      block_wrap      },
+    { "cat",        cat_wrap        },
+    { "wc",         wc_wrap         },
+    { "filter",     filter_wrap     },
     { "tron",       tronGame_wrap   },
     { "bounce",     bounce_wrap     },
     { "dividezero", dividezero_wrap },
