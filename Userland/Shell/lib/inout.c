@@ -21,7 +21,9 @@ void set_terminal_mode(int mode) {
 }
 
 int println(const char* str) {
-    return print(str) && print("\n");
+    int n = print(str);     // no usar && : print("") devuelve 0 y cortaria el \n
+    print("\n");
+    return n;
 }
 
 int printerr(const char* str) {

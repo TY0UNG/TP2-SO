@@ -92,7 +92,7 @@ static void run_test_sync(char *n_str, char *sem_str) {
 
     print("Final value: ");
     printSignedDec(global);
-    println("");
+    print("\n");
 }
 
 int testsync(char **argv, int argc) {
