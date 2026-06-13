@@ -37,10 +37,12 @@ int block(char ** argv, int argc);
 int cat(char ** argv, int argc);
 int wc(char ** argv, int argc);
 int filter(char ** argv, int argc);
+int processList(char ** argv, int argc);
+
+
 
 /* Para probar excepciones, borrarse (junto con test.c) cuando se terminen de validar */
 int dividezero();
 int invalidop();
-
 
 #endif

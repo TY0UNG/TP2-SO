@@ -77,6 +77,8 @@ static int syscall_unblock(Registers *registers);
 static int syscall_nice(Registers *registers);
 static int syscall_write_color(Registers *registers);
 static int syscall_toggle_block(Registers *registers);
+static int syscall_get_process_list(Registers *registers);
+
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -171,9 +173,11 @@ uint64_t sysCallDispatcher(Registers * registers) {
     case 45:
         return syscall_nice(registers);
     case 46:
-        return syscall_write_color(registers);
+        return syscall_get_process_list(registers);
     case 47:
         return syscall_toggle_block(registers);
+    case 48:
+        return syscall_write_color(registers);
     default:
         break;
     }
@@ -522,4 +526,10 @@ static uint64_t syscall_get_total_memory(Registers *registers) {
 
 static uint64_t syscall_get_used_memory(Registers *registers) {
     return (uint64_t) getUsedMemory();
+}
+
+static int syscall_get_process_list(Registers *regs) {
+    ProcessInfo *buffer = (ProcessInfo *)regs->rbx;
+    int maxCount = (int)regs->rcx;
+    return get_processesInfo(buffer, maxCount);
 }

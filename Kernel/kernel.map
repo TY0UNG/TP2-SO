@@ -1,0 +1,863 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+
+<<<<<<< HEAD
+.text           0x0000000000100000     0x7670
+=======
+.text           0x0000000000100000     0x86cf
+<<<<<<< HEAD
+>>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
+                0x0000000000100000                text = .
+ *(.text*)
+ .text          0x0000000000100000       0x11 dist/loader.o
+                0x0000000000100000                loader
+<<<<<<< HEAD
+ .text          0x0000000000100011      0x644 dist/kernel.o
+                0x0000000000100052                clearBSS
+                0x000000000010007a                getStackBase
+                0x0000000000100099                initializeKernelBinary
+                0x0000000000100234                sleep
+                0x0000000000100272                MusicSO
+                0x000000000010053b                main
+ .text          0x0000000000100655        0x0 dist/modules/memory/memoryBuddy.o
+ .text          0x0000000000100655        0x0 dist/modules/memory/memoryNaive.o
+ .text          0x0000000000100655      0x592 dist/modules/memory/memoryOwn.o
+                0x0000000000100844                initializeMemoryManager
+                0x0000000000100931                malloc
+                0x0000000000100a7d                free
+                0x0000000000100bcd                getTotalMemory
+                0x0000000000100bda                getUsedMemory
+ .text          0x0000000000100be7      0x6f1 dist/modules/comunication/pipes.o
+                0x0000000000100d60                create_pipe
+ .text          0x00000000001012d8      0x2e8 dist/modules/lib/lib.o
+                0x00000000001012d8                memset
+                0x0000000000101393                memcpy
+                0x000000000010146e                uintToBase
+                0x000000000010154d                strcpy
+                0x0000000000101590                strlen
+ .text          0x00000000001015c0     0x11cc dist/modules/processes/processes.o
+                0x000000000010173d                initializeScheduler
+                0x000000000010188c                scheduler
+                0x0000000000101a9f                create_process
+                0x0000000000102462                kill_process
+                0x0000000000102513                exit_current_process
+                0x0000000000102566                wait_pid
+                0x0000000000102652                yield
+                0x0000000000102675                modify_process_priority_by_pid
+                0x0000000000102687                block_process
+                0x00000000001026c8                unblock_process
+                0x0000000000102709                sleep_process
+                0x000000000010271c                wait_for_process
+                0x000000000010272f                get_processes
+                0x000000000010273a                get_actual_pid
+                0x0000000000102747                get_actual_process
+ .text          0x000000000010278c      0x49e dist/modules/processes/registers.o
+                0x000000000010278c                printHexToBuffer
+                0x00000000001027e6                printHex16ToBuffer
+                0x0000000000102817                printHex64ToBuffer
+                0x0000000000102903                printStruct
+                0x0000000000102c04                dump_registers
+                0x0000000000102c1f                get_register_dump
+ .text          0x0000000000102c2a      0x155 dist/modules/interruptions/idtLoader.o
+                0x0000000000102c2a                load_idt
+ .text          0x0000000000102d7f      0x3a6 dist/modules/interruptions/exceptions.o
+                0x0000000000102d7f                exceptionDispatcher
+ .text          0x0000000000103125       0x58 dist/modules/interruptions/irqDispatcher.o
+                0x0000000000103125                irqDispatcher
+ .text          0x000000000010317d      0xe8f dist/modules/terminal/terminal.o
+                0x000000000010317d                selectStyle
+                0x0000000000103197                setTextSize
+                0x00000000001031ff                textMode
+                0x0000000000103248                clearTextBuffer
+                0x000000000010329f                print
+                0x0000000000103329                printChar
+                0x0000000000103397                deleteChar
+                0x000000000010340a                scrollDown
+                0x0000000000103473                scrollUp
+                0x00000000001034f8                printHex64
+                0x000000000010356c                printHex32
+                0x00000000001035de                printHex16
+                0x0000000000103654                printDec
+                0x0000000000103cb1                get_foreground_pid
+                0x0000000000103cbe                set_foreground_pid
+                0x0000000000103ceb                write_terminal_fd
+                0x0000000000103dc8                read_terminal_fd
+                0x0000000000103f30                close_terminal_fd
+                0x0000000000103f8d                create_terminal_fd
+                0x0000000000103fd9                get_terminal_fd
+                0x0000000000103fe6                initialize_terminal
+ .text          0x000000000010400c      0x270 dist/modules/loader/moduleLoader.o
+                0x000000000010400c                loadModules
+ .text          0x000000000010427c      0xb9d dist/modules/syscalls.o
+                0x00000000001042d9                sysCallDispatcher
+ .text          0x0000000000104e19      0x1bf dist/drivers/time.o
+                0x0000000000104e19                calibrateMilis
+                0x0000000000104ec7                getMilisFromBoot
+                0x0000000000104f5b                getTime
+ .text          0x0000000000104fd8      0x2ad dist/drivers/keyboard.o
+                0x0000000000104fd8                isFull
+                0x0000000000104fea                isKeyBufferEmpty
+                0x0000000000104ffc                clearKeyBuffer
+                0x000000000010501f                keyboard_set_enabled
+                0x0000000000105051                keyboard_is_enabled
+                0x000000000010505e                queue
+                0x00000000001050e2                getNextKey
+                0x0000000000105163                keyboard_handler
+ .text          0x0000000000105285     0x10f5 dist/drivers/video.o
+                0x0000000000105285                getCharWidth
+                0x00000000001052b8                getMaxCols
+                0x0000000000105314                getMaxRows
+                0x000000000010535b                isTextMode
+                0x0000000000105368                setTextMode
+                0x0000000000105435                setFpsOverlayEnabled
+                0x0000000000105485                swapBuffers
+                0x00000000001054ed                canvasMode
+                0x0000000000105505                clearCanvas
+                0x0000000000105540                drawPixel
+                0x000000000010556d                abs
+                0x0000000000105584                drawLine
+                0x00000000001056c5                fillScreen
+                0x0000000000105807                drawRectangle
+                0x00000000001058c5                drawFilledRectangle
+                0x0000000000105b5a                drawCircle
+                0x0000000000105c23                drawFilledCircle
+                0x0000000000105cbd                drawText
+                0x0000000000105e54                drawStyledChar
+                0x0000000000106131                getScreenWidth
+                0x0000000000106142                getScreenHeight
+ .text          0x000000000010637a       0x5b dist/drivers/tick.o
+                0x000000000010637a                timer_handler
+                0x00000000001063a7                ticks_elapsed
+                0x00000000001063b4                seconds_elapsed
+ .text          0x00000000001063d5      0x2b7 dist/drivers/audio.o
+                0x00000000001063e9                isAudioBufferEmpty
+                0x00000000001064a4                getNextAudioEvent
+                0x00000000001064fd                audio_timer_handler
+                0x0000000000106616                play_sound
+                0x0000000000106647                clearAudioBuffer
+ .text          0x000000000010668c      0x2a1 dist/drivers/screen.o
+                0x000000000010668c                ncPrint
+                0x00000000001066f7                ncPrintChar
+                0x000000000010673c                ncNewline
+                0x0000000000106776                ncPrintDec
+                0x0000000000106796                ncPrintHex
+                0x00000000001067b6                ncPrintBin
+                0x00000000001067d6                ncPrintBase
+                0x0000000000106806                ncDelChar
+                0x00000000001068a6                ncClear
+                0x0000000000106913                ncSetStyle
+ *fill*         0x000000000010692d        0x3 
+ .text          0x0000000000106930       0x82 dist/asm/libasm.o
+                0x0000000000106930                cpuVendor
+                0x0000000000106951                fast_memcpy
+                0x000000000010696b                fast_memset
+                0x00000000001069a8                get_rsp
+                0x00000000001069ac                set_rsp
+                0x00000000001069b0                halt
+ *fill*         0x00000000001069b2        0xe 
+ .text          0x00000000001069c0       0x51 dist/asm/audio.o
+                0x00000000001069c0                output_audio_start
+                0x00000000001069f9                stop_audio
+                0x0000000000106a02                start_T
+ *fill*         0x0000000000106a11        0xf 
+ .text          0x0000000000106a20       0x3b dist/asm/time.o
+                0x0000000000106a20                getRDTSC
+                0x0000000000106a2a                getSeconds
+                0x0000000000106a31                getMinutes
+                0x0000000000106a38                getHour
+                0x0000000000106a3f                getDayOfWeek
+                0x0000000000106a46                getDayOfMonth
+                0x0000000000106a4d                getMonth
+                0x0000000000106a54                getYear
+ *fill*         0x0000000000106a5b        0x5 
+ .text          0x0000000000106a60       0x1f dist/asm/processes.o
+                0x0000000000106a60                trampoline
+                0x0000000000106a64                switch_rsp
+ *fill*         0x0000000000106a7f        0x1 
+ .text          0x0000000000106a80        0xa dist/asm/keyboard.o
+                0x0000000000106a80                get_keyboard_output
+ *fill*         0x0000000000106a8a        0x6 
+ .text          0x0000000000106a90      0x2d9 dist/asm/interrupts.o
+                0x0000000000106a90                _hlt
+                0x0000000000106a93                _cli
+                0x0000000000106a95                _sti
+                0x0000000000106a97                picMasterMask
+                0x0000000000106aa2                picSlaveMask
+                0x0000000000106aad                _irq00Handler
+                0x0000000000106afd                _irq01Handler
+                0x0000000000106b4d                _irq02Handler
+                0x0000000000106b9d                _irq03Handler
+                0x0000000000106bed                _irq04Handler
+                0x0000000000106c3d                _irq05Handler
+                0x0000000000106c8d                _exception0Handler
+                0x0000000000106cca                _exception6Handler
+                0x0000000000106d07                _sysCallHandler
+                0x0000000000106d66                haltcpu
+ *fill*         0x0000000000106d69        0x7 
+ .text          0x0000000000106d70      0x115 dist/asm/regs.o
+                0x0000000000106d70                addregs
+                0x0000000000107000                . = ALIGN (0x1000)
+ *fill*         0x0000000000106e85      0x17b 
+                0x0000000000107000                rodata = .
+ *(.rodata*)
+ .rodata        0x0000000000107000       0xe2 dist/kernel.o
+ *fill*         0x00000000001070e2        0x6 
+ .rodata        0x00000000001070e8      0x11d dist/modules/processes/registers.o
+ *fill*         0x0000000000107205        0x3 
+ .rodata        0x0000000000107208      0x166 dist/modules/interruptions/exceptions.o
+ .rodata        0x000000000010736e       0x16 dist/modules/terminal/terminal.o
+ .rodata        0x0000000000107384       0x8c dist/modules/loader/moduleLoader.o
+ .rodata        0x0000000000107410      0x118 dist/modules/syscalls.o
+ *fill*         0x0000000000107528        0x8 
+ .rodata        0x0000000000107530       0x30 dist/drivers/time.o
+ .rodata        0x0000000000107560       0x7a dist/drivers/keyboard.o
+ *fill*         0x00000000001075da        0x6 
+ .rodata        0x00000000001075e0       0x80 dist/drivers/video.o
+ .rodata        0x0000000000107660       0x10 dist/drivers/screen.o
+
+.data           0x0000000000108000      0x954
+                0x0000000000108000                data = .
+ *(.data*)
+ .data          0x0000000000108000        0x8 dist/kernel.o
+                0x0000000000108000                ramAmount
+ .data          0x0000000000108008        0x0 dist/modules/memory/memoryBuddy.o
+ .data          0x0000000000108008        0x0 dist/modules/memory/memoryNaive.o
+ .data          0x0000000000108008        0x0 dist/modules/memory/memoryOwn.o
+ *fill*         0x0000000000108008        0x8 
+ .data          0x0000000000108010       0x38 dist/modules/comunication/pipes.o
+ .data          0x0000000000108048        0x0 dist/modules/lib/lib.o
+ .data          0x0000000000108048       0x10 dist/modules/processes/processes.o
+                0x0000000000108048                pid_count
+                0x0000000000108050                actual_index
+ .data          0x0000000000108058        0x0 dist/modules/processes/registers.o
+ .data          0x0000000000108058        0x0 dist/modules/interruptions/idtLoader.o
+ .data          0x0000000000108058        0x0 dist/modules/interruptions/exceptions.o
+ .data          0x0000000000108058        0x0 dist/modules/interruptions/irqDispatcher.o
+ *fill*         0x0000000000108058        0x8 
+ .data          0x0000000000108060       0x28 dist/modules/terminal/terminal.o
+ .data          0x0000000000108088        0x0 dist/modules/loader/moduleLoader.o
+ .data          0x0000000000108088        0x0 dist/modules/syscalls.o
+ .data          0x0000000000108088        0x0 dist/drivers/time.o
+ .data          0x0000000000108088        0x1 dist/drivers/keyboard.o
+ *fill*         0x0000000000108089       0x17 
+ .data          0x00000000001080a0      0x840 dist/drivers/video.o
+                0x00000000001080a0                font8x16
+                0x00000000001088a0                VBE_mode_info
+                0x00000000001088a8                backbuffer
+ .data          0x00000000001088e0        0x0 dist/drivers/tick.o
+ .data          0x00000000001088e0        0x0 dist/drivers/audio.o
+ .data          0x00000000001088e0       0x49 dist/drivers/screen.o
+ *fill*         0x0000000000108929        0x3 
+ .data          0x000000000010892c       0x28 dist/asm/interrupts.o
+                0x0000000000108954                endOfKernelBinary = .
+
+.bss            0x0000000000109000    0x13244
+                0x0000000000109000                bss = .
+ *(.bss*)
+ .bss           0x0000000000109000        0x8 dist/kernel.o
+ .bss           0x0000000000109008        0x0 dist/modules/memory/memoryBuddy.o
+ .bss           0x0000000000109008        0x0 dist/modules/memory/memoryNaive.o
+ .bss           0x0000000000109008       0x21 dist/modules/memory/memoryOwn.o
+ .bss           0x0000000000109029        0x0 dist/modules/comunication/pipes.o
+ *fill*         0x0000000000109029        0x7 
+ .bss           0x0000000000109030        0x8 dist/modules/lib/lib.o
+ *fill*         0x0000000000109038        0x8 
+ .bss           0x0000000000109040     0xa058 dist/modules/processes/processes.o
+                0x0000000000109040                proccess_count
+                0x0000000000109060                processes
+                0x0000000000110860                priority_lists
+                0x0000000000113060                priority_index
+                0x0000000000113088                actual_pid
+                0x0000000000113090                actual_process_start_time
+ *fill*         0x0000000000113098        0x8 
+ .bss           0x00000000001130a0      0x8c4 dist/modules/processes/registers.o
+ *fill*         0x0000000000113964        0x4 
+ .bss           0x0000000000113968        0x8 dist/modules/interruptions/idtLoader.o
+                0x0000000000113968                idt
+ .bss           0x0000000000113970        0x0 dist/modules/interruptions/exceptions.o
+ .bss           0x0000000000113970        0x0 dist/modules/interruptions/irqDispatcher.o
+ *fill*         0x0000000000113970       0x10 
+ .bss           0x0000000000113980     0x8020 dist/modules/terminal/terminal.o
+ .bss           0x000000000011b9a0        0x0 dist/modules/loader/moduleLoader.o
+ .bss           0x000000000011b9a0        0x4 dist/modules/syscalls.o
+ *fill*         0x000000000011b9a4        0x4 
+ .bss           0x000000000011b9a8        0x8 dist/drivers/time.o
+                0x000000000011b9a8                ticksPerMs
+ *fill*         0x000000000011b9b0       0x10 
+ .bss           0x000000000011b9c0      0x404 dist/drivers/keyboard.o
+                0x000000000011b9c0                buffer
+                0x000000000011bdbc                size
+                0x000000000011bdbd                head
+                0x000000000011bdbe                tail
+                0x000000000011bdbf                isShiftPressed
+                0x000000000011bdc0                null
+ *fill*         0x000000000011bdc4        0x4 
+ .bss           0x000000000011bdc8       0x18 dist/drivers/video.o
+ .bss           0x000000000011bde0        0x8 dist/drivers/tick.o
+ *fill*         0x000000000011bde8       0x18 
+ .bss           0x000000000011be00      0x40c dist/drivers/audio.o
+ .bss           0x000000000011c20c        0x0 dist/drivers/screen.o
+ .bss           0x000000000011c20c        0x8 dist/asm/interrupts.o
+ .bss           0x000000000011c214       0x30 dist/asm/regs.o
+                0x000000000011c234                saved_stack_ptr
+                0x000000000011c23c                initial_saved_stack_ptr
+=======
+ .text          0x0000000000100011      0x2d3 dist/drivers/audio.o
+                0x0000000000100029                isAudioBufferEmpty
+                0x00000000001000ec                getNextAudioEvent
+                0x0000000000100149                audio_timer_handler
+                0x0000000000100266                play_sound
+                0x000000000010029b                clearAudioBuffer
+ .text          0x00000000001002e4      0x2d1 dist/drivers/keyboard.o
+                0x00000000001002e4                isFull
+                0x00000000001002fa                isKeyBufferEmpty
+                0x0000000000100310                clearKeyBuffer
+                0x0000000000100337                keyboard_set_enabled
+                0x000000000010036d                keyboard_is_enabled
+                0x000000000010037e                queue
+                0x0000000000100406                getNextKey
+                0x000000000010048b                keyboard_handler
+ .text          0x00000000001005b5      0x2c9 dist/drivers/screen.o
+                0x00000000001005b5                ncPrint
+                0x0000000000100624                ncPrintChar
+                0x000000000010066d                ncNewline
+                0x00000000001006ab                ncPrintDec
+                0x00000000001006cf                ncPrintHex
+                0x00000000001006f3                ncPrintBin
+                0x0000000000100717                ncPrintBase
+                0x000000000010074b                ncDelChar
+                0x00000000001007ef                ncClear
+                0x0000000000100860                ncSetStyle
+ .text          0x000000000010087e       0x67 dist/drivers/tick.o
+                0x000000000010087e                timer_handler
+                0x00000000001008af                ticks_elapsed
+                0x00000000001008c0                seconds_elapsed
+ .text          0x00000000001008e5      0x1cb dist/drivers/time.o
+                0x00000000001008e5                calibrateMilis
+                0x0000000000100997                getMilisFromBoot
+                0x0000000000100a2f                getTime
+ .text          0x0000000000100ab0     0x1162 dist/drivers/video.o
+                0x0000000000100ab0                getCharWidth
+                0x0000000000100ae7                getMaxCols
+                0x0000000000100b47                getMaxRows
+                0x0000000000100b92                isTextMode
+                0x0000000000100ba3                setTextMode
+                0x0000000000100c78                setFpsOverlayEnabled
+                0x0000000000100ccc                swapBuffers
+                0x0000000000100d38                canvasMode
+                0x0000000000100d54                clearCanvas
+                0x0000000000100d93                drawPixel
+                0x0000000000100dc4                abs
+                0x0000000000100ddf                drawLine
+                0x0000000000100f24                fillScreen
+                0x000000000010106a                drawRectangle
+                0x000000000010112c                drawFilledRectangle
+                0x00000000001013c9                drawCircle
+                0x0000000000101496                drawFilledCircle
+                0x0000000000101534                drawText
+                0x00000000001016cf                drawStyledChar
+                0x00000000001019b8                getScreenWidth
+                0x00000000001019cd                getScreenHeight
+ .text          0x0000000000101c12      0x692 dist/kernel.o
+                0x0000000000101c57                clearBSS
+                0x0000000000101c83                getStackBase
+                0x0000000000101ca6                initializeKernelBinary
+                0x0000000000101e45                sleep
+                0x0000000000101e87                MusicSO
+                0x0000000000102158                main
+ .text          0x00000000001022a4      0x715 dist/modules/comunication/pipes.o
+                0x000000000010242d                create_pipe
+ .text          0x00000000001029b9      0x3c0 dist/modules/interruptions/exceptions.o
+                0x00000000001029b9                exceptionDispatcher
+ .text          0x0000000000102d79      0x15d dist/modules/interruptions/idtLoader.o
+                0x0000000000102d79                load_idt
+ .text          0x0000000000102ed6       0x64 dist/modules/interruptions/irqDispatcher.o
+                0x0000000000102ed6                irqDispatcher
+ .text          0x0000000000102f3a      0x2fc dist/modules/lib/lib.o
+                0x0000000000102f3a                memset
+                0x0000000000102ff9                memcpy
+                0x00000000001030d8                uintToBase
+                0x00000000001031bb                strcpy
+                0x0000000000103202                strlen
+ .text          0x0000000000103236      0x27c dist/modules/loader/moduleLoader.o
+                0x0000000000103236                loadModules
+ .text          0x00000000001034b2        0x0 dist/modules/memory/memoryBuddy.o
+ .text          0x00000000001034b2      0x109 dist/modules/memory/memoryNaive.o
+                0x00000000001034b2                initializeMemoryManager
+                0x00000000001034fc                malloc
+                0x0000000000103561                free
+                0x000000000010357f                getTotalMemory
+                0x000000000010359d                getUsedMemory
+ .text          0x00000000001035bb        0x0 dist/modules/memory/memoryOwn.o
+ .text          0x00000000001035bb     0x14dc dist/modules/processes/processes.o
+                0x0000000000103748                initializeScheduler
+                0x000000000010389f                scheduler
+                0x0000000000103ab6                create_process
+                0x000000000010424d                kill_process
+                0x0000000000104365                exit_current_process
+                0x00000000001045f5                wait_pid
+                0x00000000001046e5                yield
+                0x0000000000104710                modify_process_priority_by_pid
+                0x0000000000104726                block_process
+                0x000000000010476b                unblock_process
+                0x00000000001047b0                sleep_process
+                0x00000000001047c7                wait_for_process
+                0x00000000001047de                get_processes
+                0x00000000001047ed                get_actual_pid
+                0x00000000001047fe                get_actual_process
+                0x0000000000104847                get_processesInfo
+ .text          0x0000000000104a97      0x4be dist/modules/processes/registers.o
+                0x0000000000104a97                printHexToBuffer
+                0x0000000000104af5                printHex16ToBuffer
+                0x0000000000104b2a                printHex64ToBuffer
+                0x0000000000104c22                printStruct
+                0x0000000000104f27                dump_registers
+                0x0000000000104f46                get_register_dump
+ .text          0x0000000000104f55      0xc7b dist/modules/syscalls.o
+                0x0000000000104fb6                sysCallDispatcher
+ .text          0x0000000000105bd0      0xf17 dist/modules/terminal/terminal.o
+                0x0000000000105bd0                selectStyle
+                0x0000000000105bee                setTextSize
+                0x0000000000105c5a                textMode
+                0x0000000000105ca7                clearTextBuffer
+                0x0000000000105d02                print
+                0x0000000000105d90                printChar
+                0x0000000000105e02                deleteChar
+                0x0000000000105e79                scrollDown
+                0x0000000000105ee6                scrollUp
+                0x0000000000105f6f                printHex64
+                0x0000000000105fe7                printHex32
+                0x000000000010605d                printHex16
+                0x00000000001060d7                printDec
+                0x000000000010674c                get_foreground_pid
+                0x000000000010675d                set_foreground_pid
+                0x00000000001067ae                write_terminal_fd
+                0x000000000010688f                read_terminal_fd
+                0x00000000001069fb                close_terminal_fd
+                0x0000000000106a5c                create_terminal_fd
+                0x0000000000106aac                get_terminal_fd
+                0x0000000000106abd                initialize_terminal
+ *fill*         0x0000000000106ae7        0x9 
+ .text          0x0000000000106af0       0x51 dist/asm/audio.o
+                0x0000000000106af0                output_audio_start
+                0x0000000000106b29                stop_audio
+                0x0000000000106b32                start_T
+ *fill*         0x0000000000106b41        0xf 
+ .text          0x0000000000106b50      0x2d9 dist/asm/interrupts.o
+                0x0000000000106b50                _hlt
+                0x0000000000106b53                _cli
+                0x0000000000106b55                _sti
+                0x0000000000106b57                picMasterMask
+                0x0000000000106b62                picSlaveMask
+                0x0000000000106b6d                _irq00Handler
+                0x0000000000106bbd                _irq01Handler
+                0x0000000000106c0d                _irq02Handler
+                0x0000000000106c5d                _irq03Handler
+                0x0000000000106cad                _irq04Handler
+                0x0000000000106cfd                _irq05Handler
+                0x0000000000106d4d                _exception0Handler
+                0x0000000000106d8a                _exception6Handler
+                0x0000000000106dc7                _sysCallHandler
+                0x0000000000106e26                haltcpu
+ *fill*         0x0000000000106e29        0x7 
+ .text          0x0000000000106e30        0xa dist/asm/keyboard.o
+                0x0000000000106e30                get_keyboard_output
+ *fill*         0x0000000000106e3a        0x6 
+ .text          0x0000000000106e40       0x82 dist/asm/libasm.o
+                0x0000000000106e40                cpuVendor
+                0x0000000000106e61                fast_memcpy
+                0x0000000000106e7b                fast_memset
+                0x0000000000106eb8                get_rsp
+                0x0000000000106ebc                set_rsp
+                0x0000000000106ec0                halt
+ *fill*         0x0000000000106ec2        0xe 
+ .text          0x0000000000106ed0       0x1f dist/asm/processes.o
+                0x0000000000106ed0                trampoline
+                0x0000000000106ed4                switch_rsp
+ *fill*         0x0000000000106eef        0x1 
+ .text          0x0000000000106ef0      0x115 dist/asm/regs.o
+                0x0000000000106ef0                addregs
+ *fill*         0x0000000000107005        0xb 
+ .text          0x0000000000107010       0x3b dist/asm/time.o
+                0x0000000000107010                getRDTSC
+                0x000000000010701a                getSeconds
+                0x0000000000107021                getMinutes
+                0x0000000000107028                getHour
+                0x000000000010702f                getDayOfWeek
+                0x0000000000107036                getDayOfMonth
+                0x000000000010703d                getMonth
+                0x0000000000107044                getYear
+                0x0000000000108000                . = ALIGN (0x1000)
+ *fill*         0x000000000010704b      0xfb5 
+                0x0000000000108000                rodata = .
+ *(.rodata*)
+ .rodata        0x0000000000108000       0x7a dist/drivers/keyboard.o
+ *fill*         0x000000000010807a        0x6 
+ .rodata        0x0000000000108080       0x10 dist/drivers/screen.o
+ .rodata        0x0000000000108090       0x30 dist/drivers/time.o
+ .rodata        0x00000000001080c0       0x80 dist/drivers/video.o
+ .rodata        0x0000000000108140       0xff dist/kernel.o
+ *fill*         0x000000000010823f        0x1 
+ .rodata        0x0000000000108240      0x166 dist/modules/interruptions/exceptions.o
+ .rodata        0x00000000001083a6       0x8c dist/modules/loader/moduleLoader.o
+ .rodata        0x0000000000108432       0x34 dist/modules/processes/processes.o
+ *fill*         0x0000000000108466        0x2 
+ .rodata        0x0000000000108468      0x11d dist/modules/processes/registers.o
+ *fill*         0x0000000000108585        0x3 
+ .rodata        0x0000000000108588      0x120 dist/modules/syscalls.o
+ .rodata        0x00000000001086a8       0x27 dist/modules/terminal/terminal.o
+
+.note.gnu.property
+                0x00000000001086d0      0x280
+ .note.gnu.property
+                0x00000000001086d0       0x20 dist/drivers/audio.o
+ .note.gnu.property
+                0x00000000001086f0       0x20 dist/drivers/keyboard.o
+ .note.gnu.property
+                0x0000000000108710       0x20 dist/drivers/screen.o
+ .note.gnu.property
+                0x0000000000108730       0x20 dist/drivers/tick.o
+ .note.gnu.property
+                0x0000000000108750       0x20 dist/drivers/time.o
+ .note.gnu.property
+                0x0000000000108770       0x20 dist/drivers/video.o
+ .note.gnu.property
+                0x0000000000108790       0x20 dist/kernel.o
+ .note.gnu.property
+                0x00000000001087b0       0x20 dist/modules/comunication/pipes.o
+ .note.gnu.property
+                0x00000000001087d0       0x20 dist/modules/interruptions/exceptions.o
+ .note.gnu.property
+                0x00000000001087f0       0x20 dist/modules/interruptions/idtLoader.o
+ .note.gnu.property
+                0x0000000000108810       0x20 dist/modules/interruptions/irqDispatcher.o
+ .note.gnu.property
+                0x0000000000108830       0x20 dist/modules/lib/lib.o
+ .note.gnu.property
+                0x0000000000108850       0x20 dist/modules/loader/moduleLoader.o
+ .note.gnu.property
+                0x0000000000108870       0x20 dist/modules/memory/memoryBuddy.o
+ .note.gnu.property
+                0x0000000000108890       0x20 dist/modules/memory/memoryNaive.o
+ .note.gnu.property
+                0x00000000001088b0       0x20 dist/modules/memory/memoryOwn.o
+ .note.gnu.property
+                0x00000000001088d0       0x20 dist/modules/processes/processes.o
+ .note.gnu.property
+                0x00000000001088f0       0x20 dist/modules/processes/registers.o
+ .note.gnu.property
+                0x0000000000108910       0x20 dist/modules/syscalls.o
+ .note.gnu.property
+                0x0000000000108930       0x20 dist/modules/terminal/terminal.o
+
+.data           0x0000000000109000      0x970
+                0x0000000000109000                data = .
+ *(.data*)
+ .data          0x0000000000109000        0x0 dist/drivers/audio.o
+ .data          0x0000000000109000        0x1 dist/drivers/keyboard.o
+ *fill*         0x0000000000109001       0x1f 
+ .data          0x0000000000109020       0x49 dist/drivers/screen.o
+ .data          0x0000000000109069        0x0 dist/drivers/tick.o
+ .data          0x0000000000109069        0x0 dist/drivers/time.o
+ *fill*         0x0000000000109069       0x17 
+ .data          0x0000000000109080      0x840 dist/drivers/video.o
+                0x0000000000109080                font8x16
+                0x0000000000109880                VBE_mode_info
+                0x0000000000109888                backbuffer
+ .data          0x00000000001098c0        0x8 dist/kernel.o
+                0x00000000001098c0                ramAmount
+ *fill*         0x00000000001098c8        0x8 
+ .data          0x00000000001098d0       0x38 dist/modules/comunication/pipes.o
+ .data          0x0000000000109908        0x0 dist/modules/interruptions/exceptions.o
+ .data          0x0000000000109908        0x0 dist/modules/interruptions/idtLoader.o
+ .data          0x0000000000109908        0x0 dist/modules/interruptions/irqDispatcher.o
+ .data          0x0000000000109908        0x0 dist/modules/lib/lib.o
+ .data          0x0000000000109908        0x0 dist/modules/loader/moduleLoader.o
+ .data          0x0000000000109908        0x0 dist/modules/memory/memoryBuddy.o
+ .data          0x0000000000109908        0x0 dist/modules/memory/memoryNaive.o
+ .data          0x0000000000109908        0x0 dist/modules/memory/memoryOwn.o
+ .data          0x0000000000109908       0x10 dist/modules/processes/processes.o
+                0x0000000000109908                pid_count
+                0x0000000000109910                actual_index
+ .data          0x0000000000109918        0x0 dist/modules/processes/registers.o
+ .data          0x0000000000109918        0x0 dist/modules/syscalls.o
+ *fill*         0x0000000000109918        0x8 
+ .data          0x0000000000109920       0x28 dist/modules/terminal/terminal.o
+ .data          0x0000000000109948       0x28 dist/asm/interrupts.o
+                0x0000000000109970                endOfKernelBinary = .
+
+.bss            0x000000000010a000    0x13238
+                0x000000000010a000                bss = .
+ *(.bss*)
+ .bss           0x000000000010a000      0x40c dist/drivers/audio.o
+ *fill*         0x000000000010a40c       0x14 
+ .bss           0x000000000010a420      0x404 dist/drivers/keyboard.o
+                0x000000000010a420                buffer
+                0x000000000010a81c                size
+                0x000000000010a81d                head
+                0x000000000010a81e                tail
+                0x000000000010a81f                isShiftPressed
+                0x000000000010a820                null
+ .bss           0x000000000010a824        0x0 dist/drivers/screen.o
+ *fill*         0x000000000010a824        0x4 
+ .bss           0x000000000010a828        0x8 dist/drivers/tick.o
+ .bss           0x000000000010a830        0x8 dist/drivers/time.o
+                0x000000000010a830                ticksPerMs
+ .bss           0x000000000010a838       0x18 dist/drivers/video.o
+ .bss           0x000000000010a850        0x8 dist/kernel.o
+ .bss           0x000000000010a858        0x0 dist/modules/comunication/pipes.o
+ .bss           0x000000000010a858        0x0 dist/modules/interruptions/exceptions.o
+ .bss           0x000000000010a858        0x8 dist/modules/interruptions/idtLoader.o
+                0x000000000010a858                idt
+ .bss           0x000000000010a860        0x0 dist/modules/interruptions/irqDispatcher.o
+ .bss           0x000000000010a860        0x8 dist/modules/lib/lib.o
+ .bss           0x000000000010a868        0x0 dist/modules/loader/moduleLoader.o
+ .bss           0x000000000010a868        0x0 dist/modules/memory/memoryBuddy.o
+ .bss           0x000000000010a868       0x20 dist/modules/memory/memoryNaive.o
+                0x000000000010a868                initialized
+                0x000000000010a870                baseAddress
+                0x000000000010a878                nextAddress
+                0x000000000010a880                finalAddress
+ .bss           0x000000000010a888        0x0 dist/modules/memory/memoryOwn.o
+ *fill*         0x000000000010a888       0x18 
+ .bss           0x000000000010a8a0     0xa058 dist/modules/processes/processes.o
+                0x000000000010a8a0                proccess_count
+                0x000000000010a8c0                processes
+                0x00000000001120c0                priority_lists
+                0x00000000001148c0                priority_index
+                0x00000000001148e8                actual_pid
+                0x00000000001148f0                actual_process_start_time
+ *fill*         0x00000000001148f8        0x8 
+ .bss           0x0000000000114900      0x8c4 dist/modules/processes/registers.o
+ .bss           0x00000000001151c4        0x4 dist/modules/syscalls.o
+ *fill*         0x00000000001151c8       0x18 
+ .bss           0x00000000001151e0     0x8020 dist/modules/terminal/terminal.o
+ .bss           0x000000000011d200        0x8 dist/asm/interrupts.o
+ .bss           0x000000000011d208       0x30 dist/asm/regs.o
+                0x000000000011d228                saved_stack_ptr
+                0x000000000011d230                initial_saved_stack_ptr
+<<<<<<< HEAD
+>>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
+ *(EXCLUDE_FILE(*.o) COMMON)
+                0x000000000011d000                . = ALIGN (0x1000)
+                0x000000000011d000                endOfKernel = .
+LOAD dist/loader.o
+<<<<<<< HEAD
+LOAD dist/kernel.o
+LOAD dist/modules/memory/memoryBuddy.o
+LOAD dist/modules/memory/memoryNaive.o
+LOAD dist/modules/memory/memoryOwn.o
+LOAD dist/modules/comunication/pipes.o
+LOAD dist/modules/lib/lib.o
+LOAD dist/modules/processes/processes.o
+LOAD dist/modules/processes/registers.o
+LOAD dist/modules/interruptions/idtLoader.o
+LOAD dist/modules/interruptions/exceptions.o
+LOAD dist/modules/interruptions/idtLoader.o
+LOAD dist/modules/interruptions/irqDispatcher.o
+LOAD dist/modules/terminal/terminal.o
+LOAD dist/modules/loader/moduleLoader.o
+LOAD dist/modules/syscalls.o
+LOAD dist/drivers/time.o
+LOAD dist/drivers/keyboard.o
+LOAD dist/drivers/video.o
+LOAD dist/drivers/tick.o
+LOAD dist/drivers/audio.o
+LOAD dist/drivers/screen.o
+LOAD dist/asm/libasm.o
+LOAD dist/asm/audio.o
+LOAD dist/asm/time.o
+LOAD dist/asm/processes.o
+LOAD dist/asm/keyboard.o
+LOAD dist/asm/interrupts.o
+LOAD dist/asm/regs.o
+OUTPUT(kernel.bin binary)
+
+.comment        0x0000000000000000      0x280
+ .comment       0x0000000000000000       0x20 dist/kernel.o
+ .comment       0x0000000000000020       0x20 dist/modules/memory/memoryBuddy.o
+ .comment       0x0000000000000040       0x20 dist/modules/memory/memoryNaive.o
+ .comment       0x0000000000000060       0x20 dist/modules/memory/memoryOwn.o
+ .comment       0x0000000000000080       0x20 dist/modules/comunication/pipes.o
+ .comment       0x00000000000000a0       0x20 dist/modules/lib/lib.o
+ .comment       0x00000000000000c0       0x20 dist/modules/processes/processes.o
+ .comment       0x00000000000000e0       0x20 dist/modules/processes/registers.o
+ .comment       0x0000000000000100       0x20 dist/modules/interruptions/idtLoader.o
+ .comment       0x0000000000000120       0x20 dist/modules/interruptions/exceptions.o
+ .comment       0x0000000000000140       0x20 dist/modules/interruptions/irqDispatcher.o
+ .comment       0x0000000000000160       0x20 dist/modules/terminal/terminal.o
+ .comment       0x0000000000000180       0x20 dist/modules/loader/moduleLoader.o
+ .comment       0x00000000000001a0       0x20 dist/modules/syscalls.o
+ .comment       0x00000000000001c0       0x20 dist/drivers/time.o
+ .comment       0x00000000000001e0       0x20 dist/drivers/keyboard.o
+ .comment       0x0000000000000200       0x20 dist/drivers/video.o
+ .comment       0x0000000000000220       0x20 dist/drivers/tick.o
+ .comment       0x0000000000000240       0x20 dist/drivers/audio.o
+ .comment       0x0000000000000260       0x20 dist/drivers/screen.o
+=======
+LOAD dist/drivers/audio.o
+LOAD dist/drivers/keyboard.o
+LOAD dist/drivers/screen.o
+LOAD dist/drivers/tick.o
+LOAD dist/drivers/time.o
+LOAD dist/drivers/video.o
+LOAD dist/kernel.o
+LOAD dist/modules/comunication/pipes.o
+LOAD dist/modules/interruptions/exceptions.o
+LOAD dist/modules/interruptions/idtLoader.o
+LOAD dist/modules/interruptions/irqDispatcher.o
+LOAD dist/modules/lib/lib.o
+LOAD dist/modules/loader/moduleLoader.o
+LOAD dist/modules/memory/memoryBuddy.o
+LOAD dist/modules/memory/memoryNaive.o
+LOAD dist/modules/memory/memoryOwn.o
+LOAD dist/modules/processes/processes.o
+LOAD dist/modules/processes/registers.o
+LOAD dist/modules/syscalls.o
+LOAD dist/modules/terminal/terminal.o
+LOAD dist/asm/audio.o
+LOAD dist/asm/interrupts.o
+LOAD dist/asm/keyboard.o
+LOAD dist/asm/libasm.o
+LOAD dist/asm/processes.o
+LOAD dist/asm/regs.o
+LOAD dist/asm/time.o
+OUTPUT(kernel.bin binary)
+
+.comment        0x0000000000000000      0x398
+ .comment       0x0000000000000000       0x2e dist/drivers/audio.o
+ .comment       0x000000000000002e       0x2e dist/drivers/keyboard.o
+ .comment       0x000000000000005c       0x2e dist/drivers/screen.o
+ .comment       0x000000000000008a       0x2e dist/drivers/tick.o
+ .comment       0x00000000000000b8       0x2e dist/drivers/time.o
+ .comment       0x00000000000000e6       0x2e dist/drivers/video.o
+ .comment       0x0000000000000114       0x2e dist/kernel.o
+ .comment       0x0000000000000142       0x2e dist/modules/comunication/pipes.o
+ .comment       0x0000000000000170       0x2e dist/modules/interruptions/exceptions.o
+ .comment       0x000000000000019e       0x2e dist/modules/interruptions/idtLoader.o
+ .comment       0x00000000000001cc       0x2e dist/modules/interruptions/irqDispatcher.o
+ .comment       0x00000000000001fa       0x2e dist/modules/lib/lib.o
+ .comment       0x0000000000000228       0x2e dist/modules/loader/moduleLoader.o
+ .comment       0x0000000000000256       0x2e dist/modules/memory/memoryBuddy.o
+ .comment       0x0000000000000284       0x2e dist/modules/memory/memoryNaive.o
+ .comment       0x00000000000002b2       0x2e dist/modules/memory/memoryOwn.o
+ .comment       0x00000000000002e0       0x2e dist/modules/processes/processes.o
+ .comment       0x000000000000030e       0x2e dist/modules/processes/registers.o
+ .comment       0x000000000000033c       0x2e dist/modules/syscalls.o
+ .comment       0x000000000000036a       0x2e dist/modules/terminal/terminal.o
+<<<<<<< HEAD
+>>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
+
+.note.GNU-stack
+                0x0000000000000000        0x0
+ .note.GNU-stack
+<<<<<<< HEAD
+                0x0000000000000000        0x0 dist/kernel.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryBuddy.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/comunication/pipes.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryOwn.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryBuddy.o
+ .note.GNU-stack
+<<<<<<< HEAD
+<<<<<<< HEAD
+                0x0000000000000000        0x0 dist/modules/comunication/pipes.o
+=======
+                0x0000000000000000        0x0 dist/modules/memory/memoryNaive.o
+>>>>>>> 1f1a581 (ps)
+=======
+                0x0000000000000000        0x0 dist/modules/memory/memoryNaive.o
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/lib/lib.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/processes/processes.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/processes/registers.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/lib/lib.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/interruptions/exceptions.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/interruptions/irqDispatcher.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryOwn.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/loader/moduleLoader.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/syscalls.o
+=======
+                0x0000000000000000        0x0 dist/drivers/audio.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/drivers/keyboard.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/drivers/screen.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/drivers/tick.o
+<<<<<<< HEAD
+>>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/drivers/time.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/drivers/keyboard.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/drivers/video.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/kernel.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/comunication/pipes.o
+ .note.GNU-stack
+<<<<<<< HEAD
+                0x0000000000000000        0x0 dist/drivers/screen.o
+=======
+                0x0000000000000000        0x0 dist/modules/interruptions/exceptions.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/interruptions/idtLoader.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/interruptions/irqDispatcher.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/lib/lib.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/loader/moduleLoader.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryBuddy.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryNaive.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/memory/memoryOwn.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/processes/processes.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/processes/registers.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/syscalls.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 dist/modules/terminal/terminal.o
+<<<<<<< HEAD
+>>>>>>> 388b5fa (ps)
+=======
+>>>>>>> 388b5fafab3d27488884f07b49f7fddca6e585af
+>>>>>>> 1b0668a6286bb34d970a157b4366139facf216e7

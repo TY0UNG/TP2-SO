@@ -46,6 +46,7 @@ GLOBAL sys_block
 GLOBAL sys_unblock
 GLOBAL sys_toggle_block
 GLOBAL sys_nice
+GLOBAL sys_get_process_list
 
 EXTERN printHex
 
@@ -411,10 +412,19 @@ sys_nice:
     int 80h
     END_SYSCALL
 
+; sys_get_process_list(buffer, maxCount);
+sys_get_process_list:
+    START_SYSCALL
+    mov rax, 46
+    mov rbx, rdi
+    mov rcx, rsi
+    int 80h
+    END_SYSCALL
+
 ; sys_write_color(str, style) -> escribe str con el byte de estilo dado
 sys_write_color:
     START_SYSCALL
-    mov rax, 46
+    mov rax, 48
     mov rbx, rdi        ; str
     mov rcx, rsi        ; style
     int 80h

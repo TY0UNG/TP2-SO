@@ -41,6 +41,16 @@ typedef struct Process {
     file_t * stdin_writer;
 } Process;
 
+typedef struct {
+    size_t pid;
+    size_t parent_pid;
+    bool active;
+    bool blocked;
+    bool zombie;
+    int priority;
+    char name[32];
+} ProcessInfo;
+
 typedef size_t pid_t;
 
 void initializeScheduler();
@@ -83,5 +93,7 @@ Process get_actual_process();
 // Write end del stdin del proceso pid, o NULL si no existe / no esta vivo.
 // Lo usa el hilo de terminal para entregar la entrada al foreground.
 file_t * process_stdin_writer(pid_t pid);
+
+int get_processesInfo(ProcessInfo *buffer, int max_count);
 
 #endif
