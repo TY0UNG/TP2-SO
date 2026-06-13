@@ -57,11 +57,9 @@ uint64_t test_mm(uint64_t argc, char *argv[]) {
     uint8_t rq;
     uint32_t total;
     uint64_t max_memory;
-    uint64_t iterations;
-    int heap_exhausted;
 
-    if (argc < 1 || argc > 2) {
-        println("Uso: testmm <bytes> [iteraciones]");
+    if (argc != 1) {
+        println("Uso: testmm <bytes>");
         return (uint64_t)-1;
     }
 
@@ -71,67 +69,37 @@ uint64_t test_mm(uint64_t argc, char *argv[]) {
         return (uint64_t)-1;
     }
 
-    iterations = 1;
-    if (argc == 2) {
-        iterations = satoi(argv[1]);
-        if (iterations == 0) {
-            println("testmm: la cantidad de iteraciones debe ser positiva");
-            return (uint64_t)-1;
-        }
-    }
+    println("test_mm: corriendo (Ctrl+C para terminar)");
 
-    println("testmm: corriendo");
-
-    for (uint64_t iteration = 0; iteration < iterations; iteration++) {
+    while (1) {
         rq = 0;
         total = 0;
-        heap_exhausted = 0;
 
         while (rq < MAX_BLOCKS && total < max_memory) {
-            uint32_t remaining = (uint32_t)(max_memory - total);
-            uint32_t req_size = (remaining > 1) ? (GetUniform(remaining - 1) + 1) : 1;
-
-            mm_rqs[rq].size = req_size;
+            mm_rqs[rq].size = GetUniform(max_memory - total - 1) + 1;
             mm_rqs[rq].address = malloc(mm_rqs[rq].size);
 
             if (mm_rqs[rq].address) {
                 total += mm_rqs[rq].size;
                 rq++;
-            } else {
-                heap_exhausted = 1;
-                break;
             }
         }
 
-        for (uint32_t i = 0; i < rq; i++) {
-            if (mm_rqs[i].address) {
+        for (uint32_t i = 0; i < rq; i++)
+            if (mm_rqs[i].address)
                 memfill(mm_rqs[i].address, (uint8_t)i, mm_rqs[i].size);
-            }
-        }
 
-        for (uint32_t i = 0; i < rq; i++) {
-            if (mm_rqs[i].address) {
+        for (uint32_t i = 0; i < rq; i++)
+            if (mm_rqs[i].address)
                 if (!memcheck(mm_rqs[i].address, (uint8_t)i, mm_rqs[i].size)) {
                     println("test_mm ERROR");
                     return (uint64_t)-1;
                 }
-            }
-        }
 
-        for (uint32_t i = 0; i < rq; i++) {
-            if (mm_rqs[i].address) {
+        for (uint32_t i = 0; i < rq; i++)
+            if (mm_rqs[i].address)
                 free(mm_rqs[i].address);
-            }
-        }
-
-        if (heap_exhausted) {
-            println("testmm: heap agotado, finalizando sin crash");
-            return 0;
-        }
     }
-
-    println("testmm: finalizado sin errores");
-    return 0;
 }
 
 int testmm(char **argv, int argc) {
