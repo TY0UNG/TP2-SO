@@ -220,7 +220,7 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
 
     processes[index].index = index;
     processes[index].pid = pid_count++;
-    processes[index].parent_pid = actual_pid;
+    processes[index].parent_pid = get_actual_pid();
     processes[index].entry_point = entry_point;
     processes[index].active = true;
     processes[index].blocked = false;
@@ -339,17 +339,11 @@ static void terminate_process(int idx, int status) {
         if (parent_idx >= 0 && processes[parent_idx].active && !processes[parent_idx].zombie) {
             
             print("IM RETUNING IN THE FATHER! | ");
-            printDec(parent_idx);
+            printDec(parent);
             print("\n");
-            set_foreground_pid(parent_idx);
-            
-            print("IM RETUNING IN THE FATHER! | ");
-            printDec(parent_idx);
-            print("\n");
-            set_foreground_pid(parent_idx);
+            set_foreground_pid(parent);
         } else {
-             print("IM RETUNING IN 0! \n");
-             print("IM RETUNING IN 0! \n");
+            print("IM RETUNING IN 0! \n");
             set_foreground_pid(0);
         }
     }

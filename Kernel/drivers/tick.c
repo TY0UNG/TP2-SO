@@ -8,6 +8,7 @@ void timer_handler() {
 	ticks++;
 	audio_timer_handler();
 	scheduler();
+	
 }
 
 int ticks_elapsed() {
