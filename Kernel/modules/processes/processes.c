@@ -538,28 +538,3 @@ int get_processesInfo(ProcessInfo *buffer, int max_count) {
 
     return count;
 }
-int get_processesInfo(ProcessInfo *buffer, int max_count) {
-
-    if (buffer == NULL || max_count <= 0)
-        return -1;
-
-    int count = 0;
-
-    for (int i = 0; i < PROCESSES_LIMIT && count < max_count; i++) {
-        if (!processes[i].active)
-            continue;
-
-        buffer[count].pid = processes[i].pid;
-        buffer[count].parent_pid = processes[i].parent_pid;
-        buffer[count].active = processes[i].active;
-        buffer[count].blocked = processes[i].blocked;
-        buffer[count].zombie = processes[i].zombie;
-        buffer[count].priority = processes[i].priority;
-
-        strcpy(buffer[count].name, processes[i].name);
-
-        count++;
-    }
-
-    return count;
-}
