@@ -34,7 +34,7 @@ int processList(char ** argv, int argc){
 
         printDec(processes[i].pid);
         print("  ");
-        printDec(processes[i].pid);
+        printDec(processes[i].parent_pid);
         print("  ");
         print(state);
         print("  ");
