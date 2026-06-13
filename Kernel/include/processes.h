@@ -41,6 +41,7 @@ typedef struct Process {
     // Write end del pipe de stdin (fds[0] es el read end). Lo usa el hilo de
     // terminal para inyectar la entrada cocida al foreground. NULL si no tiene.
     file_t * stdin_writer;
+    bool killable;  // false = Ctrl+C no lo mata, para la shell que solo cancela la linea
 } Process;
 
 typedef size_t pid_t;
@@ -87,5 +88,9 @@ Process get_actual_process();
 // Write end del stdin del proceso pid, o NULL si no existe / no esta vivo.
 // Lo usa el hilo de terminal para entregar la entrada al foreground.
 file_t * process_stdin_writer(pid_t pid);
+
+// Si un proceso puede ser matado por Ctrl+C. En la shell va false
+void set_killable(pid_t pid, bool value);
+bool process_is_killable(pid_t pid);
 
 #endif

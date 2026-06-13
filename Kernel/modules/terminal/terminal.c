@@ -402,9 +402,18 @@ void terminal_task() {
 
         if (ev.is_release) continue;
 
-        if (ev.ascii == 0x03) {          // Ctrl+C: matar al foreground
+        if (ev.ascii == 0x03) {          // Ctrl+C
+            pid_t fg = foreground_pid;
             line_len = 0;
-            if (foreground_pid != 0) kill_process(foreground_pid);
+            if (fg != 0 && process_is_killable(fg)) {
+                kill_process(fg);
+            } else {
+                // shell
+                sem_wait("tty_out");
+                print("^C\n");
+                sem_post("tty_out");
+                terminal_deliver_to_fg("\n", 1);
+            }
             continue;
         }
 

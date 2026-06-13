@@ -218,6 +218,7 @@ int main() {
 	create_process("Terminal", (EntryPoint) terminal_task, args);
 
 	pid_t shell_pid = create_process("Shell", ((EntryPoint) shell), args);
+	set_killable(shell_pid, false);   // Ctrl+C no mata la shell, funciona como en bash
 	set_foreground_pid(shell_pid);
 
 	// Capturamos el tope del kernel stack para idle ANTES de habilitar

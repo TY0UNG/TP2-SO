@@ -229,6 +229,7 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
     processes[index].exit_status = 0;
     processes[index].waiting_for_pid = 0;
     processes[index].rsp = (uint64_t) frame;
+    processes[index].killable = true;
 
     // fds: 0=stdin es un pipe propio (el hilo de terminal escribe la entrada
     // cocida en su write end cuando este proceso es foreground); 1=stdout y
@@ -293,6 +294,17 @@ file_t * process_stdin_writer(pid_t pid) {
     if (idx < 0) return NULL;
     if (!processes[idx].active || processes[idx].zombie) return NULL;
     return processes[idx].stdin_writer;
+}
+
+void set_killable(pid_t pid, bool value) {
+    int idx = getIndex(pid);
+    if (idx >= 0) processes[idx].killable = value;
+}
+
+bool process_is_killable(pid_t pid) {
+    int idx = getIndex(pid);
+    if (idx < 0) return false;
+    return processes[idx].killable;
 }
 
 // Libera completamente el slot. Asume que la memoria de stack ya no se usa.
