@@ -124,7 +124,7 @@ int commandDispatcher(char ** argsv, int argsc) {
         if (strcmp(cmd, commands[i].name) == 0) {
 
 
-            int pid = createProcess(commands[i].name, (void *) commands[i].entry, argsc, argsv);
+            int pid = sys_create_process(commands[i].name, (void *) commands[i].entry, argsc, argsv);
             if (pid <= 0) {
                 println("Error al crear proceso");
                 return 1;
