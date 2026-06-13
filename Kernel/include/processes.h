@@ -11,12 +11,17 @@
 
 #define MAX_FDS 16
 
+// Cantidad maxima de procesos vivos. Tambien acota cuantos pueden estar
+// bloqueados a la vez en una cola de espera (teclado, etc.).
+#define PROCESSES_LIMIT 128
+
 // Razon por la que un proceso esta bloqueado. Permite despertar selectivamente.
 typedef enum {
     WAIT_NONE = 0,
     WAIT_PID,        // bloqueado en wait_pid esperando que termine un hijo
     WAIT_PIPE,       // bloqueado leyendo/escribiendo un pipe (incluye stdin)
     WAIT_SEM,        // bloqueado en sem_wait esperando un semaforo
+    WAIT_KBD,        // bloqueado esperando entrada de teclado (terminal_read)
 } wait_reason_t;
 
 typedef struct Process {

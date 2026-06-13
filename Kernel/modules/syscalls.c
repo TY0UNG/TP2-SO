@@ -493,9 +493,12 @@ static uint64_t syscall_ms(Registers * registers){
 
 static KeyEvent event;
 
+// Modo RAW (juegos): no bloqueante. Saca un scancode crudo del anillo y lo
+// decodifica en el acto. Devuelve 0 si no hay tecla pendiente.
 static KeyEvent * syscall_get_key(Registers * registers) {
-    if (isKeyBufferEmpty()) return 0;
-    event = getNextKey();
+    uint8_t raw;
+    if (!raw_pop(&raw)) return 0;
+    event = decode_scancode(raw);
     return &event;
 }
 
