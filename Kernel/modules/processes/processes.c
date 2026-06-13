@@ -460,6 +460,20 @@ void unblock_process(size_t pid) {
     }
 }
 
+// Alterna el estado del proceso entre bloqueado y listo (para el comando block).
+// Devuelve el nuevo estado: 1 = bloqueado, 0 = listo, -1 = pid inexistente.
+int toggle_block_process(size_t pid) {
+    int idx = getIndex(pid);
+    if (idx < 0) return -1;
+    if (processes[idx].blocked) {
+        processes[idx].blocked = false;
+        processes[idx].wait_reason = WAIT_NONE;
+        return 0;
+    }
+    processes[idx].blocked = true;
+    return 1;
+}
+
 void block_current(wait_reason_t reason) {
     if (actual_index == (size_t)-1) return;
     processes[actual_index].blocked = true;

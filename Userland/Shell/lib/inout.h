@@ -14,6 +14,9 @@
 #define TERM_RAW    1   // teclas crudas via getKey(), sin echo (juegos)
 
 int print(const char* str);
+// Imprime con color. El byte 'style' codifica FG en el nibble bajo y BG en el
+// alto (paleta de 16, ver getHexColor). Ej: 0x0C = rojo claro sobre negro.
+int print_color(const char* str, char style);
 int println(const char* str);
 int printerr(const char* str);
 size_t read(char* buffer);

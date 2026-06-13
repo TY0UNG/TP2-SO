@@ -11,9 +11,7 @@
 
 #define MAX_FDS 16
 
-// Razon por la que un proceso esta bloqueado. Permite despertar selectivamente:
-// p. ej. al cambiar el foreground solo se despierta a quien espera la terminal,
-// sin tocar a los que esperan un hijo (wait_pid) o un pipe.
+// Razon por la que un proceso esta bloqueado. Permite despertar selectivamente.
 typedef enum {
     WAIT_NONE = 0,
     WAIT_PID,        // bloqueado en wait_pid esperando que termine un hijo
@@ -49,13 +47,9 @@ void initializeScheduler();
 void scheduler();
 
 // Tope del kernel stack sobre el que corre idle cuando no hay proceso listo.
-// Hay que capturarlo (con get_rsp) ANTES de habilitar interrupciones en el
-// boot: apenas se hace sti, el primer timer tick switchea al primer proceso y
-// abandona el stack de main, asi que cualquier captura posterior no corre.
 extern uint64_t kernel_rsp;
 
-// Corre idle sobre el kernel stack hasta que el scheduler tenga un proceso
-// listo (hace hlt). No retorna.
+// Corre idle sobre el kernel stack hasta que el scheduler tenga un proceso listo (hace hlt). No retorna.
 void idle();
 
 // Devuelve el pid del nuevo proceso, o 0 si falla.
@@ -70,6 +64,8 @@ void yield_current();
 void modify_process_priority_by_pid(pid_t pid, int new_priority);
 void block_process(size_t pid);
 void unblock_process(size_t pid);
+// Alterna entre bloqueado y listo. Devuelve 1=bloqueado, 0=listo, -1=inexistente.
+int toggle_block_process(size_t pid);
 // Bloquea el proceso actual con una razon de espera y cede la CPU.
 void block_current(wait_reason_t reason);
 // Despierta a pid solo si esta bloqueado por la razon dada. Devuelve true si lo

@@ -29,6 +29,12 @@ Commands command_list[] = {
     {"echo <texto>", "imprime los argumentos en pantalla", "  UTILIDADES"},
     {"resize <size>", "cambia el tamaño del texto (12-64)", "  UTILIDADES"},
 
+    // PROCESOS
+    {"loop [ms]", "imprime su PID con un saludo cada ms (espera activa)", "  PROCESOS"},
+    {"kill <pid>", "termina el proceso con ese PID", "  PROCESOS"},
+    {"nice <pid> <prio>", "cambia la prioridad de un proceso (0=alta..4=baja)", "  PROCESOS"},
+    {"block <pid>", "alterna un proceso entre bloqueado y listo", "  PROCESOS"},
+
     // JUEGOS Y DEMOS
     {"tron", "inicia el juego Tron Neon Grid", "  JUEGOS"},
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
@@ -38,6 +44,7 @@ Commands command_list[] = {
     {"testsync <n> <use_sem>", "prueba sincronizacion con y sin semaforos (race conditions)", "  PRUEBAS"},
     {"testprocesses <n>", "prueba creacion, kill, block y unblock de n procesos", "  PRUEBAS"},
     {"testprio <max>", "prueba el scheduler con distintas prioridades", "  PRUEBAS"},
+    {"mvar <esc> <lec>", "lectores/escritores sobre una MVar (sincronizacion)", "  PRUEBAS"},
     {"dividezero", "genera la excepcion de division por cero", "  PRUEBAS"},
     {"invalidop", "genera la excepcion de instruccion inválida", "  PRUEBAS"},
 

@@ -75,6 +75,8 @@ static int syscall_kill(Registers *registers);
 static int syscall_block(Registers *registers);
 static int syscall_unblock(Registers *registers);
 static int syscall_nice(Registers *registers);
+static int syscall_write_color(Registers *registers);
+static int syscall_toggle_block(Registers *registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -168,6 +170,10 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_unblock(registers);
     case 45:
         return syscall_nice(registers);
+    case 46:
+        return syscall_write_color(registers);
+    case 47:
+        return syscall_toggle_block(registers);
     default:
         break;
     }
@@ -177,6 +183,12 @@ uint64_t sysCallDispatcher(Registers * registers) {
 static int syscall_set_terminal_mode(Registers * registers) {
     terminal_set_mode((int) registers->rbx);
     return 0;
+}
+
+static int syscall_write_color(Registers * registers) {
+    const char * s = (const char *) registers->rbx;
+    char style = (char) registers->rcx;
+    return write_terminal_color(s, style);
 }
 
 static uint64_t syscall_getpid(Registers * registers) {
@@ -192,6 +204,10 @@ static int syscall_kill(Registers * registers) {
 static int syscall_block(Registers * registers) {
     block_process((size_t) registers->rbx);
     return 0;
+}
+
+static int syscall_toggle_block(Registers * registers) {
+    return toggle_block_process((size_t) registers->rbx);
 }
 
 static int syscall_unblock(Registers * registers) {

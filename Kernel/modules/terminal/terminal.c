@@ -428,19 +428,33 @@ void terminal_task() {
 }
 
 //   File ops (write / close / create) La terminal queda como stdout/stderr (write a pantalla).
-
 int write_terminal_fd(file_t *f, const char *buf, int count) {
     if (f == NULL || buf == NULL || count <= 0) return 0;
 
     // Un proceso en background SI puede escribir (no se bloquea): su salida se
-    // intercala con la del foreground. El mutex serializa contra el echo del
-    // hilo de terminal sobre el text_buffer compartido.
+    // intercala con la del foreground.
     sem_wait("tty_out");
     int i;
     for (i = 0; i < count; i++) {
         if (buf[i] == 0) break;  // null-terminator corta como print() clasico
         printChar(buf[i]);
     }
+    sem_post("tty_out");
+    return i;
+}
+
+// Escribe una cadena con un estilo (color) explicito de forma atomica.
+int write_terminal_color(const char *str, char style) {
+    if (str == NULL) return 0;
+    sem_wait("tty_out");
+    char prev = selected_style;
+    selectStyle(style);
+    int i = 0;
+    while (str[i] != 0) {
+        printChar(str[i]);
+        i++;
+    }
+    selectStyle(prev);
     sem_post("tty_out");
     return i;
 }
