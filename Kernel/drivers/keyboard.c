@@ -43,6 +43,8 @@ static uint8_t tail = 0;
 
 static bool isShiftPressed = false;
 static bool isCtrlPressed = false;
+static volatile bool isr_ctrl = false;        // Ctrl rastreado en la ISR
+static volatile bool sigint_pending = false;  // Ctrl+C pendiente de matar
 static bool keyboard_enabled = true;
 
 static const char scancode_to_ascii[] = {
@@ -139,9 +141,22 @@ void keyboard_handler() {
     if (!keyboard_enabled) {
         return;
     }
+    // el chequeo de Ctrl+C se tiene que hacer acá porque la ISR chequea todas las teclas
+    if (raw == SCANCODE_LCTRL) isr_ctrl = true;
+    else if (raw == (SCANCODE_LCTRL | 0x80)) isr_ctrl = false;
+    else if (raw == SCANCODE_C && isr_ctrl) {
+        sigint_pending = true;
+        return; // conmsume la 'c'
+    }
     if (raw_push(raw)) {
         kbd_wake();
     }
+}
+
+bool consume_sigint(void) {
+    if (!sigint_pending) return false;
+    sigint_pending = false;
+    return true;
 }
 
 KeyEvent decode_scancode(uint8_t raw_scancode) {

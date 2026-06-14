@@ -6,6 +6,7 @@
 #define SCANCODE_LSHIFT 0x2A
 #define SCANCODE_RSHIFT 0x36
 #define SCANCODE_LCTRL  0x1D
+#define SCANCODE_C      0x2E
 
 typedef struct key_event {
     uint8_t scancode;
@@ -32,5 +33,8 @@ void clearKeyBuffer();
 
 void keyboard_set_enabled(bool enabled);
 bool keyboard_is_enabled();
+
+// Ctrl+C. El keyboard handler (ISR) marca señal pendiente y el timer lo consume y mata al foreground
+bool consume_sigint(void);
 
 #endif
