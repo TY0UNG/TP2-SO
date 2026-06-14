@@ -403,6 +403,10 @@ static int read_cooked_line(void) {
         KeyEvent ev = decode_scancode(raw);
         if (ev.is_release) continue;
 
+        if (ev.ascii == 0x04) {   // Ctrl+D (EOF)
+            break;
+        }
+
         if (ev.ascii == '\n') {
             sem_wait("tty_out");
             print("\n");
