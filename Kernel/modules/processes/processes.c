@@ -1,7 +1,6 @@
 #include <processes.h>
 #include <terminal.h>
 #include <pipes.h>
-#define PROCESSES_LIMIT 128
 #define PRIORITY_COUNT 5
 #define STACK_SIZE 1024 * 16 // 16 KB
 
@@ -231,24 +230,19 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
     processes[index].rsp = (uint64_t) frame;
     processes[index].killable = true;
 
-    // fds: 0=stdin es un pipe propio (el hilo de terminal escribe la entrada
-    // cocida en su write end cuando este proceso es foreground); 1=stdout y
-    // 2=stderr siguen siendo la terminal global (pantalla compartida).
+    // fds: 0=stdin, 1=stdout, 2=stderr apuntan por defecto a la terminal global.
+    // La terminal hace de stdin del teclado via su file-op read (line discipline
+    // en contexto del lector). La redireccion con '|' reemplaza fds[0] por el
+    // read end de un pipe despues de crear el proceso.
     for (int i = 0; i < MAX_FDS; i++) processes[index].fds[i] = NULL;
     processes[index].stdin_writer = NULL;
 
-    file_t * stdin_rd = NULL;
-    file_t * stdin_wr = NULL;
-    if (create_pipe(&stdin_rd, &stdin_wr) == 0) {
-        processes[index].fds[0] = stdin_rd;
-        processes[index].stdin_writer = stdin_wr;
-    }
-
     file_t * term = get_terminal_fd();
     if (term != NULL) {
+        processes[index].fds[0] = term;
         processes[index].fds[1] = term;
         processes[index].fds[2] = term;
-        term->ref_count += 2;
+        term->ref_count += 3;
     }
 
     int priority_slot = getNextPriorityFreeSlot(0);
@@ -349,7 +343,7 @@ static void terminate_process(int idx, int status) {
         size_t parent = processes[idx].parent_pid;
         int parent_idx = (parent != 0) ? getIndex(parent) : -1;
         if (parent_idx >= 0 && processes[parent_idx].active && !processes[parent_idx].zombie) {
-            set_foreground_pid(parent);
+            set_foreground_pid(parent);   // pid del padre, NO el indice
         } else {
             set_foreground_pid(0);
         }
@@ -410,10 +404,14 @@ void exit_current_process(int status) {
 }
 
 int wait_pid(pid_t pid) {
+    
     int idx = getIndex(pid);
-    if (idx < 0 || !processes[idx].active) return -1;
+    
+    
     // Solo el padre puede esperar/cosechar a un proceso.
     if (processes[idx].parent_pid != get_actual_pid()) return -1;
+    
+    if (idx < 0 || !processes[idx].active) return 0;
 
     while (!processes[idx].zombie) {
         processes[actual_index].waiting_for_pid = pid;
@@ -426,6 +424,7 @@ int wait_pid(pid_t pid) {
     }
 
     int status = processes[idx].exit_status;
+
     reap(idx);
     return status;
 }
@@ -472,6 +471,20 @@ void unblock_process(size_t pid) {
     }
 }
 
+// Alterna el estado del proceso entre bloqueado y listo (para el comando block).
+// Devuelve el nuevo estado: 1 = bloqueado, 0 = listo, -1 = pid inexistente.
+int toggle_block_process(size_t pid) {
+    int idx = getIndex(pid);
+    if (idx < 0) return -1;
+    if (processes[idx].blocked) {
+        processes[idx].blocked = false;
+        processes[idx].wait_reason = WAIT_NONE;
+        return 0;
+    }
+    processes[idx].blocked = true;
+    return 1;
+}
+
 void block_current(wait_reason_t reason) {
     if (actual_index == (size_t)-1) return;
     processes[actual_index].blocked = true;
@@ -507,4 +520,30 @@ size_t get_actual_pid() {
 
 Process get_actual_process() {
     return processes[actual_index];
+}
+
+int get_processesInfo(ProcessInfo *buffer, int max_count) {
+
+    if (buffer == NULL || max_count <= 0)
+        return -1;
+
+    int count = 0;
+
+    for (int i = 0; i < PROCESSES_LIMIT && count < max_count; i++) {
+        if (!processes[i].active)
+            continue;
+
+        buffer[count].pid = processes[i].pid;
+        buffer[count].parent_pid = processes[i].parent_pid;
+        buffer[count].active = processes[i].active;
+        buffer[count].blocked = processes[i].blocked;
+        buffer[count].zombie = processes[i].zombie;
+        buffer[count].priority = processes[i].priority;
+
+        strcpy(buffer[count].name, processes[i].name);
+
+        count++;
+    }
+
+    return count;
 }

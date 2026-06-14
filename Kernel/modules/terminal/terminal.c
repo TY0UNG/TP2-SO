@@ -32,10 +32,13 @@ static pid_t foreground_pid = 0;
 
 static int terminal_mode = TERM_COOKED;
 
-// Buffer de linea para el modo cooked (line discipline en el hilo de terminal).
+// Linea cocida lista para entregar byte a byte a sys_read (la arma terminal_read
+// haciendo echo y edicion). Solo el foreground la consume, asi que un unico
+// estado estatico alcanza.
 #define LINE_MAX 256
-static char line_buf[LINE_MAX];
-static int line_len = 0;
+static char ready_line[LINE_MAX];
+static int  ready_len = 0;
+static int  ready_pos = 0;
 
 typedef struct terminal_t {
     int dummy;
@@ -54,6 +57,7 @@ static int calculateTailOffset(void);
 
 int write_terminal_fd(file_t *f, const char *buf, int count);
 int close_terminal_fd(file_t *f);
+static int terminal_read(file_t *f, char *buf, int count);
 
 // API de texto (la que antes estaba en video.c)
 
@@ -365,9 +369,13 @@ pid_t get_foreground_pid() {
 
 void set_foreground_pid(pid_t pid) {
     foreground_pid = pid;
-    // Al cambiar de foreground reseteamos a modo cooked y limpiamos la linea a medio tipear
+    // Al cambiar de foreground reseteamos a modo cooked y descartamos cualquier
+    // entrada acumulada: el type-ahead del proceso anterior NO debe filtrarse al
+    // nuevo (flush del anillo crudo + de la linea a medio entregar).
     terminal_mode = TERM_COOKED;
-    line_len = 0;
+    clearKeyBuffer();
+    ready_len = 0;
+    ready_pos = 0;
 }
 
 void terminal_set_mode(int mode) {
@@ -378,84 +386,93 @@ int terminal_get_mode(void) {
     return terminal_mode;
 }
 
-static void terminal_deliver_to_fg(const char * buf, int len) {
-    if (len <= 0) return;
-    file_t * w = process_stdin_writer(foreground_pid);
-    if (w == NULL || w->ops == NULL || w->ops->write == NULL) return;
-    w->ops->write(w, buf, len);
-}
-
-// Dos modos:
-//   - RAW: lo deja como KeyEvent para sys_get_key (juegos), sin echo.
-//   - COOKED: hace echo + arma la linea; en '\n' la entrega al pipe del fg.
-void terminal_task() {
+// Arma una linea en modo cooked: bloquea hasta recibir un '\n', haciendo echo y
+// edicion (backspace) sobre el texto. Corre en el contexto del proceso que llamo
+// read() (puede bloquearse). Solo el foreground drena el teclado; los demas
+// esperan su turno. Devuelve la cantidad de bytes en ready_line (incluido '\n').
+static int read_cooked_line(void) {
+    int len = 0;
     while (1) {
-        sem_wait("kbd");
-        uint8_t raw;
-        if (!raw_pop(&raw)) continue;
+        uint8_t raw = 0;
+        // Si no soy el foreground, o el anillo esta vacio, me bloqueo y reintento.
+        // El '||' corta: si no soy foreground NO llamo raw_pop (no robo la tecla).
+        while (get_actual_pid() != foreground_pid || !raw_pop(&raw)) {
+            kbd_block_self();
+        }
+
         KeyEvent ev = decode_scancode(raw);
-
-        if (terminal_mode == TERM_RAW) {
-            queue(ev);              // camino crudo (sys_get_key)
-            continue;
-        }
-
         if (ev.is_release) continue;
-
-        if (ev.ascii == 0x03) {          // Ctrl+C
-            pid_t fg = foreground_pid;
-            line_len = 0;
-            if (fg != 0 && process_is_killable(fg)) {
-                kill_process(fg);
-            } else {
-                // shell
-                sem_wait("tty_out");
-                print("^C\n");
-                sem_post("tty_out");
-                terminal_deliver_to_fg("\n", 1);
-            }
-            continue;
-        }
 
         if (ev.ascii == '\n') {
             sem_wait("tty_out");
             print("\n");
             sem_post("tty_out");
-            // Incluimos el '\n' en la linea entregada: asi una linea vacia es 1
-            // byte ('\n') y el read la puede devolver (devolvera 0 al cortarlo).
-            if (line_len < LINE_MAX) line_buf[line_len++] = '\n';
-            terminal_deliver_to_fg(line_buf, line_len);
-            line_len = 0;
+            ready_line[len++] = '\n';   // incluimos el '\n' como terminador
+            break;
         } else if (ev.ascii == '\b') {
-            if (line_len > 0) {
-                line_len--;
+            if (len > 0) {
+                len--;
                 sem_wait("tty_out");
                 deleteChar();
                 sem_post("tty_out");
             }
-        } else if (ev.printable && line_len < LINE_MAX - 1) {
-            line_buf[line_len++] = ev.ascii;
+        } else if (ev.printable && len < LINE_MAX - 1) {
+            ready_line[len++] = ev.ascii;
             sem_wait("tty_out");
             printChar(ev.ascii);
             sem_post("tty_out");
         }
     }
+    return len;
+}
+
+// File-op read de la terminal: la terminal ES el stdin del teclado. sys_read la
+// llama byte a byte; servimos desde la linea cocida ya armada y, cuando se agota,
+// armamos una nueva (bloqueante). El type-ahead sobrante queda en el anillo crudo.
+static int terminal_read(file_t *f, char *buf, int count) {
+    (void) f;
+    if (buf == NULL || count <= 0) return 0;
+
+    if (ready_pos >= ready_len) {
+        ready_len = read_cooked_line();
+        ready_pos = 0;
+    }
+
+    int copied = 0;
+    while (copied < count && ready_pos < ready_len) {
+        buf[copied++] = ready_line[ready_pos++];
+    }
+    return copied;
 }
 
 //   File ops (write / close / create) La terminal queda como stdout/stderr (write a pantalla).
-
 int write_terminal_fd(file_t *f, const char *buf, int count) {
     if (f == NULL || buf == NULL || count <= 0) return 0;
 
     // Un proceso en background SI puede escribir (no se bloquea): su salida se
-    // intercala con la del foreground. El mutex serializa contra el echo del
-    // hilo de terminal sobre el text_buffer compartido.
+    // intercala con la del foreground.
     sem_wait("tty_out");
     int i;
     for (i = 0; i < count; i++) {
         if (buf[i] == 0) break;  // null-terminator corta como print() clasico
         printChar(buf[i]);
     }
+    sem_post("tty_out");
+    return i;
+}
+
+// Escribe una cadena con un estilo (color) explicito de forma atomica.
+int write_terminal_color(const char *str, char style) {
+    if (str == NULL) return 0;
+    sem_wait("tty_out");
+    char prev = selected_style;
+    selectStyle(style);
+    int i = 0;
+    while (str[i] != 0) {
+        printChar(str[i]);
+        i++;
+    }
+    selectStyle(prev);
     sem_post("tty_out");
     return i;
 }
@@ -471,7 +488,7 @@ int close_terminal_fd(file_t *f) {
 }
 
 static file_ops_t terminal_ops = {
-    .read  = NULL,   // stdin es un pipe por proceso; la terminal solo escribe
+    .read  = terminal_read,   // stdin del teclado: line discipline en contexto del lector
     .write = write_terminal_fd,
     .close = close_terminal_fd,
 };

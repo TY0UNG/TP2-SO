@@ -11,14 +11,17 @@
 
 #define MAX_FDS 16
 
-// Razon por la que un proceso esta bloqueado. Permite despertar selectivamente:
-// p. ej. al cambiar el foreground solo se despierta a quien espera la terminal,
-// sin tocar a los que esperan un hijo (wait_pid) o un pipe.
+// Cantidad maxima de procesos vivos. Tambien acota cuantos pueden estar
+// bloqueados a la vez en una cola de espera (teclado, etc.).
+#define PROCESSES_LIMIT 128
+
+// Razon por la que un proceso esta bloqueado. Permite despertar selectivamente.
 typedef enum {
     WAIT_NONE = 0,
     WAIT_PID,        // bloqueado en wait_pid esperando que termine un hijo
     WAIT_PIPE,       // bloqueado leyendo/escribiendo un pipe (incluye stdin)
     WAIT_SEM,        // bloqueado en sem_wait esperando un semaforo
+    WAIT_KBD,        // bloqueado esperando entrada de teclado (terminal_read)
 } wait_reason_t;
 
 typedef struct Process {
@@ -44,19 +47,25 @@ typedef struct Process {
     bool killable;  // false = Ctrl+C no lo mata, para la shell que solo cancela la linea
 } Process;
 
+typedef struct {
+    size_t pid;
+    size_t parent_pid;
+    bool active;
+    bool blocked;
+    bool zombie;
+    int priority;
+    char name[32];
+} ProcessInfo;
+
 typedef size_t pid_t;
 
 void initializeScheduler();
 void scheduler();
 
 // Tope del kernel stack sobre el que corre idle cuando no hay proceso listo.
-// Hay que capturarlo (con get_rsp) ANTES de habilitar interrupciones en el
-// boot: apenas se hace sti, el primer timer tick switchea al primer proceso y
-// abandona el stack de main, asi que cualquier captura posterior no corre.
 extern uint64_t kernel_rsp;
 
-// Corre idle sobre el kernel stack hasta que el scheduler tenga un proceso
-// listo (hace hlt). No retorna.
+// Corre idle sobre el kernel stack hasta que el scheduler tenga un proceso listo (hace hlt). No retorna.
 void idle();
 
 // Devuelve el pid del nuevo proceso, o 0 si falla.
@@ -71,6 +80,8 @@ void yield_current();
 void modify_process_priority_by_pid(pid_t pid, int new_priority);
 void block_process(size_t pid);
 void unblock_process(size_t pid);
+// Alterna entre bloqueado y listo. Devuelve 1=bloqueado, 0=listo, -1=inexistente.
+int toggle_block_process(size_t pid);
 // Bloquea el proceso actual con una razon de espera y cede la CPU.
 void block_current(wait_reason_t reason);
 // Despierta a pid solo si esta bloqueado por la razon dada. Devuelve true si lo
@@ -92,5 +103,6 @@ file_t * process_stdin_writer(pid_t pid);
 // Si un proceso puede ser matado por Ctrl+C. En la shell va false
 void set_killable(pid_t pid, bool value);
 bool process_is_killable(pid_t pid);
+int get_processesInfo(ProcessInfo *buffer, int max_count);
 
 #endif

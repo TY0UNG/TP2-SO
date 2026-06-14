@@ -1,5 +1,7 @@
 #include <keyboard.h>
 #include <semaphores.h>
+#include <processes.h>
+#include <stddef.h>
 
 #define BUFFER_LENGHT 256   // potencia de 2: indices uint8_t envuelven solos
 #define RAW_RING      256
@@ -35,11 +37,6 @@ bool raw_pop(uint8_t * out) {
     return true;
 }
 
-// ============================================================================
-//   Anillo DECODIFICADO (KeyEvent): productor = hilo de terminal, consumidor =
-//   foreground via getNextKey/sys_get_key. Tambien SPSC: head del productor,
-//   tail del consumidor. En lleno se dropea el evento nuevo (no se toca tail).
-// ============================================================================
 static KeyEvent buffer[BUFFER_LENGHT];
 static uint8_t head = 0;
 static uint8_t tail = 0;
@@ -112,26 +109,41 @@ KeyEvent getNextKey() {
     return event;
 }
 
-// ============================================================================
-//   Top-half: la ISR hace lo minimo posible.
-//   Lee el scancode (hay que vaciar el puerto si o si), lo deja en el anillo
-//   crudo y senaliza al hilo de terminal via el semaforo "kbd". Todo el trabajo
-//   pesado (decodificar, echo, line discipline) lo hace el bottom-half.
-// ============================================================================
+// Cola de procesos esperando teclado. La acotamos a PROCESSES_LIMIT: como cada
+// proceso se encola a lo sumo una vez (dedup), nunca puede desbordar y ningun
+// lector queda bloqueado fuera de la lista de wake.
+#define KBD_MAX_WAITERS PROCESSES_LIMIT
+static pid_t kbd_waiters[KBD_MAX_WAITERS];
+static size_t kbd_waiter_count = 0;
+
+void kbd_block_self(void) {
+    pid_t me = get_actual_pid();
+    bool already = false;
+    for (size_t i = 0; i < kbd_waiter_count; i++)
+        if (kbd_waiters[i] == me) { already = true; break; }
+    if (!already && kbd_waiter_count < KBD_MAX_WAITERS)
+        kbd_waiters[kbd_waiter_count++] = me;
+    block_current(WAIT_KBD);
+}
+
+void kbd_wake(void) {
+    size_t n = kbd_waiter_count;
+    kbd_waiter_count = 0;
+    for (size_t i = 0; i < n; i++)
+        unblock_process(kbd_waiters[i]);
+}
+
+// La ISR hace lo minimo posible.
 void keyboard_handler() {
     uint8_t raw = get_keyboard_output();
     if (!keyboard_enabled) {
         return;
     }
     if (raw_push(raw)) {
-        sem_post("kbd");
+        kbd_wake();
     }
 }
 
-// ============================================================================
-//   Bottom-half: decodificacion de un scancode crudo a KeyEvent. La llama el
-//   hilo de terminal (unico caller), asi que isShiftPressed no tiene race.
-// ============================================================================
 KeyEvent decode_scancode(uint8_t raw_scancode) {
     int is_release = raw_scancode & 0x80;
     uint8_t scancode = raw_scancode & 0x7F;

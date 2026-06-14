@@ -29,12 +29,11 @@ void set_foreground_pid(pid_t pid);
 void terminal_set_mode(int mode);
 int  terminal_get_mode(void);
 
-// Bottom-half: hilo de kernel que decodifica los scancodes que deja la ISR y
-// aplica line discipline. Se crea una vez en el boot. No retorna.
-void terminal_task();
-
 // API de texto/render que antes vivia en video.h
 void print(const char *text);
+// Escribe 'str' con un byte de estilo (FG=nibble bajo, BG=nibble alto) de forma
+// atomica respecto del resto de la salida de la terminal.
+int write_terminal_color(const char *str, char style);
 void printChar(char c);
 void deleteChar();
 void selectStyle(char style);

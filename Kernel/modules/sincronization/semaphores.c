@@ -5,7 +5,9 @@
 #include <stdint.h>
 
 #define MAX_SEMAPHORES   64
-#define MAX_SEM_WAITERS  16
+// Cada proceso se encola a lo sumo una vez (dedup en is_waiting), asi que con
+// PROCESSES_LIMIT la cola nunca desborda.
+#define MAX_SEM_WAITERS  PROCESSES_LIMIT
 #define SEM_NAME_MAX     32
 
 // Estructura con la informacion de cada semaforo: nombre (su id), el entero

@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 extern int sys_write(int fd, const char* str);
+extern int sys_write_color(const char* str, char style);
 extern size_t sys_read(const char* buffer);
 extern void sys_clear();
 extern KeyEvent * sys_get_key();
@@ -16,12 +17,18 @@ int print(const char* str) {
     return sys_write(STDOUT, str);
 }
 
+int print_color(const char* str, char style) {
+    return sys_write_color(str, style);
+}
+
 void set_terminal_mode(int mode) {
     sys_set_terminal_mode(mode);
 }
 
 int println(const char* str) {
-    return print(str) && print("\n");
+    int n = print(str);     // no usar && : print("") devuelve 0 y cortaria el \n
+    print("\n");
+    return n;
 }
 
 int printerr(const char* str) {

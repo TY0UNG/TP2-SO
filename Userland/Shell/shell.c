@@ -42,8 +42,17 @@ WRAP_CMD(testsync)
 WRAP_CMD(testprocesses)
 WRAP_CMD(testprio)
 WRAP_CMD(meminfo)
+WRAP_CMD(mvar)
+WRAP_CMD(loop)
+WRAP_CMD(kill)
+WRAP_CMD(nice)
+WRAP_CMD(block)
+WRAP_CMD(cat)
+WRAP_CMD(wc)
+WRAP_CMD(filter)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
+WRAP_CMD(processList);
 
 static int clear_wrap(int argc, char **argv) {
     (void) argc; (void) argv;
@@ -85,10 +94,19 @@ static const Command commands[] = {
     { "testprocesses", testprocesses_wrap },
     { "testprio",   testprio_wrap   },
     { "meminfo",    meminfo_wrap    },
+    { "mvar",       mvar_wrap       },
+    { "loop",       loop_wrap       },
+    { "kill",       kill_wrap       },
+    { "nice",       nice_wrap       },
+    { "block",      block_wrap      },
+    { "cat",        cat_wrap        },
+    { "wc",         wc_wrap         },
+    { "filter",     filter_wrap     },
     { "tron",       tronGame_wrap   },
     { "bounce",     bounce_wrap     },
     { "dividezero", dividezero_wrap },
     { "invalidop",  invalidop_wrap  },
+    { "ps",         processList_wrap}
 };
 static const int commands_count = sizeof(commands) / sizeof(commands[0]);
 
@@ -109,26 +127,85 @@ int main(int argc, char **argv) {
         if (argsc == 0) continue;
         commandDispatcher(argsv, argsc);
     }
+    
     return 0;
 }
 
 int commandDispatcher(char ** argsv, int argsc) {
     const char * cmd = argsv[0];
+    const char * lastArgCmd = argsv[argsc - 1];
+
     for (int i = 0; i < commands_count; i++) {
+
         if (strcmp(cmd, commands[i].name) == 0) {
+
             int pid = sys_create_process(commands[i].name, (void *) commands[i].entry, argsc, argsv);
             if (pid <= 0) {
                 println("Error al crear proceso");
                 return 1;
             }
-            // Le cedemos el foreground al hijo para que pueda leer/escribir
-            // en la terminal. Cuando termine, el kernel devuelve fg al padre
-            // (shell) automaticamente.
-            sys_set_foreground(pid);
-            sys_wait(pid);
+
+            if(strcmp(lastArgCmd, "&") != 0){
+                // Le cedemos el foreground al hijo para que pueda leer/escribir
+                // en la terminal. Cuando termine, el kernel devuelve fg al padre
+                // (shell) automaticamente.
+                sys_set_foreground(pid);
+                sys_wait(pid);
+            }
+
             return 1;
         }
+        
     }
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
 }
+
+  //println("entrando al dispatcher");
+//
+    //const char * cmd_1 = argsv[0];
+//
+    //int pipe_simbol_pos = -1;
+//
+    //for(int i = 0 ; i<argsc ; i++){
+    //    if(strcmp( argsv[i] ,  "|")){
+    //        pipe_simbol_pos = i;
+    //    }
+    //}
+//
+    //char * cmd_2 = NULL;
+    //const char * lastArgCmd_1 = argsv[argsc - 1];
+    //const char * lastArgCmd_2;
+//
+    //if(pipe_simbol_pos != -1){
+    //    cmd_2 = argsv[pipe_simbol_pos + 1];
+    //    lastArgCmd_1 = argsv[pipe_simbol_pos - 1];
+    //    lastArgCmd_2 = argsv[argsc - 1];
+    //}
+//
+//
+    //for (int i = 0; i < commands_count; i++) {
+//
+    //    if (strcmp(cmd_1, commands[i].name) == 0) {
+//
+    //        int pid = sys_create_process(commands[i].name, (void *) commands[i].entry, argsc, argsv);
+    //        
+    //        if (pid <= 0) {
+    //            println("Error al crear proceso");
+    //            return 1;
+    //        }
+//
+    //        if(strcmp(lastArgCmd_1, "&") != 0){
+    //            // Le cedemos el foreground al hijo para que pueda leer/escribir
+    //            // en la terminal. Cuando termine, el kernel devuelve fg al padre
+    //            // (shell) automaticamente.
+    //            sys_set_foreground(pid);
+    //            sys_wait(pid);
+    //        }
+//
+    //        return 1;
+    //    }
+    //    
+    //}
+    //println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
+    //return 1;

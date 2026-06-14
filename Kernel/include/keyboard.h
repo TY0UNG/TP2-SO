@@ -20,11 +20,13 @@ bool isKeyBufferEmpty();
 
 KeyEvent getNextKey();
 
-// Bottom-half (hilo de terminal): saca un scancode crudo del anillo (false si
-// vacio) y lo decodifica a KeyEvent. queue() encola un evento ya decodificado.
+// Saca un scancode crudo del anillo (false si vacio) y lo decodifica a KeyEvent.
 bool raw_pop(uint8_t * out);
 KeyEvent decode_scancode(uint8_t raw_scancode);
 void queue(KeyEvent event);
+
+void kbd_block_self(void);
+void kbd_wake(void);
 
 void clearKeyBuffer();
 

@@ -1,5 +1,6 @@
 SECTION .text
 GLOBAL sys_write
+GLOBAL sys_write_color
 GLOBAL sys_read
 GLOBAL sys_clear
 GLOBAL sys_graphics_mode
@@ -43,7 +44,9 @@ GLOBAL sys_getpid
 GLOBAL sys_kill
 GLOBAL sys_block
 GLOBAL sys_unblock
+GLOBAL sys_toggle_block
 GLOBAL sys_nice
+GLOBAL sys_get_process_list
 
 EXTERN printHex
 
@@ -392,11 +395,37 @@ sys_unblock:
     int 80h
     END_SYSCALL
 
+; sys_toggle_block(pid) -> 1=bloqueado, 0=listo, -1=inexistente
+sys_toggle_block:
+    START_SYSCALL
+    mov rax, 47
+    mov rbx, rdi        ; pid
+    int 80h
+    END_SYSCALL
+
 ; sys_nice(pid, priority)
 sys_nice:
     START_SYSCALL
     mov rax, 45
     mov rbx, rdi        ; pid
     mov rcx, rsi        ; priority
+    int 80h
+    END_SYSCALL
+
+; sys_get_process_list(buffer, maxCount);
+sys_get_process_list:
+    START_SYSCALL
+    mov rax, 46
+    mov rbx, rdi
+    mov rcx, rsi
+    int 80h
+    END_SYSCALL
+
+; sys_write_color(str, style) -> escribe str con el byte de estilo dado
+sys_write_color:
+    START_SYSCALL
+    mov rax, 48
+    mov rbx, rdi        ; str
+    mov rcx, rsi        ; style
     int 80h
     END_SYSCALL

@@ -23,21 +23,33 @@ Commands command_list[] = {
     {"benchhw [s]", "mide lecturas del RTC por segundo (1-60s)", "  BENCHMARKS"},
     {"benchmem [s]", "mide copias de memoria por segundo (1-60s)", "  BENCHMARKS"},
     {"benchkbd [s]", "mide lecturas del teclado por segundo (1-60s)", "  BENCHMARKS"},
-    {"testmm <bytes>", "stress test de malloc/free en el memory manager del kernel", "  BENCHMARKS"},
     {"meminfo", "muestra memoria total y memoria usada", "  BENCHMARKS"},
 
     // UTILIDADES
-    {"echo", "imprime los argumentos en pantalla", "  UTILIDADES"},
+    {"echo <texto>", "imprime los argumentos en pantalla", "  UTILIDADES"},
     {"resize <size>", "cambia el tamaño del texto (12-64)", "  UTILIDADES"},
+
+    // PROCESOS
+    {"loop [ms]", "imprime su PID con un saludo cada ms (espera activa)", "  PROCESOS"},
+    {"kill <pid>", "termina el proceso con ese PID", "  PROCESOS"},
+    {"nice <pid> <prio>", "cambia la prioridad de un proceso (0=alta..4=baja)", "  PROCESOS"},
+    {"block <pid>", "alterna un proceso entre bloqueado y listo", "  PROCESOS"},
+
+    // FILTROS (stdin -> stdout)
+    {"cat", "imprime stdin tal como lo recibe", "  FILTROS"},
+    {"wc", "cuenta la cantidad de lineas del input", "  FILTROS"},
+    {"filter", "filtra (quita) las vocales del input", "  FILTROS"},
 
     // JUEGOS Y DEMOS
     {"tron", "inicia el juego Tron Neon Grid", "  JUEGOS"},
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
 
     // PRUEBAS Y EXCEPCIONES
-    {"testsync", "prueba sincronizacion con y sin semaforos (race conditions)", "  PRUEBAS"},
-    {"testprocesses", "prueba creacion, kill, block y unblock de procesos", "  PRUEBAS"},
-    {"testprio", "prueba el scheduler con distintas prioridades", "  PRUEBAS"},
+    {"testmm <bytes> [iter]", "stress test de malloc/free del memory manager del kernel", "  PRUEBAS"},
+    {"testsync <n> <use_sem>", "prueba sincronizacion con y sin semaforos (race conditions)", "  PRUEBAS"},
+    {"testprocesses <n>", "prueba creacion, kill, block y unblock de n procesos", "  PRUEBAS"},
+    {"testprio <max>", "prueba el scheduler con distintas prioridades", "  PRUEBAS"},
+    {"mvar <esc> <lec>", "lectores/escritores sobre una MVar (sincronizacion)", "  PRUEBAS"},
     {"dividezero", "genera la excepcion de division por cero", "  PRUEBAS"},
     {"invalidop", "genera la excepcion de instruccion inválida", "  PRUEBAS"},
 
@@ -45,7 +57,7 @@ Commands command_list[] = {
 };
 
 void print_command(const char *name, const char *description) {
-    int maxNameWidth = 20; // columna donde empieza el "-"
+    int maxNameWidth = 24; // columna donde empieza el "-"
     int len = 0;
     while (name[len] != '\0') len++;
 
