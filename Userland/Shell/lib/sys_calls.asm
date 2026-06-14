@@ -47,6 +47,8 @@ GLOBAL sys_unblock
 GLOBAL sys_toggle_block
 GLOBAL sys_nice
 GLOBAL sys_get_process_list
+GLOBAL sys_create_pipe
+GLOBAL sys_replace_process_fd
 
 EXTERN printHex
 
@@ -427,5 +429,23 @@ sys_write_color:
     mov rax, 48
     mov rbx, rdi        ; str
     mov rcx, rsi        ; style
+    int 80h
+    END_SYSCALL
+
+; sys_create_pipe(* fd[])
+sys_create_pipe:
+    START_SYSCALL
+    mov rax, 49
+    mov rbx, rdi
+    int 80h
+    END_SYSCALL
+
+;syscall_replace_process_fd(indice, fd, pid) -> reemplaza el fd de un proceso
+sys_replace_process_fd:
+    START_SYSCALL
+    mov rax, 50
+    mov rbx, rdi
+    mov rcx, rsi
+    ;(rdx ya tiene el valor requerido) 
     int 80h
     END_SYSCALL

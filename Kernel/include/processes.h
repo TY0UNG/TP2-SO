@@ -106,4 +106,7 @@ void set_killable(pid_t pid, bool value);
 bool process_is_killable(pid_t pid);
 int get_processesInfo(ProcessInfo *buffer, int max_count);
 
+//Reemplaza el fd del indice en el proceso altual
+int replace_process_fd(int indice, file_t * fd, int pid);
+
 #endif

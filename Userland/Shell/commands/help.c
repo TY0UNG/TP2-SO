@@ -30,6 +30,7 @@ Commands command_list[] = {
     {"resize <size>", "cambia el tamaño del texto (12-64)", "  UTILIDADES"},
 
     // PROCESOS
+    {"ps", "imprime los procesos actuales", "  PROCESOS"},
     {"loop [ms]", "imprime su PID con un saludo cada ms (espera activa)", "  PROCESOS"},
     {"kill <pid>", "termina el proceso con ese PID", "  PROCESOS"},
     {"nice <pid> <prio>", "cambia la prioridad de un proceso (0=alta..4=baja)", "  PROCESOS"},
