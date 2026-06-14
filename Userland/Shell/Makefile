@@ -9,6 +9,7 @@ BUILD_DIR := ../build
 SOURCES_C  := $(wildcard [^_]*.c) \
 			  $(wildcard commands/*.c) \
 			  $(wildcard commands/benchmark/*.c) \
+			  $(wildcard commands/processes/*.c) \
 			  $(wildcard commands/tests/*.c) \
 			  $(wildcard commands/tron/*.c) \
 			  $(wildcard lib/*.c)

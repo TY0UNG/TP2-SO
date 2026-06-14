@@ -75,6 +75,8 @@ static int syscall_kill(Registers *registers);
 static int syscall_block(Registers *registers);
 static int syscall_unblock(Registers *registers);
 static int syscall_nice(Registers *registers);
+static int syscall_write_color(Registers *registers);
+static int syscall_toggle_block(Registers *registers);
 static int syscall_get_process_list(Registers *registers);
 
 
@@ -172,6 +174,10 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_nice(registers);
     case 46:
         return syscall_get_process_list(registers);
+    case 47:
+        return syscall_toggle_block(registers);
+    case 48:
+        return syscall_write_color(registers);
     default:
         break;
     }
@@ -181,6 +187,12 @@ uint64_t sysCallDispatcher(Registers * registers) {
 static int syscall_set_terminal_mode(Registers * registers) {
     terminal_set_mode((int) registers->rbx);
     return 0;
+}
+
+static int syscall_write_color(Registers * registers) {
+    const char * s = (const char *) registers->rbx;
+    char style = (char) registers->rcx;
+    return write_terminal_color(s, style);
 }
 
 static uint64_t syscall_getpid(Registers * registers) {
@@ -196,6 +208,10 @@ static int syscall_kill(Registers * registers) {
 static int syscall_block(Registers * registers) {
     block_process((size_t) registers->rbx);
     return 0;
+}
+
+static int syscall_toggle_block(Registers * registers) {
+    return toggle_block_process((size_t) registers->rbx);
 }
 
 static int syscall_unblock(Registers * registers) {
@@ -477,9 +493,12 @@ static uint64_t syscall_ms(Registers * registers){
 
 static KeyEvent event;
 
+// Modo RAW (juegos): no bloqueante. Saca un scancode crudo del anillo y lo
+// decodifica en el acto. Devuelve 0 si no hay tecla pendiente.
 static KeyEvent * syscall_get_key(Registers * registers) {
-    if (isKeyBufferEmpty()) return 0;
-    event = getNextKey();
+    uint8_t raw;
+    if (!raw_pop(&raw)) return 0;
+    event = decode_scancode(raw);
     return &event;
 }
 

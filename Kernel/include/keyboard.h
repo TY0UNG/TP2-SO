@@ -5,6 +5,8 @@
 
 #define SCANCODE_LSHIFT 0x2A
 #define SCANCODE_RSHIFT 0x36
+#define SCANCODE_LCTRL  0x1D
+#define SCANCODE_C      0x2E
 
 typedef struct key_event {
     uint8_t scancode;
@@ -19,15 +21,20 @@ bool isKeyBufferEmpty();
 
 KeyEvent getNextKey();
 
-// Bottom-half (hilo de terminal): saca un scancode crudo del anillo (false si
-// vacio) y lo decodifica a KeyEvent. queue() encola un evento ya decodificado.
+// Saca un scancode crudo del anillo (false si vacio) y lo decodifica a KeyEvent.
 bool raw_pop(uint8_t * out);
 KeyEvent decode_scancode(uint8_t raw_scancode);
 void queue(KeyEvent event);
+
+void kbd_block_self(void);
+void kbd_wake(void);
 
 void clearKeyBuffer();
 
 void keyboard_set_enabled(bool enabled);
 bool keyboard_is_enabled();
+
+// Ctrl+C. El keyboard handler (ISR) marca señal pendiente y el timer lo consume y mata al foreground
+bool consume_sigint(void);
 
 #endif

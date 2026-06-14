@@ -42,6 +42,14 @@ WRAP_CMD(testsync)
 WRAP_CMD(testprocesses)
 WRAP_CMD(testprio)
 WRAP_CMD(meminfo)
+WRAP_CMD(mvar)
+WRAP_CMD(loop)
+WRAP_CMD(kill)
+WRAP_CMD(nice)
+WRAP_CMD(block)
+WRAP_CMD(cat)
+WRAP_CMD(wc)
+WRAP_CMD(filter)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
 WRAP_CMD(processList);
@@ -86,6 +94,14 @@ static const Command commands[] = {
     { "testprocesses", testprocesses_wrap },
     { "testprio",   testprio_wrap   },
     { "meminfo",    meminfo_wrap    },
+    { "mvar",       mvar_wrap       },
+    { "loop",       loop_wrap       },
+    { "kill",       kill_wrap       },
+    { "nice",       nice_wrap       },
+    { "block",      block_wrap      },
+    { "cat",        cat_wrap        },
+    { "wc",         wc_wrap         },
+    { "filter",     filter_wrap     },
     { "tron",       tronGame_wrap   },
     { "bounce",     bounce_wrap     },
     { "dividezero", dividezero_wrap },

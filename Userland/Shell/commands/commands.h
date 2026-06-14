@@ -29,6 +29,14 @@ int testsync(char ** argv, int argc);
 int testprocesses(char ** argv, int argc);
 int testprio(char ** argv, int argc);
 int meminfo(char ** argv, int argc);
+int mvar(char ** argv, int argc);
+int loop(char ** argv, int argc);
+int kill(char ** argv, int argc);
+int nice(char ** argv, int argc);
+int block(char ** argv, int argc);
+int cat(char ** argv, int argc);
+int wc(char ** argv, int argc);
+int filter(char ** argv, int argc);
 int processList(char ** argv, int argc);
 
 

@@ -1,7 +1,6 @@
 #include <processes.h>
 #include <terminal.h>
 #include <pipes.h>
-#define PROCESSES_LIMIT 128
 #define PRIORITY_COUNT 5
 #define STACK_SIZE 1024 * 16 // 16 KB
 
@@ -229,25 +228,21 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
     processes[index].exit_status = 0;
     processes[index].waiting_for_pid = 0;
     processes[index].rsp = (uint64_t) frame;
+    processes[index].killable = true;
 
-    // fds: 0=stdin es un pipe propio (el hilo de terminal escribe la entrada
-    // cocida en su write end cuando este proceso es foreground); 1=stdout y
-    // 2=stderr siguen siendo la terminal global (pantalla compartida).
+    // fds: 0=stdin, 1=stdout, 2=stderr apuntan por defecto a la terminal global.
+    // La terminal hace de stdin del teclado via su file-op read (line discipline
+    // en contexto del lector). La redireccion con '|' reemplaza fds[0] por el
+    // read end de un pipe despues de crear el proceso.
     for (int i = 0; i < MAX_FDS; i++) processes[index].fds[i] = NULL;
     processes[index].stdin_writer = NULL;
 
-    file_t * stdin_rd = NULL;
-    file_t * stdin_wr = NULL;
-    if (create_pipe(&stdin_rd, &stdin_wr) == 0) {
-        processes[index].fds[0] = stdin_rd;
-        processes[index].stdin_writer = stdin_wr;
-    }
-
     file_t * term = get_terminal_fd();
     if (term != NULL) {
+        processes[index].fds[0] = term;
         processes[index].fds[1] = term;
         processes[index].fds[2] = term;
-        term->ref_count += 2;
+        term->ref_count += 3;
     }
 
     int priority_slot = getNextPriorityFreeSlot(0);
@@ -295,6 +290,17 @@ file_t * process_stdin_writer(pid_t pid) {
     return processes[idx].stdin_writer;
 }
 
+void set_killable(pid_t pid, bool value) {
+    int idx = getIndex(pid);
+    if (idx >= 0) processes[idx].killable = value;
+}
+
+bool process_is_killable(pid_t pid) {
+    int idx = getIndex(pid);
+    if (idx < 0) return false;
+    return processes[idx].killable;
+}
+
 // Libera completamente el slot. Asume que la memoria de stack ya no se usa.
 // active=false marca el slot como reutilizable.
 static void reap(int index) {
@@ -337,13 +343,8 @@ static void terminate_process(int idx, int status) {
         size_t parent = processes[idx].parent_pid;
         int parent_idx = (parent != 0) ? getIndex(parent) : -1;
         if (parent_idx >= 0 && processes[parent_idx].active && !processes[parent_idx].zombie) {
-            
-            print("IM RETUNING IN THE FATHER! | ");
-            printDec(parent);
-            print("\n");
-            set_foreground_pid(parent);
+            set_foreground_pid(parent);   // pid del padre, NO el indice
         } else {
-            print("IM RETUNING IN 0! \n");
             set_foreground_pid(0);
         }
     }
@@ -468,6 +469,20 @@ void unblock_process(size_t pid) {
         processes[idx].blocked = false;
         processes[idx].wait_reason = WAIT_NONE;
     }
+}
+
+// Alterna el estado del proceso entre bloqueado y listo (para el comando block).
+// Devuelve el nuevo estado: 1 = bloqueado, 0 = listo, -1 = pid inexistente.
+int toggle_block_process(size_t pid) {
+    int idx = getIndex(pid);
+    if (idx < 0) return -1;
+    if (processes[idx].blocked) {
+        processes[idx].blocked = false;
+        processes[idx].wait_reason = WAIT_NONE;
+        return 0;
+    }
+    processes[idx].blocked = true;
+    return 1;
 }
 
 void block_current(wait_reason_t reason) {
