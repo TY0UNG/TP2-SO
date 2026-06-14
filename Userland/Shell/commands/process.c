@@ -1,5 +1,13 @@
 #include <commands.h>
 
+typedef enum {
+    WAIT_NONE = 0,
+    WAIT_PID,        // bloqueado en wait_pid esperando que termine un hijo
+    WAIT_PIPE,       // bloqueado leyendo/escribiendo un pipe (incluye stdin)
+    WAIT_SEM,        // bloqueado en sem_wait esperando un semaforo
+} wait_reason_t;
+
+
 typedef struct {
     size_t pid;
     size_t parent_pid;
@@ -8,7 +16,9 @@ typedef struct {
     bool zombie;
     int priority;
     char name[32];
+    wait_reason_t wait_reason;
 } ProcessInfo;
+
 
 extern int sys_get_process_list(ProcessInfo * buffer, int max_count);
 
@@ -23,7 +33,7 @@ int processList(char ** argv, int argc){
         return 1;
     }
 
-    println("PID PPID STATE NAME");
+    println("PID PPID STATE NAME WAIT_REAZON");
 
     for (int i = 0; i < count; i++) {
 
@@ -32,13 +42,21 @@ int processList(char ** argv, int argc){
             processes[i].blocked ? "BLOCKED" :
                                    "READY";
 
+        const char * wait_reazon = 
+            processes[i].wait_reason == WAIT_NONE ? "WAIT_NONE" : 
+            processes[i].wait_reason == WAIT_PID ? "WAIT_PID" : 
+            processes[i].wait_reason == WAIT_PIPE ? "WAIT_PIPE" : 
+            processes[i].wait_reason == WAIT_SEM ? "WAIT_SEM" : "";
+
         printDec(processes[i].pid);
         print("  ");
         printDec(processes[i].parent_pid);
         print("  ");
         print(state);
         print("  ");
-        println(processes[i].name);
+        print(processes[i].name);
+        print("  ");
+        println(wait_reazon);
     }
 
     return 0;

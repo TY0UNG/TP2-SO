@@ -51,6 +51,7 @@ typedef struct {
     bool zombie;
     int priority;
     char name[32];
+    wait_reason_t wait_reason;
 } ProcessInfo;
 
 typedef size_t pid_t;
