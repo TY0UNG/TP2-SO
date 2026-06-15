@@ -120,13 +120,23 @@ int sem_init(const char * name, int initialValue) {
 
     uint64_t flags = enter_region(&sem_lock);
 
-    if (find_by_name(name) >= 0) {
-        // Ya existe: sem_init no debe re-crearlo.
+    int id = find_by_name(name);
+    if (id >= 0) {
+        // Ya existe: lo RE-INICIALIZAMOS a un estado limpio (valor + cola de
+        // waiters vacia). Sirve para reutilizar un semaforo de nombre fijo entre
+        // corridas aunque la anterior lo haya dejado sucio (procesos matados a
+        // mitad de ciclo). No tocamos 'openers' (otros holders siguen validos).
+        // Cuidado: solo usar cuando nadie vivo esta bloqueado en el (vaciamos la
+        // cola), que es el caso de quien "posee" el semaforo al re-arrancar.
+        sem_table[id].value = initialValue;
+        sem_table[id].waiter_head = 0;
+        sem_table[id].waiter_tail = 0;
+        sem_table[id].waiter_count = 0;
         leave_region(&sem_lock, flags);
-        return -1;
+        return 0;
     }
 
-    int id = find_free_slot();
+    id = find_free_slot();
     if (id < 0) {
         leave_region(&sem_lock, flags);
         return -1;
