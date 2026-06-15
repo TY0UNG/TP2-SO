@@ -7,6 +7,7 @@
 extern int  sys_create_process(const char *name, void *entry, int argc, char **argv);
 extern void sys_exit(int status);
 extern int  sys_sem_open(const char *name, int initialValue);
+extern int  sys_sem_init(const char *name, int initialValue);
 extern int  sys_sem_wait(const char *name);
 extern int  sys_sem_post(const char *name);
 
@@ -104,9 +105,11 @@ int mvar(char **argv, int argc) {
         return 1;
     }
 
-    // Crear los semaforos con sus valores iniciales antes de lanzar los hijos,
-    // para que la MVar arranque vacia (empty=1, full=0).
-    if (sys_sem_open(SEM_EMPTY, 1) < 0 || sys_sem_open(SEM_FULL, 0) < 0) {
+    // Crear (o RESETEAR) los semaforos a su estado inicial antes de lanzar los
+    // hijos, para que la MVar arranque vacia (empty=1, full=0). sys_sem_init
+    // limpia el valor y la cola de waiters aunque hayan quedado sucios de una
+    // corrida anterior cuyos procesos se mataron a mitad de ciclo.
+    if (sys_sem_init(SEM_EMPTY, 1) < 0 || sys_sem_init(SEM_FULL, 0) < 0) {
         println("mvar: error al abrir los semaforos");
         return 1;
     }
