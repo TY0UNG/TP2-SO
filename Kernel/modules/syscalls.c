@@ -76,12 +76,10 @@ static int syscall_kill(Registers *registers);
 static int syscall_block(Registers *registers);
 static int syscall_unblock(Registers *registers);
 static int syscall_nice(Registers *registers);
-static int syscall_write_color(Registers *registers);
+static int syscall_select_style(Registers *registers);
 static int syscall_toggle_block(Registers *registers);
 static int syscall_get_process_list(Registers *registers);
 static int syscall_create_pipe(Registers * registers);
-static int syscall_pipe_read(Registers * registers);
-static int sys_pipe_write(Registers * registers);
 static int  syscall_replace_process_fd(Registers * registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
@@ -181,7 +179,7 @@ uint64_t sysCallDispatcher(Registers * registers) {
     case 47:
         return syscall_toggle_block(registers);
     case 48:
-        return syscall_write_color(registers);
+        return syscall_select_style(registers);
     case 49:
         return syscall_create_pipe(registers);
     case 50:
@@ -204,24 +202,14 @@ static int syscall_create_pipe(Registers *  registers){
     return create_pipe(&(fd[0]), &(fd[1]));
 }
 
-static int syscall_pipe_read(Registers * registers){
-    return 0;
-}   
-
-static int sys_pipe_write(Registers * registers){
-    return 0;
-}   
-
-
 static int syscall_set_terminal_mode(Registers * registers) {
     terminal_set_mode((int) registers->rbx);
     return 0;
 }
 
-static int syscall_write_color(Registers * registers) {
-    const char * s = (const char *) registers->rbx;
-    char style = (char) registers->rcx;
-    return write_terminal_color(s, style);
+static int syscall_select_style(Registers * registers) {
+    set_current_style((char) registers->rbx);
+    return 0;
 }
 
 static uint64_t syscall_getpid(Registers * registers) {
@@ -310,9 +298,10 @@ static uint64_t sycall_getRegs(Registers * registers){
 static int syscall_write(Registers * registers) {
     int fd_num = (int) registers->rbx;
     const char * s = (const char *) registers->rcx;
-    selectStyle(fd_num == 2 ? 0x04 : 0x0F);
     file_t * f = lookup_fd(fd_num);
     if (f == NULL || f->ops == NULL || f->ops->write == NULL) return -1;
+    // El color lo aplica el write de la terminal usando el estilo del proceso
+    // (get_current_style). Aca solo despachamos al fd (terminal o pipe).
     return f->ops->write(f, s, (int) strlen(s));
 }
 

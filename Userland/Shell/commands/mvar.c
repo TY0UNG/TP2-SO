@@ -61,12 +61,14 @@ static uint64_t reader_loop(char style) {
     if (sys_sem_open(SEM_EMPTY, 1) < 0 || sys_sem_open(SEM_FULL, 0) < 0)
         return (uint64_t) -1;
 
+    selectStyle(style);            // color identificador del lector (una sola vez)
+
     while (1) {
         busy_wait_random();
         sys_sem_wait(SEM_FULL);    // espera a que haya un valor
         char c = mvar_value;       // lo consume
         char str[2] = { c, 0 };
-        print_color(str, style);   // lo imprime con su color identificador
+        print(str);                // lo imprime con su color
         sys_sem_post(SEM_EMPTY);   // libera la MVar para el proximo escritor
     }
     return 0;   // inalcanzable

@@ -229,6 +229,7 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
     processes[index].waiting_for_pid = 0;
     processes[index].rsp = (uint64_t) frame;
     processes[index].killable = true;
+    processes[index].style = 0x0F;   // blanco sobre negro por defecto
 
     // fds: 0=stdin, 1=stdout, 2=stderr apuntan por defecto a la terminal global.
     // La terminal hace de stdin del teclado via su file-op read (line discipline
@@ -299,6 +300,16 @@ bool process_is_killable(pid_t pid) {
     int idx = getIndex(pid);
     if (idx < 0) return false;
     return processes[idx].killable;
+}
+
+char get_current_style(void) {
+    if (actual_index == (size_t)-1) return 0x0F;   // sin proceso (boot): default
+    return processes[actual_index].style;
+}
+
+void set_current_style(char style) {
+    if (actual_index == (size_t)-1) return;
+    processes[actual_index].style = style;
 }
 
 // Libera completamente el slot. Asume que la memoria de stack ya no se usa.

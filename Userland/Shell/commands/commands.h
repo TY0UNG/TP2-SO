@@ -28,7 +28,7 @@ int testmm(char ** argv, int argc);
 int testsync(char ** argv, int argc);
 int testprocesses(char ** argv, int argc);
 int testprio(char ** argv, int argc);
-int meminfo(char ** argv, int argc);
+int mem(char ** argv, int argc);
 int mvar(char ** argv, int argc);
 int loop(char ** argv, int argc);
 int kill(char ** argv, int argc);

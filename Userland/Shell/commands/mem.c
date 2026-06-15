@@ -1,7 +1,7 @@
 #include <commands.h>
 #include "../lib/memory.h"
 
-int meminfo(char **argv, int argc) {
+int mem(char **argv, int argc) {
     (void)argv;
     (void)argc;
 

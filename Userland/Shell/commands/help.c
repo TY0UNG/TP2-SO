@@ -9,11 +9,12 @@ typedef struct {
 Commands command_list[] = {
     // SISTEMA
     {"help", "muestra este listado de ayuda", "  SISTEMA"},
+    {"sh", "inicia una nueva instancia de la shell", "  SISTEMA"},
     {"clear", "limpia la pantalla", "  SISTEMA"},
 
     // INFORMACION DEL SISTEMA
     {"time", "muestra fecha y hora actuales", "  INFORMACION"},
-    {"show fps", "habilita o deshabilita el overlay de FPS", "  INFORMACION"},
+    {"show fps [on|off]", "habilita o deshabilita el overlay de FPS", "  INFORMACION"},
     {"registers", "muestra los registros del CPU", "  INFORMACION"},
 
     // BENCHMARKS
@@ -23,7 +24,7 @@ Commands command_list[] = {
     {"benchhw [s]", "mide lecturas del RTC por segundo (1-60s)", "  BENCHMARKS"},
     {"benchmem [s]", "mide copias de memoria por segundo (1-60s)", "  BENCHMARKS"},
     {"benchkbd [s]", "mide lecturas del teclado por segundo (1-60s)", "  BENCHMARKS"},
-    {"meminfo", "muestra memoria total y memoria usada", "  BENCHMARKS"},
+    {"mem", "muestra memoria total y memoria usada", "  BENCHMARKS"},
 
     // UTILIDADES
     {"echo <texto>", "imprime los argumentos en pantalla", "  UTILIDADES"},
@@ -33,7 +34,7 @@ Commands command_list[] = {
     {"ps", "imprime los procesos actuales", "  PROCESOS"},
     {"loop [ms]", "imprime su PID con un saludo cada ms (espera activa)", "  PROCESOS"},
     {"kill <pid>", "termina el proceso con ese PID", "  PROCESOS"},
-    {"nice <pid> <prio>", "cambia la prioridad de un proceso (0=alta..4=baja)", "  PROCESOS"},
+    {"nice <pid> <prioridad>", "cambia la prioridad de un proceso (0=alta..4=baja)", "  PROCESOS"},
     {"block <pid>", "alterna un proceso entre bloqueado y listo", "  PROCESOS"},
 
     // FILTROS (stdin -> stdout)
@@ -47,11 +48,11 @@ Commands command_list[] = {
     {"bounce", "muestra la animacion de rebote", "  JUEGOS"},
 
     // PRUEBAS Y EXCEPCIONES
-    {"testmm <bytes> [iter]", "stress test de malloc/free del memory manager del kernel", "  PRUEBAS"},
+    {"testmm <bytes>", "stress test de malloc/free del memory manager del kernel", "  PRUEBAS"},
     {"testsync <n> <use_sem>", "prueba sincronizacion con y sin semaforos (race conditions)", "  PRUEBAS"},
-    {"testprocesses <n>", "prueba creacion, kill, block y unblock de n procesos", "  PRUEBAS"},
-    {"testprio <max>", "prueba el scheduler con distintas prioridades", "  PRUEBAS"},
-    {"mvar <esc> <lec>", "lectores/escritores sobre una MVar (sincronizacion)", "  PRUEBAS"},
+    {"testprocesses <max_processes>", "prueba creacion, kill, block y unblock de n procesos", "  PRUEBAS"},
+    {"testprio <max_value>", "prueba el scheduler con distintas prioridades", "  PRUEBAS"},
+    {"mvar <escritores> <lectores>", "lectores/escritores sobre una MVar (sincronizacion)", "  PRUEBAS"},
     {"dividezero", "genera la excepcion de division por cero", "  PRUEBAS"},
     {"invalidop", "genera la excepcion de instruccion inválida", "  PRUEBAS"},
 

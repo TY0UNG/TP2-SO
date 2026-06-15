@@ -43,7 +43,7 @@ WRAP_CMD(testmm)
 WRAP_CMD(testsync)
 WRAP_CMD(testprocesses)
 WRAP_CMD(testprio)
-WRAP_CMD(meminfo)
+WRAP_CMD(mem)
 WRAP_CMD(mvar)
 WRAP_CMD(loop)
 WRAP_CMD(kill)
@@ -56,6 +56,16 @@ WRAP_CMD(red)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
 WRAP_CMD(processList);
+
+int main(int argc, char **argv);   // el REPL de la shell, reusado por 'sh'
+
+// Lanza una nueva instancia de la shell. El dispatcher crea el proceso (llamado
+// "sh") y le corre este entry, que entra al mismo REPL que main.
+static int sh_wrap(int argc, char **argv) {
+    main(argc, argv);
+    sys_exit(0);
+    return 0;
+}
 
 static int clear_wrap(int argc, char **argv) {
     (void) argc; (void) argv;
@@ -80,6 +90,7 @@ static int invalidop_wrap(int argc, char **argv) {
 
 static const Command commands[] = {
     { "help",       help_wrap       },
+    { "sh",         sh_wrap         },
     { "clear",      clear_wrap      },
     { "echo",       echo_wrap       },
     { "registers",  regs_wrap       },
@@ -96,7 +107,7 @@ static const Command commands[] = {
     { "testsync",   testsync_wrap   },
     { "testprocesses", testprocesses_wrap },
     { "testprio",   testprio_wrap   },
-    { "meminfo",    meminfo_wrap    },
+    { "mem",        mem_wrap        },
     { "mvar",       mvar_wrap       },
     { "loop",       loop_wrap       },
     { "kill",       kill_wrap       },

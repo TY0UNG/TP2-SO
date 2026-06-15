@@ -211,7 +211,7 @@ int main() {
 	// write de los procesos sobre el text_buffer/cursor compartido.
 	sem_init("tty_out", 1);
 
-	pid_t shell_pid = create_process("Shell", ((EntryPoint) shell), args);
+	pid_t shell_pid = create_process("sh", ((EntryPoint) shell), args);
 	set_killable(shell_pid, false);   // Ctrl+C no mata la shell, funciona como en bash
 	set_foreground_pid(shell_pid);
 

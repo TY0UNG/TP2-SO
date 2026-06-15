@@ -1,6 +1,6 @@
 SECTION .text
 GLOBAL sys_write
-GLOBAL sys_write_color
+GLOBAL sys_select_style
 GLOBAL sys_read
 GLOBAL sys_clear
 GLOBAL sys_graphics_mode
@@ -423,12 +423,11 @@ sys_get_process_list:
     int 80h
     END_SYSCALL
 
-; sys_write_color(str, style) -> escribe str con el byte de estilo dado
-sys_write_color:
+; sys_select_style(style) -> fija el estilo (color) de escritura del proceso
+sys_select_style:
     START_SYSCALL
     mov rax, 48
-    mov rbx, rdi        ; str
-    mov rcx, rsi        ; style
+    mov rbx, rdi        ; style
     int 80h
     END_SYSCALL
 

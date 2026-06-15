@@ -45,6 +45,7 @@ typedef struct Process {
     // terminal para inyectar la entrada cocida al foreground. NULL si no tiene.
     file_t * stdin_writer;
     bool killable;  // false = Ctrl+C no lo mata, para la shell que solo cancela la linea
+    char style;     // estilo (color VGA) con el que este proceso escribe a la terminal
 } Process;
 
 typedef struct {
@@ -105,6 +106,11 @@ file_t * process_stdin_writer(pid_t pid);
 void set_killable(pid_t pid, bool value);
 bool process_is_killable(pid_t pid);
 int get_processesInfo(ProcessInfo *buffer, int max_count);
+
+// Estilo (color) de escritura del proceso actual. Cada proceso tiene el suyo,
+// asi la salida coloreada no se pisa entre procesos concurrentes.
+char get_current_style(void);
+void set_current_style(char style);
 
 //Reemplaza el fd del indice en el proceso altual
 int replace_process_fd(int indice, file_t * fd, int pid);

@@ -9,11 +9,12 @@
 int red(char **argv, int argc) {
     (void) argv; (void) argc;
 
-    char buf[BUF_SIZE + 1];
+    selectStyle(RED_STYLE);   // todo lo que escriba este proceso sale en rojo
+
+    char buf[BUF_SIZE];
     int n;
     while ((n = read_fd(STDIN, buf, BUF_SIZE)) > 0) {
-        buf[n] = '\0';
-        print_color(buf, RED_STYLE);
+        write_fd(STDOUT, buf, n);
     }
     return 0;
 }

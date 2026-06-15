@@ -12,7 +12,10 @@ uint32_t GetUint(void) {
     return (m_z << 16) + m_w;
 }
 
+// Entero puro: sin punto flotante. El kernel no preserva el estado de la FPU/x87
+// en el cambio de contexto, asi que usar 'double' aca corrompe a los procesos
+// concurrentes (mvar, testsync, testprocesses lanzan varios a la vez).
 uint32_t GetUniform(uint32_t max) {
-    uint32_t u = GetUint();
-    return (u + 1.0) * 2.328306435454494e-10 * max;
+    if (max == 0) return 0;
+    return GetUint() % max;
 }
