@@ -50,6 +50,7 @@ WRAP_CMD(block)
 WRAP_CMD(cat)
 WRAP_CMD(wc)
 WRAP_CMD(filter)
+WRAP_CMD(red)
 WRAP_CMD(tronGame)
 WRAP_CMD(bounce)
 WRAP_CMD(processList);
@@ -102,6 +103,7 @@ static const Command commands[] = {
     { "cat",        cat_wrap        },
     { "wc",         wc_wrap         },
     { "filter",     filter_wrap     },
+    { "red",        red_wrap        },
     { "tron",       tronGame_wrap   },
     { "bounce",     bounce_wrap     },
     { "dividezero", dividezero_wrap },

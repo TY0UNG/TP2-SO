@@ -39,6 +39,7 @@ Commands command_list[] = {
     {"cat", "imprime stdin tal como lo recibe", "  FILTROS"},
     {"wc", "cuenta la cantidad de lineas del input", "  FILTROS"},
     {"filter", "filtra (quita) las vocales del input", "  FILTROS"},
+    {"red", "imprime stdin en rojo, hasta EOF", "  FILTROS"},
 
     // JUEGOS Y DEMOS
     {"tron", "inicia el juego Tron Neon Grid", "  JUEGOS"},

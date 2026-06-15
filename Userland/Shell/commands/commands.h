@@ -37,6 +37,7 @@ int block(char ** argv, int argc);
 int cat(char ** argv, int argc);
 int wc(char ** argv, int argc);
 int filter(char ** argv, int argc);
+int red(char ** argv, int argc);
 int processList(char ** argv, int argc);
 
 
