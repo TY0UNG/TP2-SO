@@ -57,6 +57,8 @@ typedef struct {
     int priority;
     char name[32];
     wait_reason_t wait_reason;
+    char * stack_base;
+    char * stack_memory;
 } ProcessInfo;
 
 typedef size_t pid_t;

@@ -551,7 +551,9 @@ int get_processesInfo(ProcessInfo *buffer, int max_count) {
             buffer[count].zombie = processes[i].zombie;
             buffer[count].priority = processes[i].priority;
             buffer[count].wait_reason = processes[i].wait_reason;
-            
+            buffer[count].stack_base = (int)processes[i].stack_base;
+            buffer[count].stack_memory = (int)processes[i].stack_memory;
+
             strcpy(buffer[count].name, processes[i].name);
             
             count++;

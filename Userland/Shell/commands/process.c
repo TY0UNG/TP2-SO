@@ -17,6 +17,8 @@ typedef struct {
     int priority;
     char name[32];
     wait_reason_t wait_reason;
+    int stack_base;
+    int stack_memory;
 } ProcessInfo;
 
 
@@ -33,20 +35,20 @@ int processList(char ** argv, int argc){
         return 1;
     }
 
-    println("PID PPID STATE NAME WAIT_REAZON");
+    println("PID PPID STATE NAME WAIT_REAZON BASE_POINTER STACK");
 
     for (int i = 0; i < count; i++) {
 
         const char *state =
-            processes[i].zombie  ? "ZOMBIE" :
+            processes[i].zombie  ? "ZOMBIE " :
             processes[i].blocked ? "BLOCKED" :
-                                   "READY";
+                                   "READY  ";
 
         const char * wait_reazon = 
             processes[i].wait_reason == WAIT_NONE ? "WAIT_NONE" : 
-            processes[i].wait_reason == WAIT_PID ? "WAIT_PID" : 
+            processes[i].wait_reason == WAIT_PID ? "WAIT_PID " : 
             processes[i].wait_reason == WAIT_PIPE ? "WAIT_PIPE" : 
-            processes[i].wait_reason == WAIT_SEM ? "WAIT_SEM" : "";
+            processes[i].wait_reason == WAIT_SEM ? "WAIT_SEM " : "";
 
         printDec(processes[i].pid);
         print("  ");
@@ -56,7 +58,12 @@ int processList(char ** argv, int argc){
         print("  ");
         print(processes[i].name);
         print("  ");
-        println(wait_reazon);
+        print(wait_reazon);
+        print("  ");
+        printHex((uint64_t)processes[i].stack_base);
+        print("  ");
+        printHex((uint64_t)processes[i].stack_memory);
+        println(" ");
     }
 
     return 0;
