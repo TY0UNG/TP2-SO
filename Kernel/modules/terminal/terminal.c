@@ -341,24 +341,33 @@ static void checkBufferOverflow(void) {
         if (text_buffer[i] == '\n') total_logical_lines++;
     }
 
+    // Punto desde el que conservamos. Preferimos cortar en limites de linea
+    // logica (\n). Pero si no hay suficientes saltos (ej. mvar imprime una sola
+    // linea gigante sin '\n'), igual hay que descartar contenido: caemos a tirar
+    // la primera mitad del buffer. Sin esto, cursor crece sin tope y desborda
+    // text_buffer -> corrupcion de memoria y cuelgue.
+    int new_start;
     if (total_logical_lines > LINES_TO_REMEMBER) {
         int lines_to_delete = 20;
-        int new_start = 0;
         int deleted = 0;
+        new_start = 0;
         for (int i = 0; i < cursor && deleted < lines_to_delete; i += 2) {
             if (text_buffer[i] == '\n') {
                 deleted++;
                 new_start = i + 2;
             }
         }
-        int bytes_to_move = cursor - new_start;
-        for (int i = 0; i < bytes_to_move; i++) {
-            text_buffer[i] = text_buffer[new_start + i];
-        }
-        cursor = bytes_to_move;
-        if (offset >= new_start) offset -= new_start;
-        else offset = 0;
+    } else {
+        new_start = (cursor / 2) & ~1;   // mitad del buffer, alineado a celda (par)
     }
+
+    int bytes_to_move = cursor - new_start;
+    for (int i = 0; i < bytes_to_move; i++) {
+        text_buffer[i] = text_buffer[new_start + i];
+    }
+    cursor = bytes_to_move;
+    if (offset >= new_start) offset -= new_start;
+    else offset = 0;
 }
 
 // Foreground process
