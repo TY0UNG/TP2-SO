@@ -168,8 +168,12 @@ int commandDispatcher(char ** argsv, int argsc) {
 
         left_lastArgCmd = argsv[pipePos - 1];
 
-        right_argsv = argsv + sizeof(char *) * (pipePos + 1); 
-        right_cmd = argsv[pipePos + 1];
+        right_argsv = argsv + (pipePos + 1);
+        right_cmd = right_argsv[0];
+
+        // El kernel recalcula argc recorriendo argv hasta NULL (ignora el argc
+        // que le pasamos), asi que cortamos el array izquierdo en el pipe.
+        argsv[pipePos] = NULL;
 
     }
 
