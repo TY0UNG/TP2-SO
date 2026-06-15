@@ -219,7 +219,7 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
 
     processes[index].index = index;
     processes[index].pid = pid_count++;
-    processes[index].parent_pid = actual_pid;
+    processes[index].parent_pid = get_actual_pid();
     processes[index].entry_point = entry_point;
     processes[index].active = true;
     processes[index].blocked = false;
@@ -530,20 +530,31 @@ int get_processesInfo(ProcessInfo *buffer, int max_count) {
     int count = 0;
 
     for (int i = 0; i < PROCESSES_LIMIT && count < max_count; i++) {
-        if (!processes[i].active)
-            continue;
+        
+        if (processes[i].active){
 
-        buffer[count].pid = processes[i].pid;
-        buffer[count].parent_pid = processes[i].parent_pid;
-        buffer[count].active = processes[i].active;
-        buffer[count].blocked = processes[i].blocked;
-        buffer[count].zombie = processes[i].zombie;
-        buffer[count].priority = processes[i].priority;
-
-        strcpy(buffer[count].name, processes[i].name);
-
-        count++;
+            buffer[count].pid = processes[i].pid;
+            buffer[count].parent_pid = processes[i].parent_pid;
+            buffer[count].active = processes[i].active;
+            buffer[count].blocked = processes[i].blocked;
+            buffer[count].zombie = processes[i].zombie;
+            buffer[count].priority = processes[i].priority;
+            buffer[count].wait_reason = processes[i].wait_reason;
+            
+            strcpy(buffer[count].name, processes[i].name);
+            
+            count++;
+        }
     }
 
     return count;
+}
+
+int replace_process_fd(int indice, file_t * fd, int pid){
+    
+    if(indice < 0 || indice >= MAX_FDS) return 0;
+
+    processes[getIndex(pid)].fds[indice] = fd;
+    
+    return 1;
 }

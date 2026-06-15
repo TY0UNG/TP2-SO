@@ -6,6 +6,8 @@ extern int  sys_create_process(const char *name, void *entry, int argc, char **a
 extern int  sys_wait(int pid);
 extern void sys_exit(int status);
 extern int  sys_set_foreground(int pid);
+extern int  sys_create_pipe(file_t ** fd);
+extern int sys_replace_process_fd(int indice, file_t * fd, int pid);
 
 typedef int (*command_entry_t)(int argc, char **argv);
 
@@ -134,80 +136,98 @@ int main(int argc, char **argv) {
 }
 
 int commandDispatcher(char ** argsv, int argsc) {
-    const char * cmd = argsv[0];
-    const char * lastArgCmd = argsv[argsc - 1];
 
+
+
+    char ** left_argsv = argsv;
+
+    const char * left_cmd = argsv[0];
+    const char * left_lastArgCmd = argsv[argsc - 1];
+    
+    int left_argsc = argsc; 
+
+    char **right_argsv = NULL;
+
+    char *right_cmd = NULL;
+
+    int right_argsc; 
+
+    int pipePos = -1;
+
+    // Buscar si hay pipe
+    for (int i = 0; i < argsc; i++) {
+        if (strcmp(argsv[i], "|") == 0) {
+            pipePos = i;
+            break;
+        }
+    }
+
+    if(pipePos >= 1){
+        left_argsc = pipePos;
+        right_argsc = (argsc - 1) - pipePos;
+
+        left_lastArgCmd = argsv[pipePos - 1];
+
+        right_argsv = argsv + sizeof(char *) * (pipePos + 1); 
+        right_cmd = argsv[pipePos + 1];
+
+    }
+
+    file_t * fd[2];
+
+    int command_right_index = -1;
+    
+
+
+    if(right_cmd != NULL){
+        for(int i = 0; i < commands_count; i++){
+            if (strcmp(right_cmd, commands[i].name) == 0 ){
+                command_right_index = i;
+            }
+        }
+        if(command_right_index == -1){    
+            println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
+            return 1;
+        }
+    }
     for (int i = 0; i < commands_count; i++) {
+        
+        if (strcmp(left_cmd, commands[i].name) == 0 ){
 
-        if (strcmp(cmd, commands[i].name) == 0) {
+            int pid_r = -1;
+            if(pipePos != -1){
+                sys_create_pipe(fd);
+                pid_r = sys_create_process(commands[command_right_index].name, (void *) commands[command_right_index].entry, right_argsc, right_argsv);
+                sys_replace_process_fd(0, fd[0], pid_r);
+            }
 
-            int pid = sys_create_process(commands[i].name, (void *) commands[i].entry, argsc, argsv);
-            if (pid <= 0) {
+            int pid_l = sys_create_process(commands[i].name, (void *) commands[i].entry, left_argsc, left_argsv);
+            if (pid_l <= 0) {
                 println("Error al crear proceso");
                 return 1;
             }
 
-            if(strcmp(lastArgCmd, "&") != 0){
+            if(right_cmd != NULL){
+                sys_replace_process_fd(1, fd[1], pid_l);
+            }
+
+            if(strcmp(left_lastArgCmd, "&") != 0){
                 // Le cedemos el foreground al hijo para que pueda leer/escribir
                 // en la terminal. Cuando termine, el kernel devuelve fg al padre
                 // (shell) automaticamente.
-                sys_set_foreground(pid);
-                sys_wait(pid);
+                sys_set_foreground(pid_l);
+
+                sys_wait(pid_l);
+                if(pid_r != -1){
+                    sys_wait(pid_r);
+                }
             }
 
             return 1;
         }
-        
     }
+        
+    
     println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
     return 1;
 }
-
-  //println("entrando al dispatcher");
-//
-    //const char * cmd_1 = argsv[0];
-//
-    //int pipe_simbol_pos = -1;
-//
-    //for(int i = 0 ; i<argsc ; i++){
-    //    if(strcmp( argsv[i] ,  "|")){
-    //        pipe_simbol_pos = i;
-    //    }
-    //}
-//
-    //char * cmd_2 = NULL;
-    //const char * lastArgCmd_1 = argsv[argsc - 1];
-    //const char * lastArgCmd_2;
-//
-    //if(pipe_simbol_pos != -1){
-    //    cmd_2 = argsv[pipe_simbol_pos + 1];
-    //    lastArgCmd_1 = argsv[pipe_simbol_pos - 1];
-    //    lastArgCmd_2 = argsv[argsc - 1];
-    //}
-//
-//
-    //for (int i = 0; i < commands_count; i++) {
-//
-    //    if (strcmp(cmd_1, commands[i].name) == 0) {
-//
-    //        int pid = sys_create_process(commands[i].name, (void *) commands[i].entry, argsc, argsv);
-    //        
-    //        if (pid <= 0) {
-    //            println("Error al crear proceso");
-    //            return 1;
-    //        }
-//
-    //        if(strcmp(lastArgCmd_1, "&") != 0){
-    //            // Le cedemos el foreground al hijo para que pueda leer/escribir
-    //            // en la terminal. Cuando termine, el kernel devuelve fg al padre
-    //            // (shell) automaticamente.
-    //            sys_set_foreground(pid);
-    //            sys_wait(pid);
-    //        }
-//
-    //        return 1;
-    //    }
-    //    
-    //}
-    //println("Comando desconocido. Ejecute 'help' para obtener ayuda.");
-    //return 1;

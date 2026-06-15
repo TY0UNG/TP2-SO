@@ -55,6 +55,7 @@ typedef struct {
     bool zombie;
     int priority;
     char name[32];
+    wait_reason_t wait_reason;
 } ProcessInfo;
 
 typedef size_t pid_t;
@@ -104,5 +105,8 @@ file_t * process_stdin_writer(pid_t pid);
 void set_killable(pid_t pid, bool value);
 bool process_is_killable(pid_t pid);
 int get_processesInfo(ProcessInfo *buffer, int max_count);
+
+//Reemplaza el fd del indice en el proceso altual
+int replace_process_fd(int indice, file_t * fd, int pid);
 
 #endif

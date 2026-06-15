@@ -15,6 +15,7 @@ void timer_handler() {
 		if (fg != 0 && process_is_killable(fg)) kill_process(fg);
 	}
 	scheduler();
+	
 }
 
 int ticks_elapsed() {

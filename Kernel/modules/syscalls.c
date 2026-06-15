@@ -8,6 +8,7 @@
 #include <memory.h>
 #include <lib.h>
 #include <time.h>
+#include <pipes.h>
 #include <semaphores.h>
 
 #define READ_BUFFER_MAX 256
@@ -78,7 +79,10 @@ static int syscall_nice(Registers *registers);
 static int syscall_write_color(Registers *registers);
 static int syscall_toggle_block(Registers *registers);
 static int syscall_get_process_list(Registers *registers);
-
+static int syscall_create_pipe(Registers * registers);
+static int syscall_pipe_read(Registers * registers);
+static int sys_pipe_write(Registers * registers);
+static int  syscall_replace_process_fd(Registers * registers);
 
 uint64_t sysCallDispatcher(Registers * registers) {
     switch ((*registers).rax) {
@@ -178,11 +182,36 @@ uint64_t sysCallDispatcher(Registers * registers) {
         return syscall_toggle_block(registers);
     case 48:
         return syscall_write_color(registers);
+    case 49:
+        return syscall_create_pipe(registers);
+    case 50:
+        return syscall_replace_process_fd(registers);
     default:
         break;
     }
     return 0;
 }
+
+static int syscall_replace_process_fd(Registers * registers){
+    int indice = (int)registers->rbx;
+    file_t * fd = (file_t*)registers->rcx;
+    int pid = (int)registers->rdx;
+    return replace_process_fd(indice, fd, pid);
+}
+
+static int syscall_create_pipe(Registers *  registers){
+    file_t **fd=(file_t **)registers->rbx;
+    return create_pipe(&(fd[0]), &(fd[1]));
+}
+
+static int syscall_pipe_read(Registers * registers){
+    return 0;
+}   
+
+static int sys_pipe_write(Registers * registers){
+    return 0;
+}   
+
 
 static int syscall_set_terminal_mode(Registers * registers) {
     terminal_set_mode((int) registers->rbx);
@@ -364,8 +393,6 @@ static int syscall_clear_audio_buffer(Registers *registers) {
     clearAudioBuffer();
     return 0;
 }
-
-
 
 static int syscall_clear(Registers * registers) {
     clearTextBuffer();  

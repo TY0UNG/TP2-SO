@@ -5,12 +5,15 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define MAX_PIPES 128
+
 #define PIPE_BUFFER_SIZE 4096
 // Cada proceso se encola a lo sumo una vez (dedup en enqueue_waiter), asi que
 // con PROCESSES_LIMIT la cola nunca desborda.
 #define MAX_PIPE_WAITERS PROCESSES_LIMIT
 
 typedef struct pipe_t {
+
     char buffer[PIPE_BUFFER_SIZE];
     size_t read_idx;
     size_t write_idx;
@@ -23,7 +26,9 @@ typedef struct pipe_t {
     size_t read_waiter_count;
     pid_t write_waiters[MAX_PIPE_WAITERS];
     size_t write_waiter_count;
+
 } pipe_t;
+
 
 extern Process processes[];
 extern size_t actual_index;
