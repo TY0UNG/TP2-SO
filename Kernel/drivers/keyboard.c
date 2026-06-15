@@ -2,6 +2,7 @@
 #include <semaphores.h>
 #include <processes.h>
 #include <stddef.h>
+#include <terminal.h>
 
 #define BUFFER_LENGHT 256   // potencia de 2: indices uint8_t envuelven solos
 #define RAW_RING      256
@@ -146,6 +147,7 @@ void keyboard_handler() {
     else if (raw == (SCANCODE_LCTRL | 0x80)) isr_ctrl = false;
     else if (raw == SCANCODE_C && isr_ctrl) {
         sigint_pending = true;
+        textMode();
         return; // conmsume la 'c'
     }
     if (raw_push(raw)) {
