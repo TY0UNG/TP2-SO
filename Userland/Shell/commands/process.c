@@ -17,8 +17,8 @@ typedef struct {
     int priority;
     char name[32];
     wait_reason_t wait_reason;
-    int stack_base;
-    int stack_memory;
+    char * stack_base;
+    char * stack_memory;
 } ProcessInfo;
 
 
