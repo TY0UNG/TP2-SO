@@ -48,6 +48,7 @@ Requerimientos — decisiones de diseño, ejemplos y consideraciones
       - Multitasking preemptivo disparado por el timer tick; el scheduler es Round Robin con prioridades (5 niveles, 0 = más alta .. 4 = más baja), con una priority-list por nivel.
       - Cada comando de la shell se ejecuta como un proceso aparte (no built-in): la shell crea el proceso, le pasa argv/argc y opcionalmente le cede el foreground.
       - Los procesos tienen un flag killable (la shell se marca false para que Ctrl+C cancele la línea pero no mate la shell, como en bash).
+      - Para evitar inanicion por baja prioridad, lo que hicimos fue poner todos los procesos en un unico round robin, pero la mayor prioridad determina mayores quantums a usar.
 
     Ejemplos
         ps                      lista procesos: nombre, PID, prioridad, RSP/RBP, foreground, estado
