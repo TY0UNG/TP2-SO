@@ -1,6 +1,6 @@
 #include "commands.h"
-#include "../lib/utils.h"       // GetUniform (espera activa aleatoria)
-#include "../lib/test_util.h"   // satoi
+#include "../lib/utils.h"
+#include "../lib/test_util.h"
 #include <inout.h>
 #include <stdint.h>
 
@@ -17,8 +17,7 @@ extern int  sys_sem_post(const char *name);
 #define MAX_WRITERS 26   // 'A' .. 'Z'
 #define MAX_READERS 16
 
-// Como todos los procesos comparten la imagen del shell, esta variable global vive una sola vez y la ven todos. 
-// volatile: la escribe un proceso y la lee otro, no queremos que el compilador la cachee en un registro.
+// Como todos los procesos comparten la imagen del shell, esta variable global vive una sola vez y la ven todos.
 static volatile char mvar_value;
 
 // Paleta de colores (byte de estilo VGA: FG en el nibble bajo) para identificar a cada lector.
@@ -105,10 +104,7 @@ int mvar(char **argv, int argc) {
         return 1;
     }
 
-    // Crear (o RESETEAR) los semaforos a su estado inicial antes de lanzar los
-    // hijos, para que la MVar arranque vacia (empty=1, full=0). sys_sem_init
-    // limpia el valor y la cola de waiters aunque hayan quedado sucios de una
-    // corrida anterior cuyos procesos se mataron a mitad de ciclo.
+    // Crear (o reinicializar) los semaforos a su estado inicial antes de lanzar los hijos
     if (sys_sem_init(SEM_EMPTY, 1) < 0 || sys_sem_init(SEM_FULL, 0) < 0) {
         println("mvar: error al abrir los semaforos");
         return 1;

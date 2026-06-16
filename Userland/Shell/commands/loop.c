@@ -23,9 +23,8 @@ int loop(char **argv, int argc) {
     uint64_t pid = sys_getpid();
 
     while (1) {
-        print("Hola! Soy el proceso ");
         printDec(pid);
-        print("\n");
+        print(" ");
 
         // Espera activa: gira sobre el reloj sin ceder la CPU (no bloqueante).
         uint64_t start = getMilisFromBoot();

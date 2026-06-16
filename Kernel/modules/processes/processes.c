@@ -9,13 +9,16 @@ size_t proccess_count = 0;
 
 Process processes[PROCESSES_LIMIT];
 
-typedef struct PrioritySlot {
-    Process * process;
-    bool deleted;
-} PrioritySlot;
+// Quantum (en ticks del timer) por nivel de prioridad. Nivel 0 = mayor
+// prioridad => turno mas largo. Todos los procesos listos entran al mismo
+// round-robin; la prioridad solo decide cuanta CPU recibe cada uno por vuelta,
+// nunca si corre o no. Asi no hay inanicion: todo proceso listo corre en cada
+// vuelta de la rueda, aunque sea por un solo tick.
+static const int QUANTUM[PRIORITY_COUNT] = { 5, 4, 3, 2, 1 };
 
-PrioritySlot priority_lists[PRIORITY_COUNT][PROCESSES_LIMIT] = { NULL };
-size_t priority_index[PRIORITY_COUNT] = { 0 };
+// Indice del ultimo proceso elegido. El round-robin reanuda la busqueda en el
+// siguiente para repartir la CPU de forma equitativa.
+static size_t rr_index = 0;
 
 pid_t actual_pid = 0;
 size_t actual_index = -1;
@@ -41,16 +44,6 @@ static int getNextFreeSlot() {
     return -1;
 }
 
-static int getNextPriorityFreeSlot(int priority) {
-    for (int i = 0; i < PROCESSES_LIMIT; i++) {
-        if (priority_lists[priority][i].process == NULL ||
-            priority_lists[priority][i].deleted ||
-            priority_lists[priority][i].process->active == false) 
-            return i;
-    }
-    return -1;
-}
-
 static size_t calculateArgc(const char **args) {
     if (!args) return 0;
     size_t argc = 0;
@@ -71,18 +64,16 @@ void initializeScheduler() {
 
 }
 
+// Round-robin plano sobre todos los procesos listos. La busqueda arranca en el
+// siguiente al ultimo elegido (rr_index) y, si no hay otro, vuelve a caer en el
+// actual. La prioridad NO interviene aca: solo afecta el quantum (ver QUANTUM).
 static Process * selectNextProcess() {
-    for (int i = 0; i < PRIORITY_COUNT; i++) {
-        size_t start = priority_index[i];
-        for (size_t k = 0; k < PROCESSES_LIMIT; k++) {
-            size_t j = (start + k) % PROCESSES_LIMIT;
-            if (priority_lists[i][j].deleted) continue;
-            if (priority_lists[i][j].process == NULL) continue;
-            Process *p = priority_lists[i][j].process;
-            if (p->active && !p->blocked && !p->zombie) {
-                priority_index[i] = (j + 1) % PROCESSES_LIMIT;
-                return priority_lists[i][j].process;
-            }
+    for (size_t k = 1; k <= PROCESSES_LIMIT; k++) {
+        size_t j = (rr_index + k) % PROCESSES_LIMIT;
+        Process * p = &processes[j];
+        if (p->active && !p->blocked && !p->zombie) {
+            rr_index = j;
+            return p;
         }
     }
     return NULL;
@@ -98,15 +89,11 @@ void idle() {
 }
 
 void scheduler() {
-    // Las prioridades se fijan explicitamente con my_nice/modify_process_priority
-    // (prioridad estricta: nivel 0 = mayor). No hay aging automatico para que el
-    // test_prio pueda demostrar el ordenamiento por prioridad de forma deterministica.
     Process * nextProcess = selectNextProcess();
     if (nextProcess == NULL) {
         // Durante el boot temprano el timer ya puede estar tickeando (el audio
         // del bootAnimation habilita interrupciones) y todavia no hay ningun
-        // proceso ni kernel_rsp capturado. Ahi no hay idle al que saltar:
-        // simplemente volvemos y dejamos seguir el boot, como antes.
+        // proceso ni kernel_rsp capturado.
         if (kernel_rsp == 0) {
             actual_pid = 0;
             actual_index = (size_t)-1;
@@ -126,6 +113,9 @@ void scheduler() {
 
     size_t old_idx = actual_index;
 
+    // Recarga el quantum del proceso elegido segun su prioridad.
+    nextProcess->quantum_left = QUANTUM[nextProcess->priority];
+
     // Si el scheduler eligió el mismo proceso que estaba corriendo, no hay
     // que switchear (el IRQ handler hará popState/iretq y el proceso continúa).
     if (nextProcess->index == old_idx) {
@@ -144,6 +134,18 @@ void scheduler() {
     } else {
         switch_rsp(&processes[old_idx].rsp, nextProcess->rsp);
     }
+}
+
+// Preempcion por quantum.
+void timer_tick() {
+    if (actual_index != (size_t)-1) {
+        Process * cur = &processes[actual_index];
+        if (cur->active && !cur->blocked && !cur->zombie && cur->quantum_left > 1) {
+            cur->quantum_left--;
+            return;   // todavia tiene turno: sigue corriendo
+        }
+    }
+    scheduler();
 }
 
 typedef struct NewProcessStackFrame {
@@ -246,26 +248,12 @@ pid_t create_process(const char* name, void (*entry_point)(), const char ** args
         term->ref_count += 3;
     }
 
-    int priority_slot = getNextPriorityFreeSlot(0);
-    priority_lists[0][priority_slot].process = &processes[index];
-    priority_lists[0][priority_slot].deleted = false;
     processes[index].priority = 0;
+    processes[index].quantum_left = QUANTUM[0];
 
     proccess_count++;
 
     return processes[index].pid;
-}
-
-// Saca al proceso de las priority_lists. Se llama desde kill_process /
-// exit_current_process.
-static void remove_from_priority_lists(Process * process) {
-    for (int p = 0; p < PRIORITY_COUNT; p++) {
-        for (int j = 0; j < PROCESSES_LIMIT; j++) {
-            if (priority_lists[p][j].process == process) {
-                priority_lists[p][j].deleted = true;
-            }
-        }
-    }
 }
 
 static void close_all_fds(Process * p) {
@@ -343,9 +331,8 @@ static void terminate_process(int idx, int status) {
 
     processes[idx].exit_status = status;
     // Zombie: el slot sigue ocupado (active=true) hasta que wait lo reapee,
-    // pero ya no es schedulable -> lo sacamos de las priority_lists.
+    // pero ya no es schedulable (selectNextProcess ignora a los zombie).
     processes[idx].zombie = true;
-    remove_from_priority_lists(&processes[idx]);
     proccess_count--;
 
     // Si era el foreground, el padre lo toma. Si el padre no existe o no esta
@@ -444,22 +431,17 @@ void yield() {
     scheduler();
 }
 
-// Reubica al proceso al nivel de prioridad pedido (clamp a 0..PRIORITY_COUNT-1).
-// Nivel 0 = mayor prioridad de scheduling. Lo saca de su lista actual y lo
-// inserta en un slot libre del nuevo nivel.
+// Fija el nivel de prioridad del proceso (clamp a 0..PRIORITY_COUNT-1).
+// Nivel 0 = mayor prioridad => quantum mas largo. El nuevo peso toma efecto en
+// el proximo turno; recargamos el quantum para que aplique cuanto antes.
 static void modify_process_priority(Process * process, int new_priority) {
     if (process == NULL) return;
     if (new_priority < 0) new_priority = 0;
     if (new_priority >= PRIORITY_COUNT) new_priority = PRIORITY_COUNT - 1;
     if (process->priority == new_priority) return;
 
-    remove_from_priority_lists(process);
-
-    int slot = getNextPriorityFreeSlot(new_priority);
-    if (slot == -1) return;   // no deberia pasar: la lista tiene PROCESSES_LIMIT slots
-    priority_lists[new_priority][slot].process = process;
-    priority_lists[new_priority][slot].deleted = false;
     process->priority = new_priority;
+    process->quantum_left = QUANTUM[new_priority];
 }
 
 void modify_process_priority_by_pid(size_t pid, int new_priority) {

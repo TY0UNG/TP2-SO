@@ -35,6 +35,10 @@ typedef struct Process {
     size_t index;
     size_t waiting_for_pid;  // pid que este proceso esta esperando, 0 si ninguno
     int priority;
+    // Ticks que le quedan al proceso en su turno actual. Se recarga al ser
+    // elegido con un valor proporcional a su prioridad (mayor prioridad =>
+    // quantum mas largo). El timer lo decrementa; al llegar a 0 hay preempcion.
+    int quantum_left;
     uint64_t rsp;
     char * stack_base;
     char * stack_memory;
@@ -65,6 +69,10 @@ typedef size_t pid_t;
 
 void initializeScheduler();
 void scheduler();
+// Se llama en cada tick del timer. Implementa la preempcion por quantum:
+// descuenta el turno del proceso actual y solo invoca al scheduler cuando se
+// agota. NO usar para cesion voluntaria (para eso esta scheduler()/yield()).
+void timer_tick();
 
 // Tope del kernel stack sobre el que corre idle cuando no hay proceso listo.
 extern uint64_t kernel_rsp;

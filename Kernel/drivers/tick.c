@@ -14,8 +14,8 @@ void timer_handler() {
 		pid_t fg = get_foreground_pid();
 		if (fg != 0 && process_is_killable(fg)) kill_process(fg);
 	}
-	scheduler();
-	
+	timer_tick();
+
 }
 
 int ticks_elapsed() {
