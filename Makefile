@@ -1,5 +1,5 @@
 
-MM ?= NAIVE
+MM ?= OWN
 
 all:  bootloader kernel userland image
 
