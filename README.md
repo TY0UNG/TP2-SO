@@ -53,14 +53,27 @@ Caracteres especiales y atajos de teclado en la shell:
 
 #### Decisiones de diseño
 
-    - Tres administradores intercambiables tras una interfaz común (memory.h)
-    - La selección es en tiempo de compilación con MM=NAIVE, OWN o BUDDY (mediante #ifdef). Nunca conviven dos managers; el resto del kernel y los procesos usan la misma API.
+- Tres administradores intercambiables tras una interfaz común (memory.h)
+- La selección es en tiempo de compilación con MM=NAIVE, OWN o BUDDY (mediante \#ifdef). Nunca conviven dos managers, el resto del kernel y los procesos usan la misma API.
 
 #### Ejemplos
 
     mem                     estado de la memoria (total y usada)
     testmm 1000000          stress test de malloc/free (foreground)
     testmm 1000000 &        mismo test en background
+
+#### Manager Implementado: Free List Explícita
+
+A toda la memoria que recibe el manager para administrar (denominada *arena* en el algoritmo) se la divide en bloques contiguos, uno pegado al siguiente. Cada bloque guarda información de control en sus dos extremos (un **header** al inicio y un **footer** al final), y los que están **libres** se van enlazando entre sí en una lista doblemente enlazada, la *free list*, para poder encontrarlos rápido al reservar.
+
+    [ HEADER | payload | FOOTER ]
+      HEADER: tamaño + flag libre/ocupado + punteros next/prev de la free list
+      FOOTER: copia del tamaño (el boundary tag)
+
+- **Reservar** (`malloc`): redondea el pedido para mantener todo alineado a 16 (es editable), recorre la *free list* y toma el **primer bloque que alcanza** (*first-fit*). Si sobra espacio, parte el bloque (*split*): entrega lo pedido y devuelve el resto a la free list.
+- **Liberar** (`free`): marca el bloque como libre y lo **fusiona con sus vecinos físicos** si también lo están (*coalescing*): hacia adelante saltando con el tamaño, y hacia atrás leyendo el *footer* del bloque anterior (para eso es el boundary tag). El bloque consolidado vuelve a la free list.
+- **Recorrer**: `malloc` recorre **solo los libres** (la free list, sin pasar por los ocupados). El coalescing recorre los **vecinos físicos** por aritmética de punteros.
+- **Estado** (`mem`): un contador `used_bytes` se actualiza en cada `malloc`/`free`, así `getUsedMemory` es O(1).
 
 ### Procesos, Context Switching y Scheduling
 
