@@ -76,6 +76,7 @@ Requerimientos — decisiones de diseño, ejemplos y consideraciones
 
     Consideraciones
       - sem_init sobre un semáforo existente lo re-inicializa (valor y cola de waiters): permite reutilizar un nombre fijo entre corridas aunque la anterior haya dejado el semáforo sucio (procesos matados a mitad de ciclo).
+      - Los prints de mvar no se ven exactamente como el enunciado, debido a las decisiones de diseño que tomamos en el scheduling. Por ejemplo, al aumentar prioridades, se da mayor quantum pero sigue siendo round robin global, por lo que el resultado no cambia.
 
     Limitaciones
       - Matar un proceso no libera automáticamente los semáforos que tenía abiertos ni lo saca de las colas de waiters (no hay tracking por proceso). Por eso init reinicializa.
@@ -94,15 +95,6 @@ Requerimientos — decisiones de diseño, ejemplos y consideraciones
         echo hola mundo | filter    filter quita las vocales
         echo hola mundo | red       red imprime stdin en rojo
         cat | wc                    interactivo: escribir, Ctrl+D para EOF
-
-    MVar (mvar <escritores> <lectores>): problema de múltiples lectores/escritores sobre una variable global, sincronizado con dos semáforos (empty/full). Cada lector imprime con un color identificador (estilo por proceso). El proceso principal termina apenas crea a los workers.
-
-        mvar 2 2                ABABAB...  (2 colores de lector)
-        mvar 3 2                ABCABC...
-        mvar 2 2 ; kill <pid_B> al matar al escritor B la salida pasa a sólo A
-
-    Consideraciones
-    - Los workers de mvar quedan en background (el principal sale enseguida): se frenan con kill <pid>, no con Ctrl+C.
 
   -- Drivers (teclado y video) --
 
