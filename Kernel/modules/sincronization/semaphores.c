@@ -122,12 +122,7 @@ int sem_init(const char * name, int initialValue) {
 
     int id = find_by_name(name);
     if (id >= 0) {
-        // Ya existe: lo RE-INICIALIZAMOS a un estado limpio (valor + cola de
-        // waiters vacia). Sirve para reutilizar un semaforo de nombre fijo entre
-        // corridas aunque la anterior lo haya dejado sucio (procesos matados a
-        // mitad de ciclo). No tocamos 'openers' (otros holders siguen validos).
-        // Cuidado: solo usar cuando nadie vivo esta bloqueado en el (vaciamos la
-        // cola), que es el caso de quien "posee" el semaforo al re-arrancar.
+        // Ya existe: lo reinicializamos a un estado limpio
         sem_table[id].value = initialValue;
         sem_table[id].waiter_head = 0;
         sem_table[id].waiter_tail = 0;
