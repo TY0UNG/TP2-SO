@@ -1,5 +1,10 @@
 TP2 — Construcción del Núcleo de un Sistema Operativo
 
+Grupo 2. Integrantes:
+  - Tobias Young
+  - Antonio Valentuzzi
+  - Facundo López Llopis
+
 Compilación y ejecución
 
   El proyecto se compila dentro de la imagen de la cátedra (agodio/itba-so-multiarch:3.1). Los scripts asumen un contenedor llamado tp-so con el proyecto montado en /root.
