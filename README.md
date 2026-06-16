@@ -22,6 +22,8 @@ Compilación y ejecución
 
   compile.sh arranca el contenedor y corre make adentro. El selector de memory manager es la variable MM (NAIVE, OWN o BUDDY), resuelta en tiempo de compilación vía -DMM_*.
 
+  Modificamos los make para que todo el output (.o, .map, etc) se guarden en /build, en las carpetas respectivas tanto para userland como para kernel.
+
   Ejecutar:
 
       sudo ./run.sh           levanta QEMU con la imagen generada
