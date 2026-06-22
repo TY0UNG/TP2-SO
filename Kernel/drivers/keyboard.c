@@ -133,7 +133,7 @@ void kbd_wake(void) {
     size_t n = kbd_waiter_count;
     kbd_waiter_count = 0;
     for (size_t i = 0; i < n; i++)
-        unblock_process(kbd_waiters[i]);
+        unblock_process(kbd_waiters[i], WAIT_KBD);
 }
 
 // La ISR hace lo minimo posible.

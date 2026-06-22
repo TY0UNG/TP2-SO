@@ -27,8 +27,9 @@ int loop(char **argv, int argc) {
         print(" ");
 
         // Espera activa: gira sobre el reloj sin ceder la CPU (no bloqueante).
-        uint64_t start = getMilisFromBoot();
-        while (getMilisFromBoot() - start < interval);
+        //uint64_t start = getMilisFromBoot();
+        int i = 100000000;
+        while (i-- != 0);
     }
 
     return 0;   // inalcanzable

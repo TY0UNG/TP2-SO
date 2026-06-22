@@ -211,8 +211,9 @@ int sem_post(const char * name) {
     s->value++;
 
     pid_t pid;
-    if (dequeue_waiter(s, &pid)) {
-        unblock_process(pid);
+    while (dequeue_waiter(s, &pid)) {
+        if (unblock_process(pid, WAIT_SEM) == 0) break;
+        // waiter muerto: intentar con el siguiente
     }
 
     leave_region(&sem_lock, flags);

@@ -16,10 +16,14 @@ int block(char **argv, int argc) {
         return 1;
     }
     int state = sys_toggle_block(pid);
-    if (state < 0) {
+    if (state == -1) {
         print("block: no existe el proceso ");
         printDec((uint64_t) pid);
         print("\n");
+        return 1;
+    }
+    if (state == -2) {
+        println("block: El proceso ya esta bloqueado por otra razon");
         return 1;
     }
     print("block: proceso ");

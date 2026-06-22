@@ -376,6 +376,8 @@ void kill_process(pid_t pid) {
 
     terminate_process(index, -1);
 
+    processes[index].active = false;
+
     // Si nos estamos matando a nosotros mismos no hay que volver al proceso muerto: marcamos que no hay proceso actual para que el scheduler no guarde nuestro RSP
     if ((size_t)index == actual_index) {
         actual_pid = 0;
@@ -451,30 +453,40 @@ void modify_process_priority_by_pid(size_t pid, int new_priority) {
     }
 }
 
-void block_process(size_t pid) {
+void block_process(size_t pid, wait_reason_t reason) {
     int idx = getIndex(pid);
-    if (idx >= 0) processes[idx].blocked = true;
-}
 
-void unblock_process(size_t pid) {
-    int idx = getIndex(pid);
-    if (idx >= 0) {
-        processes[idx].blocked = false;
-        processes[idx].wait_reason = WAIT_NONE;
+    if (reason == WAIT_NONE) return;
+
+    if (idx >= 0 && !processes[idx].blocked) {
+        processes[idx].blocked = true;
+        processes[idx].wait_reason = reason;
     }
 }
 
+int unblock_process(size_t pid, wait_reason_t exprected_reason) {
+    int idx = getIndex(pid);
+    if (idx >= 0 && processes[idx].blocked && processes[idx].wait_reason == exprected_reason) {
+        processes[idx].blocked = false;
+        processes[idx].wait_reason = WAIT_NONE;
+        return 0;
+    }
+    return 1;
+}
+
 // Alterna el estado del proceso entre bloqueado y listo (para el comando block).
-// Devuelve el nuevo estado: 1 = bloqueado, 0 = listo, -1 = pid inexistente.
+// Devuelve: 1=bloqueado, 0=listo, -1=pid inexistente, -2=bloqueado por otra razon.
 int toggle_block_process(size_t pid) {
     int idx = getIndex(pid);
     if (idx < 0) return -1;
     if (processes[idx].blocked) {
+        if (processes[idx].wait_reason != WAIT_BLOCK) return -2;
         processes[idx].blocked = false;
         processes[idx].wait_reason = WAIT_NONE;
         return 0;
     }
     processes[idx].blocked = true;
+    processes[idx].wait_reason = WAIT_BLOCK;
     return 1;
 }
 

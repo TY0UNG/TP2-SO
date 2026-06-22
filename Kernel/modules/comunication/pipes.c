@@ -63,7 +63,7 @@ static void wake_all(pid_t *queue, size_t *count) {
     size_t n = *count;
     *count = 0;
     for (size_t i = 0; i < n; i++) {
-        unblock_process(queue[i]);
+        unblock_process(queue[i], WAIT_PIPE);
     }
 }
 

@@ -223,7 +223,7 @@ static int syscall_kill(Registers * registers) {
 }
 
 static int syscall_block(Registers * registers) {
-    block_process((size_t) registers->rbx);
+    block_process((size_t) registers->rbx, WAIT_BLOCK);
     return 0;
 }
 
@@ -232,8 +232,7 @@ static int syscall_toggle_block(Registers * registers) {
 }
 
 static int syscall_unblock(Registers * registers) {
-    unblock_process((size_t) registers->rbx);
-    return 0;
+    return unblock_process((size_t) registers->rbx, WAIT_BLOCK);
 }
 
 static int syscall_nice(Registers * registers) {

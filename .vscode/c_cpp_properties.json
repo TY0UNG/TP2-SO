@@ -10,7 +10,7 @@
                 "/usr/lib/gcc/x86_64-linux-gnu/13/include"
             ],
             "defines": [
-                "MM_BUDDY"
+                "MM_OWN"
             ],
             "compilerPath": "/usr/bin/x86_64-linux-gnu-gcc",
             "compilerArgs": [

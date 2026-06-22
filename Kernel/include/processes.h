@@ -22,6 +22,7 @@ typedef enum {
     WAIT_PIPE,       // bloqueado leyendo/escribiendo un pipe (incluye stdin)
     WAIT_SEM,        // bloqueado en sem_wait esperando un semaforo
     WAIT_KBD,        // bloqueado esperando entrada de teclado (terminal_read)
+    WAIT_BLOCK
 } wait_reason_t;
 
 typedef struct Process {
@@ -90,8 +91,8 @@ int wait_pid(pid_t pid);
 // Cede CPU al scheduler. Si no hay otro proceso listo, vuelve enseguida.
 void yield_current();
 void modify_process_priority_by_pid(pid_t pid, int new_priority);
-void block_process(size_t pid);
-void unblock_process(size_t pid);
+void block_process(size_t pid, wait_reason_t reason);
+int unblock_process(size_t pid, wait_reason_t exprected_reason);
 // Alterna entre bloqueado y listo. Devuelve 1=bloqueado, 0=listo, -1=inexistente.
 int toggle_block_process(size_t pid);
 // Bloquea el proceso actual con una razon de espera y cede la CPU.
